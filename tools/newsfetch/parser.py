@@ -5,10 +5,12 @@ Standard library only.
 
 import email.utils
 import html
+import json
 import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Set
 
 TZ_TW = timezone(timedelta(hours=8))
 TAG_RE = re.compile(r"<[^>]+>")
@@ -29,6 +31,62 @@ PATTERN_CIVILIAN = re.compile(
 PATTERN_SHORT = re.compile(
     rf"[{SURNAMES}][男女婦翁孩](?=[與向至在和涉遭由被已因，、。 　\s]|$)"
 )
+
+
+# Public figures (officials, legislators, mayors) whose names stay visible.
+# An editor maintains tools/newsfetch/public_figures.json.
+PUBLIC_FIGURES_PATH = Path(__file__).parent / "public_figures.json"
+
+# 2-4 character name (surname + 1 to 3 characters) right before a verdict/action word.
+PATTERN_NAME_BEFORE_VERDICT = re.compile(
+    rf"(?<![{SURNAMES}])([{SURNAMES}][\u4e00-\u9fff]{{1,3}})(?=[涉遭被])"
+)
+# A personal name does not contain these characters (organizations, places, phrases).
+NON_NAME_CHARS = set("的之與及和或市縣鄉鎮區部會院署局處長案委員黨團府校所館站隊組社業費款國中生元戰方陸")
+# A surname that is also a verb: skip when the previous character shows a word such as 照顧.
+VERB_SURNAME_PREFIX = {"顧": set("照關愛看兼眷光"), "白": set("明告坦"), "易": set("交貿輕容")}
+
+
+def load_public_figures(path: Path = PUBLIC_FIGURES_PATH) -> Set[str]:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return set()
+    return set(data.get("names", []))
+
+
+_PUBLIC_FIGURES: Optional[Set[str]] = None
+
+
+def _public_figures() -> Set[str]:
+    global _PUBLIC_FIGURES
+    if _PUBLIC_FIGURES is None:
+        _PUBLIC_FIGURES = load_public_figures()
+    return _PUBLIC_FIGURES
+
+
+def _is_civilian_false_positive(text: str, m: "re.Match") -> bool:
+    surname = m.group(0)[0]
+    prefixes = VERB_SURNAME_PREFIX.get(surname)
+    return bool(prefixes and m.start() > 0 and text[m.start() - 1] in prefixes)
+
+
+def _mask_name_before_verdict(text: str) -> str:
+    figures = _public_figures()
+
+    def repl(m: "re.Match") -> str:
+        name = m.group(1)
+        if any(ch in NON_NAME_CHARS for ch in name[1:]):
+            return name
+        if m.start() > 0 and text[m.start() - 1].isdigit():
+            return name
+        # Keep the name when it overlaps a listed public figure.
+        if any(name in fig or fig in text[max(0, m.start() - 4): m.end()] for fig in figures):
+            return name
+        return "[當事人]"
+
+    return PATTERN_NAME_BEFORE_VERDICT.sub(repl, text)
 
 
 def _find_elements(root: ET.Element, local_name: str) -> List[ET.Element]:
@@ -54,9 +112,16 @@ def mask_private_person(text: str) -> str:
     """Replaces private person names/references with [當事人]. Preserves public titles."""
     if not text:
         return ""
-    masked = PATTERN_CIVILIAN.sub("[當事人]", text)
+    masked = PATTERN_CIVILIAN.sub(
+        lambda m: m.group(0) if _is_civilian_false_positive(text, m) else "[當事人]", text
+    )
     masked = PATTERN_SHORT.sub("[當事人]", masked)
     return masked
+
+
+def mask_title(text: str) -> str:
+    """Masks a title: civilian references plus a name before a verdict word."""
+    return _mask_name_before_verdict(mask_private_person(text))
 
 
 def make_snippet(text: str, max_chars: int = 150) -> str:
@@ -151,7 +216,7 @@ def parse_news_sitemap_xml(xml_bytes: bytes, publisher: str) -> List[Dict]:
         except Exception:
             continue
 
-        masked_title = mask_private_person(title)
+        masked_title = mask_title(title)
         snippet = make_snippet(masked_title)
 
         items.append(
@@ -201,7 +266,7 @@ def parse_rss_xml(xml_bytes: bytes, publisher: str) -> List[Dict]:
             except Exception:
                 continue
 
-            masked_title = mask_private_person(title)
+            masked_title = mask_title(title)
             snippet_source = raw_desc if raw_desc else masked_title
             snippet = make_snippet(snippet_source)
 
@@ -247,7 +312,7 @@ def parse_rss_xml(xml_bytes: bytes, publisher: str) -> List[Dict]:
             except Exception:
                 continue
 
-            masked_title = mask_private_person(title)
+            masked_title = mask_title(title)
             snippet_source = raw_desc if raw_desc else masked_title
             snippet = make_snippet(snippet_source)
 
@@ -300,7 +365,7 @@ def parse_ltn_search_html(html_str: str, publisher: str = "自由時報") -> Lis
         except Exception:
             continue
 
-        masked_title = mask_private_person(raw_title)
+        masked_title = mask_title(raw_title)
         snippet_source = summary_raw if summary_raw else masked_title
         snippet = make_snippet(snippet_source)
 
