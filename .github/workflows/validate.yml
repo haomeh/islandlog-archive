@@ -1,7 +1,7 @@
 # Content validation for archive. It runs the pinned server image (PRD FR-131).
 # Never use the `latest` tag. Raise ISLANDLOG_SERVER_VERSION only in a reviewed PR.
 # CLI form (ruling R25): islandlog validate [--mode full|mr] [--base <git sha>] [--include-fixtures] <archive dir>.
-# PR fields come from the event payload. A warning prints "LABEL privacy-review" and exits 0.
+# PR fields come from CI_MERGE_REQUEST_DESCRIPTION, which the workflow fills from the PR body. A warning prints "LABEL privacy-review" and exits 0.
 # OPEN QUESTION: the image is in registry.gitlab.com/howmay/islandlog/server.
 # A pull from GitHub Actions needs the GitLab registry to allow public pulls.
 
@@ -14,8 +14,8 @@ on:
 
 env:
   # PLACEHOLDER: no server release exists yet (D19). Replace with the first tag.
+  # The job `container.image` cannot read `env`, so change the tag in both jobs.
   ISLANDLOG_SERVER_VERSION: "v0.0.0"
-  ISLANDLOG_IMAGE: "registry.gitlab.com/howmay/islandlog/server"
 
 permissions:
   contents: read
@@ -43,7 +43,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
-      PR_BODY: ${{ github.event.pull_request.body }}
+      # The server reads the PR text from this name (cmd/validate.go).
+      CI_MERGE_REQUEST_DESCRIPTION: ${{ github.event.pull_request.body }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - uses: actions/checkout@v4
