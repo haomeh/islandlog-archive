@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/publisher_grades.schema.json",
+  "title": "Publisher grades",
+  "description": "Default grade of media publishers. Only C and E apply to news (6.2). Changes need two approvals, one from a senior editor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "name", "publishers"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "name": { "const": "publisher_grades" },
+    "description": { "type": "string" },
+    "publishers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "grade", "basis"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "domains": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9.-]+$" }, "uniqueItems": true },
+          "grade": { "enum": ["C", "E"] },
+          "basis": { "type": "string", "minLength": 1 },
+          "decided_on": { "$ref": "common.schema.json#/$defs/date" }
+        }
+      }
+    }
+  }
+}

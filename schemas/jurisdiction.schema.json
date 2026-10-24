@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/jurisdiction.schema.json",
+  "title": "Jurisdiction file",
+  "description": "Applies to jurisdictions/jur-*.yaml. jur-tw is the hand-written central jurisdiction (D17): it has no official_code, parent_id or geometry_ref. Every other jurisdiction needs official_code.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "name", "gov_level"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "id": { "$ref": "common.schema.json#/$defs/jurisdiction_id" },
+    "official_code": { "type": "string", "pattern": "^[0-9]{8}$" },
+    "name": { "type": "string", "minLength": 1 },
+    "gov_level": { "$ref": "common.schema.json#/$defs/jurisdiction_gov_level" },
+    "parent_id": { "$ref": "common.schema.json#/$defs/jurisdiction_id" },
+    "valid_from": { "$ref": "common.schema.json#/$defs/date" },
+    "valid_to": { "$ref": "common.schema.json#/$defs/date" },
+    "predecessor_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/jurisdiction_id" } },
+    "successor_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/jurisdiction_id" } },
+    "geometry_ref": { "type": "string", "minLength": 1 }
+  },
+  "if": { "properties": { "id": { "const": "jur-tw" } }, "required": ["id"] },
+  "then": {
+    "properties": { "gov_level": { "const": "central" }, "name": { "const": "中央" } },
+    "not": { "anyOf": [{ "required": ["official_code"] }, { "required": ["parent_id"] }, { "required": ["geometry_ref"] }] }
+  },
+  "else": {
+    "required": ["official_code"],
+    "properties": { "id": { "pattern": "^jur-[0-9]{8}$" } }
+  }
+}

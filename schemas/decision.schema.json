@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/decision.schema.json",
+  "title": "Decision front matter",
+  "description": "Applies to the YAML front matter of decisions/<YYYY>/dc-*.md. The file must not have event_ids: the API computes the reverse reference from Event.decision_ids.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "status", "title", "decision_type", "decided_on", "decided_on_precision", "decision_maker_id", "jurisdiction_id", "outcome", "source_ids", "privacy", "review"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "id": { "$ref": "common.schema.json#/$defs/decision_id" },
+    "aliases": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/decision_id" }, "uniqueItems": true },
+    "status": { "enum": ["draft", "published", "withdrawn"] },
+    "title": { "type": "string", "minLength": 1 },
+    "decision_type": {
+      "enum": ["vote", "judgment", "constitutional_judgment", "administrative_order", "regulation", "budget", "eia_conclusion", "impeachment", "corrective_measure", "approval", "rejection", "referendum_result", "other"]
+    },
+    "decided_on": { "$ref": "common.schema.json#/$defs/date" },
+    "decided_on_precision": { "$ref": "common.schema.json#/$defs/date_precision" },
+    "decision_maker_id": { "$ref": "common.schema.json#/$defs/actor_id" },
+    "jurisdiction_id": { "$ref": "common.schema.json#/$defs/jurisdiction_id" },
+    "official_identifier": { "type": "string", "minLength": 1 },
+    "official_identifier_scheme": {
+      "enum": ["judgment_jid", "cons_judgment", "eia_case_no", "ly_bill_no", "ey_gazette_issue", "council_minutes", "other"]
+    },
+    "outcome": { "type": "string", "minLength": 1 },
+    "source_ids": { "$ref": "common.schema.json#/$defs/source_id_list_nonempty" },
+    "privacy": { "$ref": "common.schema.json#/$defs/privacy" },
+    "review": { "$ref": "common.schema.json#/$defs/review" },
+    "external_refs": { "$ref": "common.schema.json#/$defs/external_refs" }
+  },
+  "dependentRequired": { "official_identifier": ["official_identifier_scheme"] }
+}

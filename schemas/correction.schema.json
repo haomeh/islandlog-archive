@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/correction.schema.json",
+  "title": "Correction record",
+  "description": "Applies to corrections/<YYYY>/cr-*.yaml. Correction records are append-only. A takedown record must not name the removed personal data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "target_ids", "date", "type", "summary", "mr_url"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "id": { "$ref": "common.schema.json#/$defs/correction_id" },
+    "target_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/any_object_id" } },
+    "date": { "$ref": "common.schema.json#/$defs/date" },
+    "type": { "enum": ["factual", "attribution", "source", "privacy", "takedown"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "mr_url": { "$ref": "common.schema.json#/$defs/url" }
+  }
+}

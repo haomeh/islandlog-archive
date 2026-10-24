@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/source.schema.json",
+  "title": "Source file",
+  "description": "Applies to sources/<YYYY>/src-*.yaml. The schema has no body or full_text property: additionalProperties false rejects them for every source (D11, CI-21). The class-to-grade table (CI-06) and B-grade publisher rule (CI-07) belong to validate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "source_class", "grade", "title", "publisher", "url", "published_on", "accessed_on", "has_archive_url", "license"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "id": { "$ref": "common.schema.json#/$defs/source_id" },
+    "source_class": { "$ref": "common.schema.json#/$defs/source_class" },
+    "grade": { "$ref": "common.schema.json#/$defs/grade" },
+    "title": { "type": "string", "minLength": 1 },
+    "publisher": { "type": "string", "minLength": 1 },
+    "publisher_actor_id": { "$ref": "common.schema.json#/$defs/actor_id" },
+    "url": { "$ref": "common.schema.json#/$defs/url" },
+    "published_on": { "$ref": "common.schema.json#/$defs/date" },
+    "accessed_on": { "$ref": "common.schema.json#/$defs/date" },
+    "archive_url": { "$ref": "common.schema.json#/$defs/url" },
+    "has_archive_url": { "type": "boolean" },
+    "quote": { "type": "string", "minLength": 1 },
+    "official_identifier": { "type": "string", "minLength": 1 },
+    "license": { "$ref": "common.schema.json#/$defs/license" },
+    "attribution": { "type": "string", "minLength": 1 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "license": { "const": "ogdl-tw-1.0" } }, "required": ["license"] },
+      "then": { "required": ["attribution"] }
+    },
+    {
+      "if": { "properties": { "has_archive_url": { "const": true } }, "required": ["has_archive_url"] },
+      "then": { "required": ["archive_url"] }
+    },
+    {
+      "if": { "required": ["archive_url"] },
+      "then": { "properties": { "has_archive_url": { "const": true } } }
+    }
+  ]
+}
