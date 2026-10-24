@@ -98,12 +98,27 @@ def mask_title(text: str) -> str:
     return _mask_name_before_verdict(mask_private_person(text))
 
 
+AGE_RE = re.compile(r"[（(]?(?:\d+|[一二三四五六七八九十百]+)多?歲[）)]?(?:的)?")
+ADDRESS_RE = re.compile(r"[\u4e00-\u9fff]{0,6}[路街道]\d*(?:段)?(?:\d+巷)?(?:\d+弄)?\d+號(?:之\d+)?(?:\d+樓)?(?:\d+室)?")
+WORKPLACE_RE = re.compile(r"(?:任職|服務|任教|受僱|工作)於[^，。,；;\s、]{2,20}")
+MEDICAL_RE = re.compile(r"(?:病歷|就醫紀錄|診斷證明)[^，。,；;\s]*")
+
+
+def redact_victim(text: str) -> str:
+    """Remove age, address, workplace and medical-record details. Used for titles and snippets."""
+    if not text:
+        return ""
+    for rx in (AGE_RE, ADDRESS_RE, WORKPLACE_RE, MEDICAL_RE):
+        text = rx.sub("", text)
+    return text
+
+
 def make_snippet(text: str, max_chars: int = 150) -> str:
     """Strip tags, mask private names and cut to max_chars."""
     if not text:
         return ""
     cleaned = html.unescape(TAG_RE.sub("", text))
-    cleaned = mask_title(cleaned)
+    cleaned = redact_victim(mask_title(cleaned))
     cleaned = " ".join(cleaned.split())
     if len(cleaned) <= max_chars:
         return cleaned

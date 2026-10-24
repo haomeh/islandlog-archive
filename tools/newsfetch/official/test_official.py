@@ -8,6 +8,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
+import classify  # noqa: E402
 import crawler as crawler_mod  # noqa: E402
 import listing  # noqa: E402
 import textutil  # noqa: E402
@@ -125,12 +126,8 @@ class RecordTests(unittest.TestCase):
     def test_record_fields(self):
         src = {"id": "ey", "publisher": "行政院", "source_class": "official_statement", "actor_hint": "actor-ey"}
         item = {"url": "u", "title": "行政院通過預算", "published_on": "2026-09-23", "summary": "陳男向行政院表示"}
-        rec = fetch_official.build_record(src, item, "2026-10-24T00:00:00Z", ["行政院"])
-        self.assertEqual(
-            sorted(rec),
-            sorted(["url", "title", "publisher", "published_on", "snippet", "fetched_on",
-                    "matched_terms", "routine", "source_class", "publisher_actor_hint"]),
-        )
+        rec = fetch_official.build_record(src, item, "2026-10-24T00:00:00Z", classify.load_lexicons(HERE), {})
+        self.assertIn("negative", rec)
         self.assertIn("[當事人]", rec["snippet"])
         self.assertLessEqual(len(rec["snippet"]), 150)
 
@@ -176,7 +173,7 @@ class RoutineTests(unittest.TestCase):
 
     def test_record_has_routine_flag(self):
         src = {"publisher": "X", "source_class": "official_statement"}
-        rec = fetch_official.build_record(src, {"url": "u", "title": "春季市集開幕", "published_on": "2026-05-01"}, "t", [])
+        rec = fetch_official.build_record(src, {"url": "u", "title": "春季市集開幕", "published_on": "2026-05-01"}, "t", classify.load_lexicons(HERE), {})
         self.assertIs(rec["routine"], True)
 
 
@@ -188,3 +185,110 @@ class TitleAttrListTests(unittest.TestCase):
                          [("行政院會通過預算案", "2026-10-08"), ("頒獎表彰選手", "2026-09-24")])
         self.assertEqual(items[0]["url"], "https://www.ey.gov.tw/Page/9277F759E41CCD91/aaa-111")
         self.assertEqual(items[0]["summary"], "")
+
+
+
+class ClassifyTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.lex = classify.load_lexicons(HERE)
+
+    def test_lexicon_shape(self):
+        self.assertIn("topics", classify.json.loads((HERE / "negative_terms.json").read_text(encoding="utf-8")))
+        self.assertIn("terms", classify.json.loads((HERE / "clarification_terms.json").read_text(encoding="utf-8")))
+        self.assertIn("terms", classify.json.loads((HERE / "sensitive_terms.json").read_text(encoding="utf-8")))
+
+    def test_negative_topics(self):
+        r = classify.classify("工廠大火造成3人死亡", "", self.lex)
+        self.assertTrue(r["negative"])
+        self.assertIn("fire", r["topics"])
+
+    def test_neutral_title(self):
+        r = classify.classify("行政院會通過預算案", "", self.lex)
+        self.assertFalse(r["negative"])
+        self.assertEqual(r["topics"], [])
+        self.assertFalse(r["clarification"])
+        self.assertFalse(r["sensitive"])
+
+    def test_clarification_term(self):
+        self.assertTrue(classify.classify("疾管署澄清網傳疫苗訊息為錯誤訊息", "", self.lex)["clarification"])
+
+    def test_feed_flag_forces_clarification(self):
+        self.assertTrue(classify.classify("院會報告", "", self.lex, force_clarification=True)["clarification"])
+
+    def test_sensitive_term(self):
+        self.assertTrue(classify.classify("國中生輕生事件", "", self.lex)["sensitive"])
+        self.assertTrue(classify.classify("男子涉性侵未成年少女", "", self.lex)["sensitive"])
+
+
+class RedactTests(unittest.TestCase):
+    def test_age_removed(self):
+        self.assertNotIn("歲", textutil.redact_victim("35歲男子墜樓"))
+        self.assertNotIn("歲", textutil.redact_victim("八十歲長者走失"))
+
+    def test_address_removed(self):
+        out = textutil.redact_victim("民權路100號3樓發生火警")
+        self.assertNotIn("100號", out)
+        self.assertIn("火警", out)
+
+    def test_workplace_removed(self):
+        self.assertNotIn("某某科技", textutil.redact_victim("任職於某某科技公司的員工受傷"))
+
+    def test_plain_text_kept(self):
+        self.assertEqual(textutil.redact_victim("行政院會通過預算案"), "行政院會通過預算案")
+
+
+class RecordV2Tests(unittest.TestCase):
+    LEX = None
+
+    def rec(self, title, summary="", src=None, feed=None):
+        lex = classify.load_lexicons(HERE)
+        src = src or {"publisher": "X", "source_class": "official_statement"}
+        item = {"url": "u", "title": title, "published_on": "2026-05-01", "summary": summary}
+        return fetch_official.build_record(src, item, "t", lex, feed or {})
+
+    def test_schema_fields(self):
+        r = self.rec("行政院會通過預算案")
+        self.assertEqual(
+            sorted(r),
+            sorted(["url", "title", "publisher", "published_on", "snippet", "fetched_on", "negative",
+                    "topics", "clarification", "sensitive", "source_class", "routine"]),
+        )
+
+    def test_feed_clarification_flag(self):
+        r = self.rec("院會報告", feed={"clarification": True})
+        self.assertIs(r["clarification"], True)
+        self.assertEqual(r["source_class"], "official_statement")
+
+    def test_fact_check_class_and_no_routine(self):
+        r = self.rec("【錯誤】網傳某事", src={"publisher": "TFC", "source_class": "fact_check"})
+        self.assertEqual(r["source_class"], "fact_check")
+        self.assertNotIn("routine", r)
+
+    def test_snippet_title_only_when_requested(self):
+        r = self.rec("標題文字測試", summary="全文內容很長" * 20, feed={"snippet": "title"})
+        self.assertEqual(r["snippet"], "標題文字測試")
+
+    def test_sensitive_item_uses_title_only_and_redacts(self):
+        r = self.rec("35歲男子涉性侵", summary="受害者住民權路100號任職於某某公司")
+        self.assertIs(r["sensitive"], True)
+        self.assertNotIn("民權路", r["snippet"])
+        self.assertNotIn("歲", r["title"])
+        self.assertNotIn("歲", r["snippet"])
+
+    def test_keeps_all_news_no_term_filter(self):
+        r = self.rec("職棒球員全壘打")
+        self.assertEqual(r["url"], "u")
+
+
+class FeedFlagTests(unittest.TestCase):
+    def test_sources_json_valid_and_flags(self):
+        import json
+        srcs = json.loads((HERE / "sources.json").read_text(encoding="utf-8"))
+        ids = {s["id"] for s in srcs}
+        self.assertTrue({"ey", "moi", "fda", "tfc", "mygopen"} <= ids)
+        for s in srcs:
+            for f in s.get("feeds", []):
+                self.assertIn(f["type"], ("rss", "html_list", "titleattr_list"))
+        tfc = next(s for s in srcs if s["id"] == "tfc")
+        self.assertEqual(tfc["source_class"], "fact_check")
