@@ -1,13 +1,13 @@
-<!-- Takedown MRs are always sensitive. Do not put the request text or personal data in this MR. -->
+<!-- Takedown PRs are always sensitive. Do not put the request text or personal data in this PR. -->
 
 ## Takedown
 
-- Confidential issue link:
+- Private request reference (no link to a public issue; no personal data):
 - Object IDs to remove or mask:
 - Correction record file (`type: takedown`): `corrections/<YYYY>/cr-YYYYMMDD-nn.yaml`
 - Does the personal data appear in git history? (yes or no; a yes goes to the maintainer, see Q-10)
 
-## MR review fields
+## PR review fields
 
 review_sensitive: true
 review_reason:
@@ -19,4 +19,4 @@ review_reason:
 - [ ] Two approvals, one from a senior editor.
 - [ ] `islandlog validate .` passes on my machine.
 
-/label ~takedown ~privacy-review
+Labels to add after you open the PR: `takedown`, `privacy-review`.

@@ -2,12 +2,12 @@
 
 ## Correction
 
-- Request (issue or suggestion link):
+- Request reference (private report ID or editor note; no personal data):
 - Object IDs to correct:
 - Correction type (`factual`, `attribution`, `source`, `privacy`):
 - Correction record file: `corrections/<YYYY>/cr-YYYYMMDD-nn.yaml`
 
-## MR review fields
+## PR review fields
 
 Write exactly `true` or `false` after each colon. If `review_sensitive` is `true`, `review_reason` must not be empty.
 
@@ -30,4 +30,4 @@ Write how you checked the claim in the request and which official record or seco
 - [ ] The public summary does not repeat removed personal data.
 - [ ] `islandlog validate .` passes on my machine.
 
-/label ~correction
+Label to add after you open the PR: `correction`.

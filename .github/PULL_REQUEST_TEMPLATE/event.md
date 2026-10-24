@@ -5,7 +5,7 @@
 - Objects added or changed (IDs):
 - Summary of the change (neutral wording):
 
-## MR review fields
+## PR review fields
 
 Write exactly `true` or `false` after each colon. If `review_sensitive` is `true`, `review_reason` must not be empty.
 
@@ -28,6 +28,6 @@ For each new statement of fact, write the method and the official record or seco
 - [ ] Privacy: no private person is named without an A-grade basis. No address, phone number or email (CONTRIBUTING, section 4).
 - [ ] Quotes are 150 characters or fewer. No news full text. No images.
 - [ ] `islandlog validate .` passes on my machine.
-- [ ] I am not the approver of this MR.
+- [ ] I am not the approver of this PR.
 
-/label ~event
+Label to add after you open the PR: `event`.
