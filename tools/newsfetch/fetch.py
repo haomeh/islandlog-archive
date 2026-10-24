@@ -33,6 +33,7 @@ DEFAULT_FEEDS_PATH = BASE_DIR / "feeds.json"
 DEFAULT_TERMS_PATH = BASE_DIR / "terms.json"
 DEFAULT_OUT_PATH = BASE_DIR / "out" / "news.jsonl"
 DEFAULT_CACHE_DIR = BASE_DIR / ".cache"
+LTN_MAX_PAGES = 10
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,14 +49,10 @@ def load_feeds(feeds_path: Path) -> List[Dict]:
 
 
 def generate_weekly_windows(since: str, until: str) -> List[Tuple[str, str]]:
-    """Splits a date window [since, until] into weekly slices, including start boundary."""
+    """Splits a date window [since, until] into weekly slices. The first slice starts on since."""
     dt_since = datetime.datetime.strptime(since, "%Y-%m-%d")
     dt_until = datetime.datetime.strptime(until, "%Y-%m-%d")
     windows = []
-    # Always include the exact start date window to guarantee reaching the start boundary
-    since_compact = dt_since.strftime("%Y%m%d")
-    windows.append((since_compact, since_compact))
-
     cur = dt_since
     while cur <= dt_until:
         w_end = min(cur + datetime.timedelta(days=6), dt_until)
@@ -64,14 +61,42 @@ def generate_weekly_windows(since: str, until: str) -> List[Tuple[str, str]]:
     return windows
 
 
+def _fetch_ltn_window(
+    crawler: PoliteCrawler, url: str, publisher: str, term: str, w_start: str, w_end: str
+) -> List[Dict]:
+    """Reads LTN search pages for one term and window until a page is empty or has nothing new."""
+    import urllib.parse
+
+    found: List[Dict] = []
+    seen: Set[str] = set()
+    for page in range(1, LTN_MAX_PAGES + 1):
+        query_url = (
+            f"{url}?keyword={urllib.parse.quote(term)}&sort=date"
+            f"&start_time={w_start}&end_time={w_end}&type=all&page={page}"
+        )
+        content = crawler.fetch_raw(query_url)
+        if not content:
+            break
+        page_items = parse_ltn_search_html(content.decode("utf-8", errors="ignore"), publisher=publisher)
+        new_items = [i for i in page_items if i["url"] not in seen]
+        if not new_items:
+            break
+        seen.update(i["url"] for i in new_items)
+        found.extend(new_items)
+        if page == LTN_MAX_PAGES:
+            logger.warning(
+                "LTN page cap (%d) hit for term %s window %s-%s: results may be incomplete",
+                LTN_MAX_PAGES, term, w_start, w_end,
+            )
+    return found
+
+
 def fetch_source_items(
     feed_cfg: Dict,
     crawler: PoliteCrawler,
     since: str = "2026-04-24",
     until: str = "2026-10-24",
 ) -> List[Dict]:
-    import urllib.parse
-
     url = feed_cfg["url"]
     publisher = feed_cfg["publisher"]
     feed_type = feed_cfg.get("type", "sitemap")
@@ -95,11 +120,7 @@ def fetch_source_items(
         windows = generate_weekly_windows(since, until)
         for w_start, w_end in windows:
             for term in terms:
-                query_url = f"{url}?keyword={urllib.parse.quote(term)}&sort=date&start_time={w_start}&end_time={w_end}&type=all"
-                q_content = crawler.fetch_raw(query_url)
-                if q_content:
-                    q_str = q_content.decode("utf-8", errors="ignore")
-                    items.extend(parse_ltn_search_html(q_str, publisher=publisher))
+                items.extend(_fetch_ltn_window(crawler, url, publisher, term, w_start, w_end))
     else:
         logger.info("Fetching %s sitemap from %s ...", publisher, url)
         content = crawler.fetch_raw(url)
@@ -127,8 +148,8 @@ def main():
     parser.add_argument(
         "--out",
         type=Path,
-        default=DEFAULT_OUT_PATH,
-        help="Output path for JSONL file",
+        default=None,
+        help="Output path for JSONL file (default: out/news.jsonl, or out/news-<source>.jsonl with --source)",
     )
     parser.add_argument(
         "--source",
@@ -155,12 +176,26 @@ def main():
         help="Path to response cache directory",
     )
     parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Do not read or write the response cache",
+    )
+    parser.add_argument(
         "--force-refresh",
         action="store_true",
         help="Bypass cache and re-download feeds",
     )
 
     args = parser.parse_args()
+
+    if args.out is None:
+        if args.source and args.source != "all":
+            args.out = DEFAULT_OUT_PATH.with_name(f"news-{args.source}.jsonl")
+        else:
+            args.out = DEFAULT_OUT_PATH
+    elif args.source != "all" and args.out.resolve() == DEFAULT_OUT_PATH.resolve():
+        logger.error("Refusing to overwrite the full result %s with a single source", args.out)
+        sys.exit(1)
 
     # Load configurations
     if not args.feeds.exists():
@@ -177,10 +212,12 @@ def main():
             logger.error("Source ID '%s' not found in feeds config", args.source)
             sys.exit(1)
 
-    crawler = PoliteCrawler(cache_dir=args.cache_dir)
+    crawler = PoliteCrawler(cache_dir=args.cache_dir, use_cache=not args.no_cache)
     now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    output_records: List[Dict] = []
+    record_count = 0
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    out_f = open(args.out, "w", encoding="utf-8")
     seen_urls: Set[str] = set()
     publisher_counts: Dict[str, int] = {}
     publisher_dates: Dict[str, List[str]] = {}
@@ -219,23 +256,19 @@ def main():
                 "fetched_on": now_iso,
                 "matched_terms": matched,
             }
-            output_records.append(record)
+            out_f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            out_f.flush()
+            record_count += 1
             publisher_counts[pub_name] += 1
 
-    # Ensure output directory exists
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(args.out, "w", encoding="utf-8") as out_f:
-        for rec in output_records:
-            out_f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-
-    logger.info("Finished. Saved %d records to %s", len(output_records), args.out)
+    out_f.close()
+    logger.info("Finished. Saved %d records to %s", record_count, args.out)
 
     # Print summary statistics
     print("\n--- Newsfetch Summary ---")
     print(f"Date Window: {args.since} to {args.until}")
     print(f"Output File: {args.out}")
-    print(f"Total Matched Records: {len(output_records)}")
+    print(f"Total Matched Records: {record_count}")
     print("\nPublisher Reach and Matched Counts:")
     for pub, count in publisher_counts.items():
         dates = publisher_dates.get(pub, [])

@@ -243,11 +243,10 @@ class TestCLI(unittest.TestCase):
         from tools.newsfetch.fetch import generate_weekly_windows
 
         windows = generate_weekly_windows("2026-04-24", "2026-05-08")
-        self.assertEqual(len(windows), 4)
-        self.assertEqual(windows[0], ("20260424", "20260424"))
-        self.assertEqual(windows[1], ("20260424", "20260430"))
-        self.assertEqual(windows[2], ("20260501", "20260507"))
-        self.assertEqual(windows[3], ("20260508", "20260508"))
+        self.assertEqual(
+            windows,
+            [("20260424", "20260430"), ("20260501", "20260507"), ("20260508", "20260508")],
+        )
 
     def test_fetch_source_items_ltn_search(self):
         from tools.newsfetch.fetch import fetch_source_items
@@ -271,7 +270,7 @@ class TestCLI(unittest.TestCase):
             since="2026-04-24",
             until="2026-04-30",
         )
-        self.assertEqual(len(items), 4)
+        self.assertEqual(len(items), 2)
         self.assertEqual(items[0]["published_on"], "2026-04-24")
 
     def test_cli_help(self):
