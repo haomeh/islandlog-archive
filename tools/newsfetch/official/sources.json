@@ -1,0 +1,257 @@
+[
+ {
+  "id": "ey",
+  "publisher": "行政院",
+  "source_class": "official_statement",
+  "actor_hint": "executive-yuan",
+  "feeds": [
+   {
+    "type": "titleattr_list",
+    "url": "https://www.ey.gov.tw/Page/6485009ABEC1CB9C?page={page}&PS=15",
+    "max_pages": 80
+   },
+   {
+    "type": "titleattr_list",
+    "url": "https://www.ey.gov.tw/Page/B31C61707D4FEEEF?page={page}&PS=15",
+    "max_pages": 80
+   },
+   {
+    "type": "titleattr_list",
+    "url": "https://www.ey.gov.tw/Page/5519E969E8931E4E?page={page}&PS=15",
+    "max_pages": 40,
+    "clarification": true
+   },
+   {
+    "type": "rss",
+    "url": "https://www.ey.gov.tw/RSS_Content.aspx?ModuleType=3"
+   }
+  ]
+ },
+ {
+  "id": "ly",
+  "publisher": "立法院",
+  "source_class": "official_record",
+  "actor_hint": "legislative-yuan",
+  "note": "no legal dated listing: ly.gov.tw list pages are script-rendered; /sitemap.xml returns HTML"
+ },
+ {
+  "id": "cec",
+  "publisher": "中央選舉委員會",
+  "source_class": "official_statement",
+  "actor_hint": "central-election-commission",
+  "note": "no legal dated listing: robots.txt returns HTTP 403, so the crawler treats the host as disallowed"
+ },
+ {
+  "id": "judicial",
+  "publisher": "司法院",
+  "source_class": "official_statement",
+  "actor_hint": "judicial-yuan",
+  "feeds": [
+   {
+    "type": "html_list",
+    "url": "https://www.judicial.gov.tw/tw/lp-1887-1-{page}-20.html",
+    "max_pages": 30
+   }
+  ]
+ },
+ {
+  "id": "cons",
+  "publisher": "憲法法庭",
+  "source_class": "official_record",
+  "actor_hint": "constitutional-court",
+  "note": "no legal dated listing: cons.judicial.gov.tw robots.txt returns an HTML 404 page, so the crawler treats the host as disallowed"
+ },
+ {
+  "id": "moenv",
+  "publisher": "環境部",
+  "source_class": "official_statement",
+  "actor_hint": "ministry-of-environment",
+  "note": "no legal dated listing: www.moenv.gov.tw answers HTTP 403 with a Cloudflare challenge; enc.moenv.gov.tw does not connect"
+ },
+ {
+  "id": "moea",
+  "publisher": "經濟部",
+  "source_class": "official_statement",
+  "actor_hint": "ministry-of-economic-affairs",
+  "feeds": [
+   {
+    "type": "html_list",
+    "url": "https://www.moea.gov.tw/Mns/populace/news/News.aspx?kind=1&menu_id=40",
+    "max_pages": 1
+   },
+   {
+    "type": "rss",
+    "url": "https://www.moea.gov.tw/Mns/populace/news/NewsRSSdetail.aspx?Kind=1"
+   },
+   {
+    "type": "rss",
+    "url": "https://www.moea.gov.tw/Mns/populace/news/NewsRSSdetail.aspx?Kind=9"
+   },
+   {
+    "type": "rss",
+    "url": "https://www.moea.gov.tw/Mns/populace/news/NewsRSSdetail.aspx?Kind=4"
+   }
+  ]
+ },
+ {
+  "id": "moi",
+  "publisher": "內政部",
+  "source_class": "official_statement",
+  "actor_hint": "ministry-of-interior",
+  "feeds": [
+   {
+    "type": "html_list",
+    "url": "https://www.moi.gov.tw/News.aspx?n=8&sms=9224&PageSize=200&page={page}",
+    "max_pages": 3,
+    "clarification": true
+   },
+   {
+    "type": "html_list",
+    "url": "https://www.moi.gov.tw/News.aspx?n=4&sms=9009&PageSize=200&page={page}",
+    "max_pages": 6
+   }
+  ]
+ },
+ {
+  "id": "mohw",
+  "publisher": "衛生福利部",
+  "source_class": "official_statement",
+  "actor_hint": "ministry-of-health-and-welfare",
+  "note": "no legal route: Python TLS check fails for www.mohw.gov.tw (missing Subject Key Identifier); we do not turn off verification. Clarification list is np-17-1.html (RSS rss-17-1.html)"
+ },
+ {
+  "id": "fda",
+  "publisher": "衛生福利部食品藥物管理署",
+  "source_class": "official_statement",
+  "actor_hint": "taiwan-fda",
+  "feeds": [
+   {
+    "type": "html_list",
+    "url": "https://www.fda.gov.tw/TC/news.aspx?cid=5049&pn={page}",
+    "max_pages": 3,
+    "clarification": true
+   }
+  ],
+  "note": "only the rumor-clarification list (cid=5049) is dated and static; no press-release list found"
+ },
+ {
+  "id": "motc",
+  "publisher": "交通部",
+  "source_class": "official_statement",
+  "actor_hint": "ministry-of-transportation-and-communications",
+  "note": "no legal route: Python TLS check fails for www.motc.gov.tw (missing Subject Key Identifier); we do not turn off verification"
+ },
+ {
+  "id": "tfc",
+  "publisher": "台灣事實查核中心",
+  "source_class": "fact_check",
+  "actor_hint": "taiwan-factcheck-center",
+  "feeds": [
+   {
+    "type": "rss",
+    "url": "https://tfc-taiwan.org.tw/feed/?paged={page}",
+    "max_pages": 60,
+    "snippet": "title"
+   }
+  ],
+  "note": "robots.txt allows all; the RSS feed carries titles and dates only (snippet comes from the title)"
+ },
+ {
+  "id": "mygopen",
+  "publisher": "MyGoPen",
+  "source_class": "fact_check",
+  "actor_hint": "mygopen",
+  "feeds": [
+   {
+    "type": "rss",
+    "url": "https://www.mygopen.com/feeds/posts/default?alt=rss&max-results=100&start-index={start_index}",
+    "max_pages": 10,
+    "page_size": 100,
+    "snippet": "title"
+   }
+  ],
+  "note": "robots.txt allows /feeds; snippet comes from the title only"
+ },
+ {
+  "id": "cofacts",
+  "publisher": "Cofacts",
+  "source_class": "fact_check",
+  "actor_hint": "cofacts",
+  "note": "no legal route: api.cofacts.tw answers HTTP 403, cofacts.tw has no robots.txt route, and the open data dump holds user-submitted message text (private data) and has no current dated list"
+ },
+ {
+  "id": "taipei",
+  "publisher": "臺北市政府",
+  "source_class": "official_statement",
+  "actor_hint": "taipei-city-government",
+  "note": "no legal dated listing: Python TLS check fails for www.gov.taipei (missing Subject Key Identifier); we do not turn off verification"
+ },
+ {
+  "id": "newtaipei",
+  "publisher": "新北市政府",
+  "source_class": "official_statement",
+  "actor_hint": "new-taipei-city-government",
+  "note": "no legal dated listing: Python TLS check fails for www.ntpc.gov.tw (missing Subject Key Identifier); we do not turn off verification"
+ },
+ {
+  "id": "taoyuan",
+  "publisher": "桃園市政府",
+  "source_class": "official_statement",
+  "actor_hint": "taoyuan-city-government",
+  "note": "no legal dated listing: www.tycg.gov.tw answers HTTP 428 and robots.txt is unreadable"
+ },
+ {
+  "id": "taichung",
+  "publisher": "臺中市政府",
+  "source_class": "official_statement",
+  "actor_hint": "taichung-city-government",
+  "note": "no legal dated listing found: the Lpsimplelist pages probed hold links without dates"
+ },
+ {
+  "id": "tainan",
+  "publisher": "臺南市政府",
+  "source_class": "official_statement",
+  "actor_hint": "tainan-city-government",
+  "feeds": [
+   {
+    "type": "html_list",
+    "url": "https://www.tainan.gov.tw/News.aspx?n=13370&sms=9748&PageSize=200&page={page}",
+    "max_pages": 30
+   }
+  ]
+ },
+ {
+  "id": "kaohsiung",
+  "publisher": "高雄市政府",
+  "source_class": "official_statement",
+  "actor_hint": "kaohsiung-city-government",
+  "feeds": [
+   {
+    "type": "html_list",
+    "url": "https://www.kcg.gov.tw/News.aspx?n=F29A02A9D36C47F0&sms=19902EF36D6B551D&PageSize=200&page={page}",
+    "max_pages": 30
+   }
+  ]
+ },
+ {
+  "id": "changhua",
+  "publisher": "彰化縣政府",
+  "source_class": "official_statement",
+  "actor_hint": "changhua-county-government",
+  "note": "no legal dated listing: robots.txt of www.chcg.gov.tw is unreadable and the list page answers HTTP 403"
+ },
+ {
+  "id": "yunlin",
+  "publisher": "雲林縣政府",
+  "source_class": "official_statement",
+  "actor_hint": "yunlin-county-government",
+  "note": "no legal dated listing: www.yunlin.gov.tw answers HTTP 403"
+ },
+ {
+  "id": "hualien",
+  "publisher": "花蓮縣政府",
+  "source_class": "official_statement",
+  "actor_hint": "hualien-county-government",
+  "note": "no legal dated listing found: the pages probed on www.hl.gov.tw hold no dated static list"
+ }
+]
