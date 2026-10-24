@@ -14,6 +14,11 @@ Rules:
 - cluster_id is "cluster-" + the first 16 hex digits of SHA-256 of the earliest item URL
   of the cluster. It does not depend on input order. It changes only if an earlier item
   joins the cluster.
+- Each item has a source_group, "news" or "official". The input field source_group wins.
+  Else it is "official" for source_class official_statement or official_record, else "news".
+  Official items form groups of kind "official". They never merge with news groups,
+  but they can share a topic cluster. Only news groups can be clarifications.
+- A group where every item has routine:true gets routine:true.
 - An item with a bad or missing published_on, title or url is skipped with a warning.
 """
 
@@ -36,6 +41,7 @@ TOPIC_THRESHOLD = 0.25
 SAME_CONTENT_DAYS = 3
 TOPIC_DAYS = 30
 CLARIFICATION_WORDS = ("澄清", "更正", "回應", "否認", "道歉", "說明", "駁斥", "表示將")
+OFFICIAL_CLASSES = ("official_statement", "official_record")
 PREFERRED_PUBLISHERS = ("公視新聞網", "中央通訊社")
 LEADING_TAG = re.compile(r"^\s*(?:【[^】]*】|\[[^\]]*\])")
 PUBLISHER_SUFFIXES = ("公視新聞網", "中央通訊社", "中央社", "自由時報", "聯合新聞網", "TVBS新聞網")
@@ -106,9 +112,17 @@ def same_content(left, right):
             and jaccard(bigrams(left["title"]), bigrams(right["title"])) >= SAME_CONTENT_THRESHOLD)
 
 
+def _source_group(item):
+    value = item.get("source_group")
+    if value in ("news", "official"):
+        return value
+    return "official" if item.get("source_class") in OFFICIAL_CLASSES else "news"
+
+
 class _Prepared:
     """An item with its day, bigrams and clarification flag computed once."""
-    __slots__ = ("item", "day", "bigrams", "order", "has_word")
+    __slots__ = ("item", "day", "bigrams", "order", "has_word",
+                 "source_group", "routine")
 
     def __init__(self, item):
         self.item = item
@@ -116,6 +130,8 @@ class _Prepared:
         self.bigrams = _bigrams_of(normalize_title(item["title"]))
         self.order = (self.day, _publisher_rank(item), item["url"])
         self.has_word = any(word in item["title"] for word in CLARIFICATION_WORDS)
+        self.source_group = _source_group(item)
+        self.routine = item.get("routine") is True
 
 
 class _Index:
@@ -150,14 +166,15 @@ def _prepare(items):
 
 def _report_groups(prepared):
     groups = []  # each: {"rep": _Prepared, "members": [_Prepared]}
-    index = _Index()
+    indexes = {"news": _Index(), "official": _Index()}
     for entry in prepared:
+        index = indexes[entry.source_group]
         best, best_score = None, 0.0
         for group_id, shared in index.shared(entry.bigrams).items():
             rep = groups[group_id]["rep"]
             if abs((entry.day - rep.day).days) > SAME_CONTENT_DAYS:
                 continue
-            if entry.has_word and not rep.has_word:
+            if entry.source_group == "news" and entry.has_word and not rep.has_word:
                 continue
             score = shared / (len(entry.bigrams) + len(rep.bigrams) - shared)
             if score >= SAME_CONTENT_THRESHOLD and (score > best_score or (
@@ -207,15 +224,24 @@ def cluster_items(items):
         members = sorted((m for g in topic for m in g["members"]), key=lambda value: value.order)
         earliest = members[0]
         clean_groups = []
-        for position, group in enumerate(topic):
+        seen_news = False
+        for group in topic:
             rep = group["rep"]
-            kind = "clarification" if position > 0 and rep.has_word else "report"
-            clean_groups.append({
+            if rep.source_group == "official":
+                kind = "official"
+            else:
+                kind = "clarification" if seen_news and rep.has_word else "report"
+                seen_news = True
+            clean = {
                 "kind": kind,
+                "source_group": rep.source_group,
                 "title": rep.item["title"],
                 "representative_url": rep.item["url"],
                 "member_urls": [member.item["url"] for member in group["members"]],
-            })
+            }
+            if all(member.routine for member in group["members"]):
+                clean["routine"] = True
+            clean_groups.append(clean)
         output.append({
             "cluster_id": "cluster-" + hashlib.sha256(earliest.item["url"].encode("utf-8")).hexdigest()[:16],
             "title": earliest.item["title"],
@@ -248,13 +274,17 @@ def as_news_groups(clusters, items):
         for number, group in enumerate(cluster["groups"], start=1):
             for url in group["member_urls"]:
                 mapping[url] = _proposed_source_id(url, days[url])
-            news_groups.append({
+            entry = {
                 "id": f"ng-{number:02d}",
                 "kind": group["kind"],
+                "source_group": group["source_group"],
                 "title": group["title"],
                 "representative_source_id": group["representative_url"],
                 "source_ids": list(group["member_urls"]),
-            })
+            }
+            if group.get("routine"):
+                entry["routine"] = True
+            news_groups.append(entry)
         result.append({"cluster_id": cluster["cluster_id"], "title": cluster["title"],
                        "news_groups": news_groups})
     return result, mapping

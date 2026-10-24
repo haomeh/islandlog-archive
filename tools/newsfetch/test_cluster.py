@@ -202,5 +202,69 @@ class NewsGroupsTests(unittest.TestCase):
             self.assertEqual(len(mapping), 3)
 
 
+class SourceGroupTests(unittest.TestCase):
+    TITLE = "行政院宣布調整電價方案內容說明重點"
+
+    def mixed(self):
+        official = item("https://ey.example/1", self.TITLE, "2026-06-01", "行政院")
+        official["source_class"] = "official_statement"
+        news = item("https://n.example/1", self.TITLE, "2026-06-01")
+        return [official, news]
+
+    def test_defaults(self):
+        result = cluster_items(self.mixed())
+        groups = {g["source_group"]: g for g in result[0]["groups"]}
+        self.assertEqual(groups["official"]["kind"], "official")
+        self.assertEqual(groups["news"]["kind"], "report")
+
+    def test_official_record_defaults_to_official(self):
+        record = item("https://ey.example/2", "公報紀錄標題", "2026-06-01")
+        record["source_class"] = "official_record"
+        self.assertEqual(cluster_items([record])[0]["groups"][0]["source_group"], "official")
+
+    def test_explicit_source_group_wins(self):
+        news = item("https://n.example/2", "某標題內容文字", "2026-06-01")
+        news["source_class"] = "official_statement"
+        news["source_group"] = "news"
+        self.assertEqual(cluster_items([news])[0]["groups"][0]["kind"], "report")
+
+    def test_never_merge_across_source_group(self):
+        result = cluster_items(self.mixed())
+        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result[0]["groups"]), 2)
+
+    def test_official_items_dedupe_among_themselves(self):
+        a, b = self.mixed()[0], self.mixed()[0]
+        b["url"] = "https://ey.example/2"
+        groups = cluster_items([a, b])[0]["groups"]
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(len(groups[0]["member_urls"]), 2)
+
+    def test_official_never_clarification(self):
+        base = self.mixed()[0]
+        later = dict(base, url="https://ey.example/9", title="行政院回應電價方案內容", published_on="2026-06-20")
+        later["source_class"] = "official_statement"
+        for group in cluster_items([base, later])[0]["groups"]:
+            self.assertEqual(group["kind"], "official")
+
+    def test_routine_propagation(self):
+        a = item("https://n.example/a", self.TITLE, "2026-06-01")
+        b = dict(a, url="https://n.example/b")
+        a["routine"] = b["routine"] = True
+        self.assertTrue(cluster_items([a, b])[0]["groups"][0]["routine"])
+        b["routine"] = False
+        self.assertNotIn("routine", cluster_items([a, b])[0]["groups"][0])
+
+    def test_as_news_groups_keeps_kind_and_source_group(self):
+        items = self.mixed()
+        items[0]["routine"] = True
+        groups, _ = as_news_groups(cluster_items(items), items)
+        by_kind = {g["kind"]: g for g in groups[0]["news_groups"]}
+        self.assertEqual(by_kind["official"]["source_group"], "official")
+        self.assertTrue(by_kind["official"]["routine"])
+        self.assertEqual(by_kind["report"]["source_group"], "news")
+        self.assertNotIn("routine", by_kind["report"])
+
+
 if __name__ == "__main__":
     unittest.main()
