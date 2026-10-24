@@ -20,7 +20,10 @@
    "note": "no legal dated listing: www.moenv.gov.tw answers HTTP 403 with a Cloudflare challenge; enc.moenv.gov.tw does not connect"},
   {"id": "moea", "publisher": "經濟部", "source_class": "official_statement", "actor_hint": "ministry-of-economic-affairs",
    "feeds": [
-     {"type": "html_list", "url": "https://www.moea.gov.tw/Mns/populace/news/News.aspx?kind=1&menu_id=40", "max_pages": 1}
+     {"type": "html_list", "url": "https://www.moea.gov.tw/Mns/populace/news/News.aspx?kind=1&menu_id=40", "max_pages": 1},
+     {"type": "rss", "url": "https://www.moea.gov.tw/Mns/populace/news/NewsRSSdetail.aspx?Kind=1"},
+     {"type": "rss", "url": "https://www.moea.gov.tw/Mns/populace/news/NewsRSSdetail.aspx?Kind=9"},
+     {"type": "rss", "url": "https://www.moea.gov.tw/Mns/populace/news/NewsRSSdetail.aspx?Kind=4"}
    ]},
   {"id": "taipei", "publisher": "臺北市政府", "source_class": "official_statement", "actor_hint": "taipei-city-government",
    "note": "no legal dated listing: Python TLS check fails for www.gov.taipei (missing Subject Key Identifier); we do not turn off verification"},
