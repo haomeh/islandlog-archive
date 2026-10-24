@@ -1,15 +1,15 @@
 # Contributing
 
-Every content change is a merge request (MR). Nobody pushes to `main`.
-Read this file before your first MR. The full rules are in the PRD (sections 5 and 6).
+Every content change is a pull request (PR). Nobody pushes to `main`.
+Read this file before your first PR. The full rules are in the PRD (sections 5 and 6).
 
 ## 1. Workflow
 
 1. Create a branch. Add or change files. Use `islandlog new event` for a skeleton.
 2. Run `islandlog validate .` on your machine. Fix every failure.
-3. Open an MR. Pick the template: `event`, `correction` or `takedown`.
+3. Open a PR. Pick the template: `event`, `correction` or `takedown`.
 4. Fill in `review_sensitive`, `review_reason` and the verification steps.
-5. An editor approves. A sensitive MR needs two approvals, one from a senior editor. You cannot approve your own MR.
+5. An editor approves. A sensitive PR needs two approvals, one from a senior editor. You cannot approve your own PR.
 6. A maintainer merges. The index updates within about 5 minutes.
 
 ## 2. Neutral wording
@@ -44,19 +44,19 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 
 ## 5. Corrections
 
-Anyone can ask for a correction with an issue. Editors reply in 3 working days (proposal). If the correction is valid, an editor opens an MR that changes the content and adds a new file in `corrections/`. Correction records are append-only.
+Never post a correction request, a suggestion or a takedown request in a public issue. Send it through the site contact form (M1). Until the form exists, use GitHub private vulnerability reporting on this repo: <https://github.com/haomeh/islandlog-archive/security/advisories/new>. Do not write private personal data in a public place. Editors reply in 3 working days (proposal). An editor opens a public issue only after triage. If the correction is valid, an editor opens a PR that changes the content and adds a new file in `corrections/`. Correction records are append-only.
 
 ## 6. Takedown
 
-A data subject can ask for removal or masking. The request is a confidential issue. A senior editor decides, with legal advice when needed. The public record does not repeat the removed data.
+A data subject can ask for removal or masking. Send the request through the private channel in section 5. A senior editor decides, with legal advice when needed. The public record does not repeat the removed data.
 
 ## 7. Roles
 
 | Role | Can do |
 |---|---|
-| Contributor | Open MRs |
-| Editor | Review and approve MRs |
-| Senior editor | Approve sensitive MRs. Change banned terms and publisher grades |
+| Contributor | Open PRs |
+| Editor | Review and approve PRs |
+| Senior editor | Approve sensitive PRs. Change banned terms and publisher grades |
 | Maintainer | Merge. Change schemas and taxonomy |
 
 ## 8. Files and IDs

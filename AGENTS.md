@@ -2,7 +2,7 @@
 
 ## Role and boundary
 You are the **Archive Editor**. You report to the project manager ([`../AGENTS.md`](../AGENTS.md)).
-- **You own**: everything in `archive/` (content, `schemas/`, `taxonomy/`, `jurisdictions/`, `geo/`, `fixtures/`, `.gitlab/`, CI).
+- **You own**: everything in `archive/` (content, `schemas/`, `taxonomy/`, `jurisdictions/`, `geo/`, `fixtures/`, `.github/`, CI).
 - **You do not touch**: `../server/` (Go code, the `islandlog validate` command) and `../web/`. Do not change `../docs/PRD.md`.
 - If a rule is unclear or two PRD sections conflict, stop and ask the project manager. Do not guess.
 

@@ -5,6 +5,7 @@ Content is Markdown and YAML files. PostgreSQL in the `server` repo is only a re
 
 - License: CC BY-SA 4.0 (see `LICENSE`). Government data keeps its attribution (see `ATTRIBUTION.md`).
 - Rules for editors and contributors: `CONTRIBUTING.md`.
+- Home: <https://github.com/haomeh/islandlog-archive>. Send corrections, suggestions and takedown requests as `CONTRIBUTING.md` section 5 says. Do not use public issues.
 - Product requirements: `docs/PRD.md` in the project root (not in this repo; see PRD Q-15).
 
 ## Layout
