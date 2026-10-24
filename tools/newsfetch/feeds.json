@@ -1,0 +1,44 @@
+[
+  {
+    "id": "pts",
+    "publisher": "公視新聞網",
+    "type": "sitemap",
+    "url": "https://news.pts.org.tw/xml/sitemap.xml"
+  },
+  {
+    "id": "cna",
+    "publisher": "中央通訊社",
+    "type": "sitemap",
+    "url": "https://www.cna.com.tw/GoogleNewsSitemap_fromRemote_cfp.xml"
+  },
+  {
+    "id": "tvbs",
+    "publisher": "TVBS",
+    "type": "sitemap",
+    "url": "https://news.tvbs.com.tw/sitemap/news-sitemap"
+  },
+  {
+    "id": "newtalk",
+    "publisher": "Newtalk",
+    "type": "sitemap",
+    "url": "https://newtalk.tw/sitemap/news/1067"
+  },
+  {
+    "id": "storm",
+    "publisher": "風傳媒",
+    "type": "sitemap",
+    "url": "https://www.storm.mg/sitemaps/1/article-news-1.xml"
+  },
+  {
+    "id": "ltn",
+    "publisher": "自由時報",
+    "type": "sitemap",
+    "url": "https://news.ltn.com.tw/sitemap.xml"
+  },
+  {
+    "id": "udn",
+    "publisher": "聯合新聞網",
+    "type": "sitemap",
+    "url": "https://udn.com/sitemap/gnews_contents/2/1"
+  }
+]
