@@ -25,15 +25,20 @@ logger = logging.getLogger("newsfetch.crawler")
 class HostRobots:
     """Manages robots.txt rules for a host."""
 
-    def __init__(self, content: str = ""):
+    def __init__(self, content: Optional[str] = None):
         self.parser = urllib.robotparser.RobotFileParser()
+        self.is_missing = (content is None)
         if content:
             self.parser.parse(content.splitlines())
 
     def parse(self, content: str) -> None:
+        self.is_missing = False
         self.parser.parse(content.splitlines())
 
     def can_fetch(self, user_agent: str, url: str) -> bool:
+        if self.is_missing:
+            # Per RFC 9309, missing robots.txt allows access
+            return True
         return self.parser.can_fetch(user_agent, url)
 
 
@@ -110,8 +115,8 @@ class PoliteCrawler:
 
         robots_url = f"{scheme}://{host}/robots.txt"
         content_bytes = self.fetch_raw(robots_url, check_robots=False)
-        content_str = ""
-        if content_bytes:
+        content_str = None
+        if content_bytes is not None:
             content_str = content_bytes.decode("utf-8", errors="ignore")
 
         hr = HostRobots(content_str)
@@ -160,7 +165,25 @@ class PoliteCrawler:
                     self.host_failures[host] = 0
                     self.cache.set(url, data)
                     return data
-            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError) as err:
+            except urllib.error.HTTPError as err:
+                if err.code == 404:
+                    logger.info("URL returned 404 (Not Found): %s", url)
+                    return None
+                logger.warning(
+                    "Fetch attempt %d failed for %s: %s", attempt + 1, url, err
+                )
+                if attempt < retries - 1:
+                    time.sleep(backoff)
+                    backoff *= 2.0
+                else:
+                    failures = self.host_failures.get(host, 0) + 1
+                    self.host_failures[host] = failures
+                    if failures >= MAX_HOST_FAILURES:
+                        logger.error(
+                            "Host %s failed %d times. Stopping host.", host, failures
+                        )
+                        self.stopped_hosts.add(host)
+            except (urllib.error.URLError, TimeoutError, OSError) as err:
                 logger.warning(
                     "Fetch attempt %d failed for %s: %s", attempt + 1, url, err
                 )

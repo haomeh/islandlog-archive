@@ -182,6 +182,13 @@ class TestRobotsHandling(unittest.TestCase):
         self.assertFalse(hr.can_fetch(user_agent, "https://news.example.com/search?q=test"))
         self.assertFalse(hr.can_fetch(user_agent, "https://news.example.com/admin/settings"))
 
+    def test_robots_missing_allows_all(self):
+        from tools.newsfetch.crawler import HostRobots
+
+        hr = HostRobots(None)
+        user_agent = "islandlog-newsfetch/0.1 (+https://github.com/haomeh/islandlog-archive)"
+        self.assertTrue(hr.can_fetch(user_agent, "https://search.example.com/list?q=test"))
+
 
 class TestParsers(unittest.TestCase):
     """Test XML sitemap and RSS parsing without network."""
