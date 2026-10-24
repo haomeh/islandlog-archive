@@ -5,8 +5,11 @@ Standard library only.
 
 import email.utils
 import html
+import json
 import re
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Optional, Set
 
 TZ_TW = timezone(timedelta(hours=8))
 TAG_RE = re.compile(r"<[^>]+>")
@@ -31,12 +34,68 @@ DATE_FIND_RE = re.compile(
 )
 
 
+# Public figures stay visible. Copy of tools/newsfetch/public_figures.json from branch m1/news-fetch (F6).
+PUBLIC_FIGURES_PATH = Path(__file__).parent / "public_figures.json"
+
+# Name (surname + 1 to 3 characters) right before a verdict or action word. Origin: F6 parser.py.
+PATTERN_NAME_BEFORE_VERDICT = re.compile(
+    rf"(?<![{SURNAMES}])([{SURNAMES}][\u4e00-\u9fff]{{1,3}})(?=[涉遭被])"
+)
+NON_NAME_CHARS = set("的之與及和或市縣鄉鎮區部會院署局處長案委員黨團府校所館站隊組社業費款國中生元戰方陸")
+VERB_SURNAME_PREFIX = {"顧": set("照關愛看兼眷光"), "白": set("明告坦"), "易": set("交貿輕容")}
+
+_PUBLIC_FIGURES: Optional[Set[str]] = None
+
+
+def load_public_figures(path: Path = PUBLIC_FIGURES_PATH) -> Set[str]:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return set(json.load(f).get("names", []))
+    except (OSError, ValueError):
+        return set()
+
+
+def _public_figures() -> Set[str]:
+    global _PUBLIC_FIGURES
+    if _PUBLIC_FIGURES is None:
+        _PUBLIC_FIGURES = load_public_figures()
+    return _PUBLIC_FIGURES
+
+
+def _is_civilian_false_positive(text: str, m: "re.Match") -> bool:
+    prefixes = VERB_SURNAME_PREFIX.get(m.group(0)[0])
+    return bool(prefixes and m.start() > 0 and text[m.start() - 1] in prefixes)
+
+
+def _mask_name_before_verdict(text: str) -> str:
+    figures = _public_figures()
+
+    def repl(m: "re.Match") -> str:
+        name = m.group(1)
+        if any(ch in NON_NAME_CHARS for ch in name[1:]):
+            return name
+        if m.start() > 0 and text[m.start() - 1].isdigit():
+            return name
+        if any(name in fig or fig in text[max(0, m.start() - 4): m.end()] for fig in figures):
+            return name
+        return "[當事人]"
+
+    return PATTERN_NAME_BEFORE_VERDICT.sub(repl, text)
+
+
 def mask_private_person(text: str) -> str:
-    """Replace private person references with [當事人]. Public titles stay."""
+    """Replace civilian references with [當事人]. Public titles stay."""
     if not text:
         return ""
-    masked = PATTERN_CIVILIAN.sub("[當事人]", text)
+    masked = PATTERN_CIVILIAN.sub(
+        lambda m: m.group(0) if _is_civilian_false_positive(text, m) else "[當事人]", text
+    )
     return PATTERN_SHORT.sub("[當事人]", masked)
+
+
+def mask_title(text: str) -> str:
+    """Mask civilian references plus a name before a verdict word."""
+    return _mask_name_before_verdict(mask_private_person(text))
 
 
 def make_snippet(text: str, max_chars: int = 150) -> str:
@@ -44,7 +103,7 @@ def make_snippet(text: str, max_chars: int = 150) -> str:
     if not text:
         return ""
     cleaned = html.unescape(TAG_RE.sub("", text))
-    cleaned = mask_private_person(cleaned)
+    cleaned = mask_title(cleaned)
     cleaned = " ".join(cleaned.split())
     if len(cleaned) <= max_chars:
         return cleaned

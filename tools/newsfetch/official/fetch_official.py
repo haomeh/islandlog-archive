@@ -41,11 +41,24 @@ def assign_source_class(source: Dict, title: str) -> str:
     return "official_statement"
 
 
+ROUTINE_WORDS = ("活動", "開幕", "表揚", "補助", "招募", "比賽", "市集", "展覽", "報名", "慶典")
+
+
+def is_routine(title: str) -> bool:
+    """A title with a routine word (event, award, subsidy, contest) is routine."""
+    return any(w in title for w in ROUTINE_WORDS)
+
+
 def match_terms(title: str, summary: str, terms: Dict) -> Tuple[List[str], bool]:
-    """Return (matched include terms, is_excluded)."""
+    """Return (matched include terms, is_excluded). Same rules as F6 filter.py."""
     text = f"{title} {summary}"
     matched = [t for t in terms.get("include_terms", []) if t in text]
+    broad = terms.get("broad_terms", [])
+    if broad and not any(t in text for t in terms.get("taiwan_public_body_terms", [])):
+        matched = [t for t in matched if t not in broad]
     excluded = any(w in text for words in terms.get("exclude_categories", {}).values() for w in words)
+    if not excluded and any(t in text for t in terms.get("foreign_soft_terms", [])):
+        excluded = not any(t in text for t in terms.get("taiwan_government_terms", []))
     return matched, excluded
 
 
@@ -53,12 +66,13 @@ def build_record(source: Dict, item: Dict, fetched_on: str, matched: List[str]) 
     title = item["title"]
     return {
         "url": item["url"],
-        "title": title,
         "publisher": source["publisher"],
         "published_on": item["published_on"],
+        "title": textutil.mask_title(title),
         "snippet": textutil.make_snippet(item.get("summary") or title),
         "fetched_on": fetched_on,
         "matched_terms": matched,
+        "routine": is_routine(title),
         "source_class": assign_source_class(source, title),
         "publisher_actor_hint": source.get("actor_hint", ""),
     }
@@ -96,7 +110,7 @@ def run(sources: List[Dict], terms: Dict, crawler: PoliteCrawler, since: str, un
     seen = set()
     stats: Dict[str, Dict] = {}
     for src in sources:
-        st = stats.setdefault(src["id"], {"count": 0, "oldest": None, "newest": None, "feeds": 0})
+        st = stats.setdefault(src["id"], {"count": 0, "oldest": None, "newest": None, "feeds": 0, "non_routine": 0, "matched_non_routine": 0})
         if not src.get("feeds"):
             st["note"] = src.get("note", "no feed configured")
             continue
@@ -113,8 +127,12 @@ def run(sources: List[Dict], terms: Dict, crawler: PoliteCrawler, since: str, un
                 if excluded:
                     continue
                 seen.add(it["url"])
-                records.append(build_record({**src, **{k: v for k, v in feed.items() if k == "source_class"}}, it, now_iso, matched))
+                rec = build_record({**src, **{k: v for k, v in feed.items() if k == "source_class"}}, it, now_iso, matched)
+                records.append(rec)
                 st["count"] += 1
+                if not rec["routine"]:
+                    st["non_routine"] += 1
+                    st["matched_non_routine"] += 1 if matched else 0
         if not st["count"] and not st["oldest"]:
             st["note"] = "feeds returned no dated items (blocked, empty or unparsable)"
     return records, stats
@@ -148,7 +166,7 @@ def main():
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     print(f"Window {args.since} to {args.until}; {len(records)} records -> {args.out}")
     for sid, st in stats.items():
-        print(f"  {sid}: kept={st['count']} oldest={st['oldest']} newest={st['newest']} {st.get('note', '')}")
+        print(f"  {sid}: kept={st['count']} non_routine={st['non_routine']} matched_non_routine={st['matched_non_routine']} oldest={st['oldest']} newest={st['newest']} {st.get('note', '')}")
     stopped = sorted(crawler.stopped_hosts)
     if stopped:
         print("Stopped hosts (5 failures):", ", ".join(stopped))

@@ -129,7 +129,7 @@ class RecordTests(unittest.TestCase):
         self.assertEqual(
             sorted(rec),
             sorted(["url", "title", "publisher", "published_on", "snippet", "fetched_on",
-                    "matched_terms", "source_class", "publisher_actor_hint"]),
+                    "matched_terms", "routine", "source_class", "publisher_actor_hint"]),
         )
         self.assertIn("[當事人]", rec["snippet"])
         self.assertLessEqual(len(rec["snippet"]), 150)
@@ -137,3 +137,44 @@ class RecordTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MaskTests(unittest.TestCase):
+    """F6 examples (origin: branch m1/news-fetch, test_rules.py)."""
+
+    def test_name_before_verdict_word_masked(self):
+        self.assertEqual(textutil.mask_title("新北市陳大文被控詐欺"), "新北市[當事人]被控詐欺")
+        self.assertEqual(textutil.mask_title("王小明涉貪遭起訴"), "[當事人]涉貪遭起訴")
+
+    def test_public_figure_kept(self):
+        self.assertEqual(textutil.mask_title("蔣萬安遭質疑"), "蔣萬安遭質疑")
+        self.assertEqual(textutil.mask_title("憂蔡康永遭跨境鎮壓加派警力"), "憂蔡康永遭跨境鎮壓加派警力")
+
+    def test_false_positive_not_masked(self):
+        self.assertEqual(textutil.mask_title("內政部：照顧民眾比較少"), "內政部：照顧民眾比較少")
+        self.assertEqual(textutil.mask_title("內政部：照[當事人]比較少"), "內政部：照[當事人]比較少")
+
+    def test_place_and_number_words_not_masked(self):
+        for t in ("台大陸生被驅逐出境　陸委會：這只是個案", "地方選戰恐被國會攻防牽動",
+                  "索賄370萬元涉貪 桃市經發局前科長"):
+            self.assertEqual(textutil.mask_title(t), t)
+
+    def test_snippet_uses_title_mask(self):
+        self.assertEqual(textutil.make_snippet("王小明涉貪遭起訴"), "[當事人]涉貪遭起訴")
+
+    def test_civilian_suffix_still_masked(self):
+        self.assertEqual(textutil.mask_title("陳姓男子涉詐"), "[當事人]涉詐")
+
+
+class RoutineTests(unittest.TestCase):
+    def test_routine_words(self):
+        for w in ("活動", "開幕", "表揚", "補助", "招募", "比賽", "市集", "展覽", "報名", "慶典"):
+            self.assertTrue(fetch_official.is_routine(f"市府辦理{w}公告"), w)
+
+    def test_not_routine(self):
+        self.assertFalse(fetch_official.is_routine("行政院會通過預算案"))
+
+    def test_record_has_routine_flag(self):
+        src = {"publisher": "X", "source_class": "official_statement"}
+        rec = fetch_official.build_record(src, {"url": "u", "title": "春季市集開幕", "published_on": "2026-05-01"}, "t", [])
+        self.assertIs(rec["routine"], True)
