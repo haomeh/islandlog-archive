@@ -150,6 +150,9 @@ def parse_date(date_str: str) -> str:
     # Match RFC 2822 (e.g. 'Sat, 24 Oct 2026 09:00:00 +0800' or '... GMT')
     if re.search(r"[A-Za-z]{3},", s) or "GMT" in s or "UTC" in s:
         dt = email.utils.parsedate_to_datetime(s)
+        if dt.tzinfo is None:
+            # Zone-less dates are Asia/Taipei, never the machine zone
+            dt = dt.replace(tzinfo=TZ_TW)
         dt_tw = dt.astimezone(TZ_TW)
         return dt_tw.strftime("%Y-%m-%d")
 
@@ -330,13 +333,38 @@ def parse_rss_xml(xml_bytes: bytes, publisher: str) -> List[Dict]:
     return items
 
 
+def _balanced_div_blocks(html_str: str, css_class: str) -> List[str]:
+    """Returns inner HTML of each <div class="css_class"> with nested divs balanced."""
+    blocks: List[str] = []
+    start_re = re.compile(rf'<div\s+class="{re.escape(css_class)}"[^>]*>')
+    tag_re = re.compile(r"<(/?)div\b[^>]*>")
+    pos = 0
+    while True:
+        m = start_re.search(html_str, pos)
+        if not m:
+            break
+        depth = 1
+        end = None
+        for t in tag_re.finditer(html_str, m.end()):
+            depth += -1 if t.group(1) else 1
+            if depth == 0:
+                end = t.start()
+                break
+        if end is None:
+            blocks.append(html_str[m.end():])
+            break
+        blocks.append(html_str[m.end():end])
+        pos = end
+    return blocks
+
+
 def parse_ltn_search_html(html_str: str, publisher: str = "自由時報") -> List[Dict]:
     """Parses HTML search results from search.ltn.com.tw into news items."""
     items: List[Dict] = []
     if not html_str:
         return items
 
-    cont_blocks = re.findall(r'<div class="cont"[^>]*>([\s\S]*?)</div>', html_str)
+    cont_blocks = _balanced_div_blocks(html_str, "cont")
     for block in cont_blocks:
         link_m = re.search(r'<a\s+[^>]*?class="tit"[^>]*href="([^"]+)"', block)
         if not link_m:

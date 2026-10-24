@@ -1,6 +1,8 @@
 """Tests for the title masker and the topic filter (real terms.json)."""
 
+import time
 import unittest
+from unittest import mock
 
 from tools.newsfetch.filter import NewsFilter
 from tools.newsfetch.parser import mask_title
@@ -58,3 +60,27 @@ class TestRealTermsFilter(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestLowFindings(unittest.TestCase):
+    def test_zoneless_rfc2822_is_taipei(self):
+        from tools.newsfetch.parser import parse_date
+
+        with mock.patch.dict("os.environ", {"TZ": "America/Los_Angeles"}):
+            time.tzset()
+            try:
+                self.assertEqual(parse_date("2026-10-24 23:30:00"), "2026-10-24")
+                self.assertEqual(parse_date("2026-10-24T23:30:00"), "2026-10-24")
+            finally:
+                pass
+        time.tzset()
+
+    def test_nested_div_in_cont_block(self):
+        from tools.newsfetch.parser import parse_ltn_search_html
+
+        html = ('<div class="cont"><div class="img"><img src="a.jpg"></div>'
+                '<a href="https://n/1" class="tit">立法院開會</a>'
+                '<span class="time">2026/05/01</span><p>內文</p></div>')
+        items = parse_ltn_search_html(html)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["url"], "https://n/1")
