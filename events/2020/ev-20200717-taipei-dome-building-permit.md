@@ -62,6 +62,21 @@ timeline:
   - src-20200808-pts-dome-resume
 decision_ids:
 - dc-20200807-taipei-dome-resume
+news_groups:
+- id: ng-01
+  timeline_id: tl-02
+  kind: report
+  title: 臺北市核發大巨蛋新建照
+  representative_source_id: src-20200717-pts-dome-permit
+  source_ids:
+  - src-20200717-pts-dome-permit
+- id: ng-02
+  timeline_id: tl-03
+  kind: report
+  title: 臺北市同意大巨蛋復工
+  representative_source_id: src-20200808-pts-dome-resume
+  source_ids:
+  - src-20200808-pts-dome-resume
 privacy:
   contains_private_persons: false
   basis_source_ids: []

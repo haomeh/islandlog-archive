@@ -47,6 +47,15 @@ timeline:
   source_ids:
   - src-20190923-newtalk-hsinta
   - src-20190921-pts-hsinta
+news_groups:
+- id: ng-01
+  timeline_id: tl-01
+  kind: report
+  title: 興達電廠2部燃煤機組秋冬停機半年
+  representative_source_id: src-20190921-pts-hsinta
+  source_ids:
+  - src-20190921-pts-hsinta
+  - src-20190923-newtalk-hsinta
 privacy:
   contains_private_persons: false
   basis_source_ids: []

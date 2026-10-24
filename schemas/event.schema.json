@@ -107,6 +107,24 @@
         "then": { "required": ["source_ids"], "properties": { "source_ids": { "minItems": 1 } } }
       }
     },
+    "news_groups": {
+      "description": "Groups of news reports. Reports with the same content form one group. A clarification, correction or response forms a new group with kind clarification.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "title", "representative_source_id", "source_ids"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^ng-[0-9]{2}$" },
+          "timeline_id": { "type": "string", "pattern": "^tl-[0-9]{2}$" },
+          "kind": { "enum": ["report", "clarification"] },
+          "title": { "type": "string", "minLength": 1 },
+          "representative_source_id": { "$ref": "common.schema.json#/$defs/source_id" },
+          "source_ids": { "$ref": "common.schema.json#/$defs/source_id_list_nonempty" },
+          "note": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
     "external_refs": { "$ref": "common.schema.json#/$defs/external_refs" },
     "privacy": { "$ref": "common.schema.json#/$defs/privacy" },
     "review": { "$ref": "common.schema.json#/$defs/review" }

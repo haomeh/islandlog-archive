@@ -53,6 +53,15 @@ timeline:
   source_ids:
   - src-20190102-storm-changhua
   - src-20190102-pts-changhua
+news_groups:
+- id: ng-01
+  timeline_id: tl-01
+  kind: report
+  title: 彰化縣政府表示來不及回覆籌設許可意見
+  representative_source_id: src-20190102-pts-changhua
+  source_ids:
+  - src-20190102-pts-changhua
+  - src-20190102-storm-changhua
 privacy:
   contains_private_persons: false
   basis_source_ids: []
