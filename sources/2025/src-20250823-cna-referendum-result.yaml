@@ -1,0 +1,12 @@
+schema_version: 1
+id: src-20250823-cna-referendum-result
+source_class: news
+grade: C
+title: "核三重啟公投案投票率29.53%史上第3低　同意票破7成未過門檻"
+publisher: "中央通訊社"
+url: "https://www.cna.com.tw/news/aipl/202508230199.aspx"
+published_on: 2025-08-23
+accessed_on: 2026-10-24
+has_archive_url: false
+quote: "同意票未達投票權人總額1/4以上門檻，因此不通過。"
+license: unknown

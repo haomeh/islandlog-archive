@@ -1,0 +1,12 @@
+schema_version: 1
+id: src-20211218-tvbs-referendum-results
+source_class: news
+grade: C
+title: "不斷更新／四大公投結果「全不通過」　不同意皆破4百萬"
+publisher: "TVBS新聞網"
+url: "https://news.tvbs.com.tw/politics/1663729"
+published_on: 2021-12-18
+accessed_on: 2026-10-24
+has_archive_url: false
+quote: "您是否同意中油第三天然氣接收站遷離桃園大潭藻礁海岸及海域？"
+license: unknown
