@@ -1,0 +1,13 @@
+schema_version: 1
+id: src-20250410-fanli-council-minutes
+source_class: official_record
+grade: A
+title: 範例縣議會定期會議事錄（2025-04-10）（虛構範例）
+publisher: 範例縣議會
+url: https://example.com/fanli/council/minutes-20250410
+published_on: 2025-04-10
+accessed_on: 2026-10-24
+has_archive_url: false
+official_identifier: 範例縣議會定期會議案第12號
+license: ogdl-tw-1.0
+attribution: 範例縣議會，議事錄，政府資料開放授權條款－第1版（虛構範例）

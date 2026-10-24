@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/term_list.schema.json",
+  "title": "Term list",
+  "description": "Applies to banned_terms.yaml (CI-11) and sensitive_terms.yaml (CI-15). Changes to banned_terms.yaml need a senior editor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "name", "terms"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "name": { "enum": ["banned_terms", "sensitive_terms"] },
+    "description": { "type": "string" },
+    "terms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["term", "category"],
+        "properties": {
+          "term": { "type": "string", "minLength": 1 },
+          "category": { "type": "string", "pattern": "^[a-z]+(_[a-z]+)*$" },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  }
+}

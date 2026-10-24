@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/actor.schema.json",
+  "title": "Actor front matter",
+  "description": "Applies to the YAML front matter of actors/ac-*.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "name", "actor_type"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "id": { "$ref": "common.schema.json#/$defs/actor_id" },
+    "aliases": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/actor_id" }, "uniqueItems": true },
+    "name": { "type": "string", "minLength": 1 },
+    "other_names": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "actor_type": { "$ref": "common.schema.json#/$defs/actor_type" },
+    "jurisdiction_id": { "$ref": "common.schema.json#/$defs/jurisdiction_id" },
+    "public_roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "organization_id", "start_date", "source_ids"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "organization_id": { "$ref": "common.schema.json#/$defs/actor_id" },
+          "start_date": { "$ref": "common.schema.json#/$defs/date" },
+          "end_date": { "$ref": "common.schema.json#/$defs/date" },
+          "source_ids": { "$ref": "common.schema.json#/$defs/source_id_list_nonempty" }
+        }
+      }
+    },
+    "party_memberships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["party_id", "start_date", "source_ids"],
+        "properties": {
+          "party_id": { "$ref": "common.schema.json#/$defs/actor_id" },
+          "start_date": { "$ref": "common.schema.json#/$defs/date" },
+          "end_date": { "$ref": "common.schema.json#/$defs/date" },
+          "source_ids": { "$ref": "common.schema.json#/$defs/source_id_list_nonempty" }
+        }
+      }
+    },
+    "active_from": { "$ref": "common.schema.json#/$defs/date" },
+    "active_to": { "$ref": "common.schema.json#/$defs/date" },
+    "successor_id": { "$ref": "common.schema.json#/$defs/actor_id" },
+    "named_basis_source_ids": { "$ref": "common.schema.json#/$defs/source_id_list" },
+    "external_refs": { "$ref": "common.schema.json#/$defs/external_refs" }
+  },
+  "if": { "properties": { "actor_type": { "const": "private_individual" } }, "required": ["actor_type"] },
+  "then": { "required": ["named_basis_source_ids"], "properties": { "named_basis_source_ids": { "minItems": 1 } } }
+}

@@ -1,0 +1,29 @@
+schema_version: 1
+name: policy_domains
+description: Policy domains of an event (PRD 5.4.2). Each domain maps to one Executive Yuan competent authority. An event can have several values.
+multi_valued: true
+values:
+  - { slug: interior, label_zh: 內政 }
+  - { slug: foreign_affairs, label_zh: 外交 }
+  - { slug: defense, label_zh: 國防 }
+  - { slug: finance, label_zh: 財政 }
+  - { slug: education, label_zh: 教育 }
+  - { slug: justice, label_zh: 法務 }
+  - { slug: economy_energy, label_zh: 經濟與能源 }
+  - { slug: transport, label_zh: 交通 }
+  - { slug: labor, label_zh: 勞動 }
+  - { slug: agriculture, label_zh: 農業 }
+  - { slug: health_welfare, label_zh: 衛生福利 }
+  - { slug: environment, label_zh: 環境 }
+  - { slug: culture, label_zh: 文化 }
+  - { slug: digital_affairs, label_zh: 數位 }
+  - { slug: ocean, label_zh: 海洋 }
+  - { slug: science_technology, label_zh: 科技 }
+  - { slug: indigenous_peoples, label_zh: 原住民族 }
+  - { slug: hakka_affairs, label_zh: 客家 }
+  - { slug: veterans, label_zh: 退輔 }
+  - { slug: financial_supervision, label_zh: 金融監理 }
+  - { slug: fair_trade, label_zh: 公平交易 }
+  - { slug: communications, label_zh: 通訊傳播 }
+  - { slug: mainland_affairs, label_zh: 陸委 }
+  - { slug: overseas_community, label_zh: 僑務 }

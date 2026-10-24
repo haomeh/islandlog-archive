@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/event.schema.json",
+  "title": "Event front matter",
+  "description": "Applies to the YAML front matter of events/<YYYY>/ev-*.md. Length limits and content rules belong to validate (CI-04 to CI-23), not to this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "kind", "status", "title", "summary", "start_date", "start_date_precision", "gov_levels", "jurisdiction_ids", "controversy_types", "policy_domains", "actors", "timeline", "privacy", "review"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "id": { "$ref": "common.schema.json#/$defs/event_id" },
+    "aliases": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/event_id" }, "uniqueItems": true },
+    "kind": { "enum": ["controversy", "historical_event", "decision_record"] },
+    "status": { "enum": ["draft", "published", "withdrawn"] },
+    "title": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "start_date": { "$ref": "common.schema.json#/$defs/date" },
+    "start_date_precision": { "$ref": "common.schema.json#/$defs/date_precision" },
+    "end_date": { "$ref": "common.schema.json#/$defs/date" },
+    "end_date_precision": { "$ref": "common.schema.json#/$defs/date_precision" },
+    "gov_levels": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/gov_level" } },
+    "jurisdiction_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/jurisdiction_id" } },
+    "controversy_types": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/controversy_type" } },
+    "policy_domains": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/policy_domain" } },
+    "actors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actor_id", "role"],
+        "properties": {
+          "actor_id": { "$ref": "common.schema.json#/$defs/actor_id" },
+          "role": { "enum": ["decision_maker", "proposer", "opponent", "supporter", "affected_party", "reviewer", "mediator", "reporter", "other"] }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^q-[0-9]{2}$" },
+          "text": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "positions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "question_id", "actor_id", "stance"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^pos-[0-9]{2}$" },
+          "question_id": { "type": "string", "pattern": "^q-[0-9]{2}$" },
+          "actor_id": { "$ref": "common.schema.json#/$defs/actor_id" },
+          "stance": { "enum": ["support", "oppose", "conditional", "undecided", "other", "not_found"] },
+          "summary": { "type": "string", "minLength": 1 },
+          "stated_on": { "$ref": "common.schema.json#/$defs/date" },
+          "source_ids": { "$ref": "common.schema.json#/$defs/source_id_list" }
+        },
+        "if": { "properties": { "stance": { "not": { "const": "not_found" } } } },
+        "then": {
+          "required": ["summary", "stated_on", "source_ids"],
+          "properties": { "source_ids": { "minItems": 1 } }
+        }
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "date", "date_precision", "title", "source_ids"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^tl-[0-9]{2}$" },
+          "date": { "$ref": "common.schema.json#/$defs/date" },
+          "date_precision": { "$ref": "common.schema.json#/$defs/date_precision" },
+          "title": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "attributed_to": { "$ref": "common.schema.json#/$defs/actor_id" },
+          "lifecycle_stage": { "$ref": "common.schema.json#/$defs/lifecycle_stage" },
+          "decision_id": { "$ref": "common.schema.json#/$defs/decision_id" },
+          "jurisdiction_id": { "$ref": "common.schema.json#/$defs/jurisdiction_id" },
+          "source_ids": { "$ref": "common.schema.json#/$defs/source_id_list_nonempty" }
+        }
+      }
+    },
+    "decision_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/decision_id" } },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "target_id"],
+        "properties": {
+          "type": { "$ref": "common.schema.json#/$defs/relation_type" },
+          "target_id": { "$ref": "common.schema.json#/$defs/target_id" },
+          "note": { "type": "string" },
+          "source_ids": { "$ref": "common.schema.json#/$defs/source_id_list" }
+        },
+        "if": { "properties": { "type": { "enum": ["caused_by", "led_to"] } }, "required": ["type"] },
+        "then": { "required": ["source_ids"], "properties": { "source_ids": { "minItems": 1 } } }
+      }
+    },
+    "external_refs": { "$ref": "common.schema.json#/$defs/external_refs" },
+    "privacy": { "$ref": "common.schema.json#/$defs/privacy" },
+    "review": { "$ref": "common.schema.json#/$defs/review" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "controversy" } }, "required": ["kind"] },
+      "then": { "required": ["questions"], "properties": { "questions": { "minItems": 1 } } }
+    },
+    {
+      "if": { "required": ["end_date"] },
+      "then": { "required": ["end_date_precision"] }
+    }
+  ]
+}

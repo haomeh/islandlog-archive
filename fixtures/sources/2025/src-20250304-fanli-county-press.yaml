@@ -1,0 +1,13 @@
+schema_version: 1
+id: src-20250304-fanli-county-press
+source_class: official_statement
+grade: B
+title: 範例縣政府新聞稿：範例溪疏濬計畫（虛構範例）
+publisher: 範例縣政府
+publisher_actor_id: ac-fanli-county-government
+url: https://example.com/fanli/press/20250304
+published_on: 2025-03-04
+accessed_on: 2026-10-24
+has_archive_url: false
+license: ogdl-tw-1.0
+attribution: 範例縣政府，新聞稿，政府資料開放授權條款－第1版（虛構範例）

@@ -1,0 +1,30 @@
+# proposal, needs senior editor review
+schema_version: 1
+name: banned_terms
+description: >-
+  Evaluative terms that editor-written titles and summaries must not contain (CI-11, PRD 6.1).
+  A quote marked with 「」 and backed by a grade A source is the only exception in a summary.
+  Changes need approval from a senior editor.
+terms:
+  - { term: 黑心, category: evaluative }
+  - { term: 無恥, category: evaluative }
+  - { term: 荒謬, category: evaluative }
+  - { term: 惡劣, category: evaluative }
+  - { term: 惡意, category: evaluative }
+  - { term: 離譜, category: evaluative }
+  - { term: 可恥, category: evaluative }
+  - { term: 卑劣, category: evaluative }
+  - { term: 狼狽為奸, category: evaluative }
+  - { term: 官商勾結, category: evaluative }
+  - { term: 圖利財團, category: evaluative }
+  - { term: 欺騙, category: evaluative }
+  - { term: 謊言, category: evaluative }
+  - { term: 抹黑, category: evaluative }
+  - { term: 踐踏, category: evaluative }
+  - { term: 蠻橫, category: evaluative }
+  - { term: 霸凌, category: evaluative }
+  - { term: 惡霸, category: evaluative }
+  - { term: 貪官, category: pre_verdict_label, note: PRD 6.1 item 7. No conviction label before a final judgment. }
+  - { term: 貪污犯, category: pre_verdict_label, note: PRD 6.1 item 7. }
+  - { term: 罪犯, category: pre_verdict_label, note: PRD 6.1 item 7. }
+  - { term: 惡行, category: pre_verdict_label, note: PRD 6.1 item 7. }

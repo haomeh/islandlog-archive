@@ -1,0 +1,7 @@
+schema_version: 1
+id: jur-65000000
+official_code: "65000000"
+name: 新北市
+gov_level: special_municipality
+parent_id: jur-tw
+geometry_ref: jur-65000000

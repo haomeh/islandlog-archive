@@ -1,0 +1,7 @@
+# Suggestions, corrections and takedown requests never go to public issues (R34).
+# An editor opens a public issue only after triage.
+blank_issues_enabled: false
+contact_links:
+  - name: Report a correction, suggestion or takedown request (private)
+    url: https://github.com/haomeh/islandlog-archive/security/advisories/new
+    about: Use private vulnerability reporting until the site contact form exists. Do not open a public issue.

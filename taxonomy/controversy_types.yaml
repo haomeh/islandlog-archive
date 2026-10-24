@@ -1,0 +1,18 @@
+schema_version: 1
+name: controversy_types
+description: Controversy types of an event (PRD 5.4.1). An event can have several values.
+multi_valued: true
+values:
+  - { slug: legislation, label_zh: 立法爭議, scope_zh: 法案內容、程序、三讀 }
+  - { slug: budget, label_zh: 預算爭議, scope_zh: 刪減、凍結、特別預算 }
+  - { slug: land_development, label_zh: 土地開發與徵收, scope_zh: 都市計畫、徵收、都市更新 }
+  - { slug: environment, label_zh: 環境與污染, scope_zh: 環評、污染、能源設施選址 }
+  - { slug: public_works, label_zh: 公共工程, scope_zh: 採購、延宕、超支 }
+  - { slug: misconduct, label_zh: 公職不當行為, scope_zh: 貪污、利益衝突、彈劾 }
+  - { slug: election, label_zh: 選舉爭議, scope_zh: 賄選、罷免、公投 }
+  - { slug: rights_liberties, label_zh: 人權與自由, scope_zh: 言論、集會、隱私、平等 }
+  - { slug: public_safety, label_zh: 公共安全, scope_zh: 災害、事故、食品安全 }
+  - { slug: transitional_justice, label_zh: 轉型正義, scope_zh: 威權時期檔案、象徵 }
+  - { slug: cross_strait_foreign, label_zh: 兩岸與外交, scope_zh: 協議、交流、貿易 }
+  - { slug: governance_procedure, label_zh: 程序與治理, scope_zh: 人事任命、機關爭議 }
+  - { slug: information, label_zh: 資訊與假訊息, scope_zh: 假訊息、資料外洩 }

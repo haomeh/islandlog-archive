@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/common.schema.json",
+  "title": "Shared definitions",
+  "description": "Shared ID patterns, enums and small objects. Other schemas reference these with $ref. Enum values mirror taxonomy/*.yaml.",
+  "$defs": {
+    "schema_version": { "const": 1 },
+    "slug_part": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "event_id": { "type": "string", "maxLength": 64, "pattern": "^ev-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*$" },
+    "decision_id": { "type": "string", "maxLength": 64, "pattern": "^dc-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*$" },
+    "actor_id": { "type": "string", "maxLength": 64, "pattern": "^ac-(p-)?[a-z0-9]+(-[a-z0-9]+)*$" },
+    "jurisdiction_id": { "type": "string", "maxLength": 64, "pattern": "^jur-([0-9]{8}|tw)$" },
+    "source_id": { "type": "string", "maxLength": 64, "pattern": "^src-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*$" },
+    "correction_id": { "type": "string", "maxLength": 64, "pattern": "^cr-[0-9]{8}-[0-9]{2}$" },
+    "target_id": {
+      "description": "An event or decision ID.",
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^(ev|dc)-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "any_object_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^((ev|dc|src)-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*|ac-(p-)?[a-z0-9]+(-[a-z0-9]+)*|jur-([0-9]{8}|tw))$"
+    },
+    "event_id_list": { "type": "array", "items": { "$ref": "#/$defs/event_id" }, "uniqueItems": true },
+    "source_id_list": { "type": "array", "items": { "$ref": "#/$defs/source_id" }, "uniqueItems": true },
+    "source_id_list_nonempty": { "type": "array", "items": { "$ref": "#/$defs/source_id" }, "uniqueItems": true, "minItems": 1 },
+    "date": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "date_precision": { "enum": ["day", "month", "year"] },
+    "url": { "type": "string", "format": "uri", "pattern": "^https?://" },
+    "gov_level": { "enum": ["central", "special_municipality", "county_city", "township", "indigenous_district", "village", "cross_level"] },
+    "jurisdiction_gov_level": { "enum": ["central", "special_municipality", "county_city", "township", "indigenous_district", "village"] },
+    "controversy_type": {
+      "enum": ["legislation", "budget", "land_development", "environment", "public_works", "misconduct", "election", "rights_liberties", "public_safety", "transitional_justice", "cross_strait_foreign", "governance_procedure", "information"]
+    },
+    "policy_domain": {
+      "enum": ["interior", "foreign_affairs", "defense", "finance", "education", "justice", "economy_energy", "transport", "labor", "agriculture", "health_welfare", "environment", "culture", "digital_affairs", "ocean", "science_technology", "indigenous_peoples", "hakka_affairs", "veterans", "financial_supervision", "fair_trade", "communications", "mainland_affairs", "overseas_community"]
+    },
+    "actor_type": {
+      "enum": ["gov_agency", "elected_official", "appointed_official", "civil_servant", "legislature", "party", "court", "control_body", "company", "state_owned_enterprise", "industry_association", "ngo", "social_movement", "community_group", "indigenous_community", "academic_expert", "media", "private_individual", "foreign_actor"]
+    },
+    "lifecycle_stage": {
+      "description": "Only stages 1 to 7. dormant and reopened are computed at query time and are rejected here (CI-23).",
+      "enum": ["emergence", "escalation", "institutional_response", "decision", "implementation", "contestation", "resolution"]
+    },
+    "relation_type": {
+      "enum": ["part_of", "has_part", "precedes", "follows", "caused_by", "led_to", "same_issue_other_jurisdiction", "supersedes", "related"]
+    },
+    "source_class": {
+      "enum": ["official_record", "official_statement", "actor_statement", "news", "fact_check", "advocacy", "academic", "party_publication", "social_media", "dataset"]
+    },
+    "grade": { "enum": ["A", "B", "C", "D", "E"] },
+    "license": {
+      "enum": ["ogdl-tw-1.0", "cc-by-4.0", "cc-by-sa-4.0", "cc-by-nc-nd-3.0-tw", "all-rights-reserved", "public-domain", "unknown"]
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contains_private_persons", "basis_source_ids"],
+      "properties": {
+        "contains_private_persons": { "type": "boolean" },
+        "basis_source_ids": { "$ref": "#/$defs/source_id_list" }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sensitive", "reason"],
+      "properties": {
+        "sensitive": { "type": "boolean" },
+        "reason": { "type": "string" }
+      }
+    },
+    "external_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "id", "label"],
+      "properties": {
+        "system": { "enum": ["twwatch", "judicial_yuan", "eia", "cec", "ly", "cofacts", "tfc", "wikidata"] },
+        "kind": { "enum": ["legislator", "bill", "vote"] },
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "term": { "type": "integer", "minimum": 1 },
+        "official_identifier": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["system"], "properties": { "system": { "const": "twwatch" } } },
+          "then": { "required": ["kind"] }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "legislator" } } },
+          "then": { "required": ["term"] }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "vote" } } },
+          "then": { "required": ["official_identifier"] }
+        }
+      ]
+    },
+    "external_refs": { "type": "array", "items": { "$ref": "#/$defs/external_ref" } }
+  }
+}

@@ -1,0 +1,7 @@
+schema_version: 1
+id: jur-67000000
+official_code: "67000000"
+name: 臺南市
+gov_level: special_municipality
+parent_id: jur-tw
+geometry_ref: jur-67000000

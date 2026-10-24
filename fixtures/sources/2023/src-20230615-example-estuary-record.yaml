@@ -1,0 +1,12 @@
+schema_version: 1
+id: src-20230615-example-estuary-record
+source_class: official_record
+grade: A
+title: 另一個範例縣河口疏濬會議紀錄（虛構範例）
+publisher: 範例縣議會
+url: https://example.com/example/estuary/record-20230615
+published_on: 2023-06-15
+accessed_on: 2026-10-24
+has_archive_url: false
+license: ogdl-tw-1.0
+attribution: 範例縣議會，會議紀錄，政府資料開放授權條款－第1版（虛構範例）

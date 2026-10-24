@@ -1,0 +1,12 @@
+schema_version: 1
+name: gov_levels
+description: Government levels (PRD 4.1 and 5.4.3). cross_level applies to events only, never to a jurisdiction.
+multi_valued: true
+values:
+  - { slug: central, label_zh: 中央, scope_zh: 總統府、五院、各部會、獨立機關 }
+  - { slug: special_municipality, label_zh: 直轄市, scope_zh: 6 個直轄市政府與議會 }
+  - { slug: county_city, label_zh: 縣（市）, scope_zh: 13 個縣、3 個市的政府與議會 }
+  - { slug: township, label_zh: 鄉鎮市區, scope_zh: 鄉鎮市公所、區公所、鄉鎮市民代表會 }
+  - { slug: indigenous_district, label_zh: 直轄市山地原住民區, scope_zh: 6 個山地原住民區（含區民代表會） }
+  - { slug: village, label_zh: 村里, scope_zh: 村里辦公處（P2，見 Q-08） }
+  - { slug: cross_level, label_zh: 跨層級, scope_zh: 中央與地方之間的爭議 }

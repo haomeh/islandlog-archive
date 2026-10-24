@@ -1,0 +1,23 @@
+schema_version: 1
+name: actor_types
+description: Actor types (PRD 5.4.4). Event inclusion needs at least one actor of type gov_agency, elected_official, appointed_official, legislature, court or control_body (PRD 4.4).
+values:
+  - { slug: gov_agency, label_zh: 政府機關 }
+  - { slug: elected_official, label_zh: 民選公職人員 }
+  - { slug: appointed_official, label_zh: 政務任命人員 }
+  - { slug: civil_servant, label_zh: 公務人員, note: Only in public roles. }
+  - { slug: legislature, label_zh: 立法院、議會、代表會 }
+  - { slug: party, label_zh: 政黨 }
+  - { slug: court, label_zh: 法院 }
+  - { slug: control_body, label_zh: 監察院、審計機關 }
+  - { slug: company, label_zh: 公司 }
+  - { slug: state_owned_enterprise, label_zh: 國營事業 }
+  - { slug: industry_association, label_zh: 產業公會 }
+  - { slug: ngo, label_zh: 公民團體 }
+  - { slug: social_movement, label_zh: 社會運動 }
+  - { slug: community_group, label_zh: 社區團體、自救會 }
+  - { slug: indigenous_community, label_zh: 原住民族部落 }
+  - { slug: academic_expert, label_zh: 學者專家 }
+  - { slug: media, label_zh: 媒體 }
+  - { slug: private_individual, label_zh: 私人, note: Limited by D10. Needs named_basis_source_ids of grade A. }
+  - { slug: foreign_actor, label_zh: 外國行動者 }
