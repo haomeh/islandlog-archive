@@ -18,6 +18,15 @@ Rules:
   Else it is "official" for source_class official_statement or official_record, else "news".
   Official items form groups of kind "official". They never merge with news groups,
   but they can share a topic cluster. Only news groups can be clarifications.
+- fact_check counts as official for grouping. Its source_class stays in the output.
+- A clarification item has clarification:true, and for a news item also a clarification word
+  in the title. It never joins a group of other items. Its group has kind "clarification".
+  An item without the clarification field keeps the old rule (title word, later news group).
+- A clarification group links to a group in a topic cluster when the shared bigrams cover
+  MIN_CLARIFICATION_OVERLAP of the smaller set (and at least MIN_CLARIFICATION_SHARED).
+- negative, clarification and sensitive are true on a group or cluster if any item is true.
+  topics is the sorted union. has_negative_and_clarification is true when a negative group
+  and a different clarification group are in the same cluster.
 - A group where every item has routine:true gets routine:true.
 - An item with a bad or missing published_on, title or url is skipped with a warning.
 """
@@ -41,7 +50,9 @@ TOPIC_THRESHOLD = 0.25
 SAME_CONTENT_DAYS = 3
 TOPIC_DAYS = 30
 CLARIFICATION_WORDS = ("澄清", "更正", "回應", "否認", "道歉", "說明", "駁斥", "表示將")
-OFFICIAL_CLASSES = ("official_statement", "official_record")
+OFFICIAL_CLASSES = ("official_statement", "official_record", "fact_check")
+MIN_CLARIFICATION_OVERLAP = 0.5
+MIN_CLARIFICATION_SHARED = 4
 PREFERRED_PUBLISHERS = ("公視新聞網", "中央通訊社")
 LEADING_TAG = re.compile(r"^\s*(?:【[^】]*】|\[[^\]]*\])")
 PUBLISHER_SUFFIXES = ("公視新聞網", "中央通訊社", "中央社", "自由時報", "聯合新聞網", "TVBS新聞網")
@@ -122,7 +133,8 @@ def _source_group(item):
 class _Prepared:
     """An item with its day, bigrams and clarification flag computed once."""
     __slots__ = ("item", "day", "bigrams", "order", "has_word",
-                 "source_group", "routine")
+                 "source_group", "routine", "is_clar", "legacy", "negative",
+                 "clarification", "sensitive", "topics")
 
     def __init__(self, item):
         self.item = item
@@ -132,6 +144,13 @@ class _Prepared:
         self.has_word = any(word in item["title"] for word in CLARIFICATION_WORDS)
         self.source_group = _source_group(item)
         self.routine = item.get("routine") is True
+        self.negative = item.get("negative") is True
+        self.clarification = item.get("clarification") is True
+        self.sensitive = item.get("sensitive") is True
+        topics = item.get("topics")
+        self.topics = {t for t in topics if isinstance(t, str)} if isinstance(topics, list) else set()
+        self.legacy = "clarification" not in item
+        self.is_clar = self.clarification and (self.source_group == "official" or self.has_word)
 
 
 class _Index:
@@ -166,15 +185,16 @@ def _prepare(items):
 
 def _report_groups(prepared):
     groups = []  # each: {"rep": _Prepared, "members": [_Prepared]}
-    indexes = {"news": _Index(), "official": _Index()}
+    indexes = {}
     for entry in prepared:
-        index = indexes[entry.source_group]
+        index = indexes.setdefault((entry.source_group, entry.is_clar), _Index())
         best, best_score = None, 0.0
         for group_id, shared in index.shared(entry.bigrams).items():
             rep = groups[group_id]["rep"]
             if abs((entry.day - rep.day).days) > SAME_CONTENT_DAYS:
                 continue
-            if entry.source_group == "news" and entry.has_word and not rep.has_word:
+            if (entry.source_group == "news" and entry.legacy and entry.has_word
+                    and not rep.has_word):
                 continue
             score = shared / (len(entry.bigrams) + len(rep.bigrams) - shared)
             if score >= SAME_CONTENT_THRESHOLD and (score > best_score or (
@@ -186,6 +206,7 @@ def _report_groups(prepared):
         else:
             groups[best]["members"].append(entry)
     for group in groups:
+        group["clar"] = group["rep"].is_clar
         group["bigrams"] = set().union(*(member.bigrams for member in group["members"]))
     return groups
 
@@ -206,13 +227,26 @@ def _topic_components(groups):
             if abs((group["rep"].day - rep.day).days) > TOPIC_DAYS:
                 continue
             union = len(group["bigrams"]) + len(groups[other]["bigrams"]) - shared
-            if shared / union >= TOPIC_THRESHOLD:
+            smaller = min(len(group["bigrams"]), len(groups[other]["bigrams"]))
+            clarifies = ((group["clar"] != groups[other]["clar"])
+                         and shared >= MIN_CLARIFICATION_SHARED
+                         and shared / smaller >= MIN_CLARIFICATION_OVERLAP)
+            if shared / union >= TOPIC_THRESHOLD or clarifies:
                 parents[root(current)] = root(other)
         index.add(current, group["bigrams"])
     topics = {}
     for node, group in enumerate(groups):
         topics.setdefault(root(node), []).append(group)
     return list(topics.values())
+
+
+def _flags(members):
+    return {
+        "negative": any(m.negative for m in members),
+        "clarification": any(m.clarification for m in members),
+        "sensitive": any(m.sensitive for m in members),
+        "topics": sorted(set().union(*(m.topics for m in members))),
+    }
 
 
 def cluster_items(items):
@@ -230,24 +264,35 @@ def cluster_items(items):
             if rep.source_group == "official":
                 kind = "official"
             else:
-                kind = "clarification" if seen_news and rep.has_word else "report"
+                if rep.is_clar or (rep.legacy and seen_news and rep.has_word):
+                    kind = "clarification"
+                else:
+                    kind = "report"
                 seen_news = True
+            if rep.is_clar:
+                kind = "clarification"
             clean = {
                 "kind": kind,
                 "source_group": rep.source_group,
                 "title": rep.item["title"],
                 "representative_url": rep.item["url"],
                 "member_urls": [member.item["url"] for member in group["members"]],
+                "source_class": rep.item.get("source_class"),
+                **_flags(group["members"]),
             }
             if all(member.routine for member in group["members"]):
                 clean["routine"] = True
             clean_groups.append(clean)
+        has_pair = any(g["negative"] and h["kind"] == "clarification" and g is not h
+                       for g in clean_groups for h in clean_groups)
         output.append({
             "cluster_id": "cluster-" + hashlib.sha256(earliest.item["url"].encode("utf-8")).hexdigest()[:16],
             "title": earliest.item["title"],
             "first_date": str(earliest.day),
             "last_date": str(members[-1].day),
             "groups": clean_groups,
+            **_flags(members),
+            "has_negative_and_clarification": has_pair,
         })
     return sorted(output, key=lambda cluster: (cluster["first_date"], cluster["cluster_id"]))
 
@@ -282,10 +327,15 @@ def as_news_groups(clusters, items):
                 "representative_source_id": group["representative_url"],
                 "source_ids": list(group["member_urls"]),
             }
+            for key in ("source_class", "negative", "clarification", "sensitive", "topics"):
+                entry[key] = group[key]
             if group.get("routine"):
                 entry["routine"] = True
             news_groups.append(entry)
         result.append({"cluster_id": cluster["cluster_id"], "title": cluster["title"],
+                       "negative": cluster["negative"], "clarification": cluster["clarification"],
+                       "sensitive": cluster["sensitive"], "topics": cluster["topics"],
+                       "has_negative_and_clarification": cluster["has_negative_and_clarification"],
                        "news_groups": news_groups})
     return result, mapping
 

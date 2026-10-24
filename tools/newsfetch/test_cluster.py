@@ -266,5 +266,81 @@ class SourceGroupTests(unittest.TestCase):
         self.assertNotIn("routine", by_kind["report"])
 
 
+class PairingTests(unittest.TestCase):
+    NEG = "某縣市工廠爆炸造成多人受傷消防局到場搶救"
+    CLAR = "某縣市工廠爆炸消防局澄清起火原因"
+
+    def negative(self, **extra):
+        base = item("https://n.example/neg", self.NEG, "2026-06-01")
+        base.update(source_class="news", negative=True, topics=["fire"], clarification=False, sensitive=False)
+        base.update(extra)
+        return base
+
+    def official(self, **extra):
+        base = item("https://gov.example/clar", self.CLAR, "2026-06-02", "消防局")
+        base.update(source_class="official_statement", negative=False, topics=["accident"],
+                    clarification=True, sensitive=False, routine=False)
+        base.update(extra)
+        return base
+
+    def test_official_clarification_pairs_with_negative_news(self):
+        result = cluster_items([self.negative(), self.official()])
+        self.assertEqual(len(result), 1)
+        kinds = {g["source_group"]: g["kind"] for g in result[0]["groups"]}
+        self.assertEqual(kinds, {"news": "report", "official": "clarification"})
+        self.assertTrue(result[0]["has_negative_and_clarification"])
+
+    def test_fact_check_is_official_group_and_keeps_source_class(self):
+        check = self.official(source_class="fact_check")
+        group = [g for g in cluster_items([self.negative(), check])[0]["groups"]
+                 if g["kind"] == "clarification"][0]
+        self.assertEqual(group["source_group"], "official")
+        self.assertEqual(group["source_class"], "fact_check")
+
+    def test_news_clarification_needs_flag_and_word(self):
+        clar = item("https://n.example/c", self.CLAR, "2026-06-02")
+        clar.update(source_class="news", clarification=True, negative=False, topics=[], sensitive=False)
+        groups = cluster_items([self.negative(), clar])[0]["groups"]
+        self.assertEqual([g["kind"] for g in groups], ["report", "clarification"])
+        clar["title"] = "某縣市工廠爆炸消防局公布搜救進度"
+        groups = cluster_items([self.negative(), clar])[0]["groups"]
+        self.assertNotIn("clarification", [g["kind"] for g in groups])
+
+    def test_routine_official_is_not_clarification(self):
+        plain = self.official(clarification=False)
+        result = cluster_items([self.negative(), plain])
+        self.assertEqual([g["kind"] for g in result[0]["groups"]], ["report", "official"])
+        self.assertFalse(result[0]["has_negative_and_clarification"])
+
+    def test_clarification_alone_has_no_pair(self):
+        result = cluster_items([self.official()])
+        self.assertFalse(result[0]["has_negative_and_clarification"])
+
+    def test_flags_and_topics_propagate(self):
+        second = self.negative(url="https://n.example/neg2", topics=["disaster"], negative=False,
+                               sensitive=True)
+        result = cluster_items([self.negative(), second, self.official()])[0]
+        news = [g for g in result["groups"] if g["source_group"] == "news"][0]
+        self.assertTrue(news["negative"])
+        self.assertTrue(news["sensitive"])
+        self.assertEqual(news["topics"], ["disaster", "fire"])
+        self.assertTrue(result["negative"] and result["clarification"] and result["sensitive"])
+        self.assertEqual(result["topics"], ["accident", "disaster", "fire"])
+
+    def test_flags_default_to_false(self):
+        result = cluster_items([item("u1", A, "2026-06-01")])[0]
+        self.assertFalse(result["negative"] or result["clarification"] or result["sensitive"])
+        self.assertEqual(result["topics"], [])
+
+    def test_as_news_groups_carries_flags(self):
+        items = [self.negative(sensitive=True), self.official()]
+        out, _ = as_news_groups(cluster_items(items), items)
+        self.assertTrue(out[0]["has_negative_and_clarification"])
+        self.assertTrue(out[0]["sensitive"])
+        entry = [g for g in out[0]["news_groups"] if g["kind"] == "clarification"][0]
+        self.assertEqual(entry["source_class"], "official_statement")
+        self.assertTrue(entry["clarification"])
+
+
 if __name__ == "__main__":
     unittest.main()
