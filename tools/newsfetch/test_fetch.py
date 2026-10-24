@@ -45,6 +45,11 @@ class TestDateParsing(unittest.TestCase):
 
         self.assertEqual(parse_date("2026-10-24"), "2026-10-24")
 
+    def test_parse_slash_date(self):
+        from tools.newsfetch.parser import parse_date
+
+        self.assertEqual(parse_date("2026/04/24"), "2026-04-24")
+
     def test_date_in_range(self):
         from tools.newsfetch.parser import is_date_in_range
 
@@ -208,9 +213,58 @@ class TestParsers(unittest.TestCase):
         self.assertEqual(items[0]["published_on"], "2026-10-24")
         self.assertIn("行政院", items[0]["snippet"])
 
+    def test_parse_ltn_search_html(self):
+        from tools.newsfetch.parser import parse_ltn_search_html
+
+        fixture_path = FIXTURES_DIR / "sample_ltn_search.html"
+        with open(fixture_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        items = parse_ltn_search_html(content, publisher="自由時報")
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0]["url"], "https://news.ltn.com.tw/news/politics/breakingnews/5415200")
+        self.assertEqual(items[0]["title"], "立法院協商法案引發熱烈討論")
+        self.assertEqual(items[0]["published_on"], "2026-04-24")
+        self.assertEqual(items[0]["publisher"], "自由時報")
+        self.assertIn("立法院朝野黨團", items[0]["snippet"])
+
 
 class TestCLI(unittest.TestCase):
     """Test CLI execution and arguments."""
+
+    def test_generate_weekly_windows(self):
+        from tools.newsfetch.fetch import generate_weekly_windows
+
+        windows = generate_weekly_windows("2026-04-24", "2026-05-08")
+        self.assertEqual(len(windows), 3)
+        self.assertEqual(windows[0], ("20260424", "20260430"))
+        self.assertEqual(windows[1], ("20260501", "20260507"))
+        self.assertEqual(windows[2], ("20260508", "20260508"))
+
+    def test_fetch_source_items_ltn_search(self):
+        from tools.newsfetch.fetch import fetch_source_items
+
+        class MockCrawler:
+            def fetch_raw(self, url, check_robots=True):
+                fixture_path = FIXTURES_DIR / "sample_ltn_search.html"
+                with open(fixture_path, "rb") as f:
+                    return f.read()
+
+        feed_cfg = {
+            "id": "ltn",
+            "publisher": "自由時報",
+            "type": "ltn_search",
+            "url": "https://search.ltn.com.tw/list",
+            "search_terms": ["立法院"],
+        }
+        items = fetch_source_items(
+            feed_cfg,
+            MockCrawler(),
+            since="2026-04-24",
+            until="2026-04-30",
+        )
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0]["published_on"], "2026-04-24")
 
     def test_cli_help(self):
         import subprocess

@@ -88,17 +88,20 @@ def parse_date(date_str: str) -> str:
         dt_tw = dt.astimezone(TZ_TW)
         return dt_tw.strftime("%Y-%m-%d")
 
+    # Normalize slashes to dashes
+    s_norm = s.replace("/", "-")
+
     # Plain date YYYY-MM-DD
-    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", s):
-        return s
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", s_norm):
+        return s_norm
 
     # Space separated YYYY-MM-DD HH:MM:SS
-    if " " in s and "T" not in s:
-        parts = s.split(" ")
-        s = parts[0] + "T" + parts[1]
+    if " " in s_norm and "T" not in s_norm:
+        parts = s_norm.split(" ")
+        s_norm = parts[0] + "T" + parts[1]
 
     # ISO 8601
-    dt = datetime.fromisoformat(s)
+    dt = datetime.fromisoformat(s_norm)
     if dt.tzinfo:
         dt = dt.astimezone(TZ_TW)
     return dt.strftime("%Y-%m-%d")
@@ -258,5 +261,58 @@ def parse_rss_xml(xml_bytes: bytes, publisher: str) -> List[Dict]:
                     "summary": raw_desc,
                 }
             )
+
+    return items
+
+
+def parse_ltn_search_html(html_str: str, publisher: str = "自由時報") -> List[Dict]:
+    """Parses HTML search results from search.ltn.com.tw into news items."""
+    items: List[Dict] = []
+    if not html_str:
+        return items
+
+    cont_blocks = re.findall(r'<div class="cont"[^>]*>([\s\S]*?)</div>', html_str)
+    for block in cont_blocks:
+        link_m = re.search(r'<a\s+[^>]*?class="tit"[^>]*href="([^"]+)"', block)
+        if not link_m:
+            link_m = re.search(r'<a\s+[^>]*?href="([^"]+)"[^>]*class="tit"', block)
+        if not link_m:
+            continue
+        url = link_m.group(1).strip()
+
+        title_m = re.search(r'<a\s+[^>]*?class="tit"[^>]*>([\s\S]*?)</a>', block)
+        if not title_m:
+            title_m = re.search(r'<a\s+[^>]*?class="[^"]*tit[^"]*"[^>]*>([\s\S]*?)</a>', block)
+        if not title_m:
+            continue
+        raw_title = TAG_RE.sub("", title_m.group(1)).strip()
+
+        time_m = re.search(r'<span class="time">([\s\S]*?)</span>', block)
+        if not time_m:
+            continue
+        time_raw = time_m.group(1).strip()
+
+        p_m = re.search(r'<p>([\s\S]*?)</p>', block)
+        summary_raw = TAG_RE.sub("", p_m.group(1)).strip() if p_m else ""
+
+        try:
+            published_on = parse_date(time_raw)
+        except Exception:
+            continue
+
+        masked_title = mask_private_person(raw_title)
+        snippet_source = summary_raw if summary_raw else masked_title
+        snippet = make_snippet(snippet_source)
+
+        items.append(
+            {
+                "url": url,
+                "title": masked_title,
+                "publisher": publisher,
+                "published_on": published_on,
+                "snippet": snippet,
+                "summary": summary_raw,
+            }
+        )
 
     return items

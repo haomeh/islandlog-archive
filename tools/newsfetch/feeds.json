@@ -32,8 +32,13 @@
   {
     "id": "ltn",
     "publisher": "自由時報",
-    "type": "sitemap",
-    "url": "https://news.ltn.com.tw/sitemap.xml"
+    "type": "ltn_search",
+    "url": "https://search.ltn.com.tw/list",
+    "sitemap_url": "https://news.ltn.com.tw/sitemap.xml",
+    "search_terms": [
+      "立法院",
+      "行政院"
+    ]
   },
   {
     "id": "udn",
