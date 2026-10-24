@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/taxonomy.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/taxonomy.schema.json",
   "title": "Taxonomy file",
   "description": "Applies to the seven taxonomy files that list slugs with Traditional Chinese labels.",
   "type": "object",

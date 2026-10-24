@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/common.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/common.schema.json",
   "title": "Shared definitions",
   "description": "Shared ID patterns, enums and small objects. Other schemas reference these with $ref. Enum values mirror taxonomy/*.yaml.",
   "$defs": {

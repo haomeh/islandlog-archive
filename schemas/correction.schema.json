@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/correction.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/correction.schema.json",
   "title": "Correction record",
   "description": "Applies to corrections/<YYYY>/cr-*.yaml. Correction records are append-only. A takedown record must not name the removed personal data.",
   "type": "object",

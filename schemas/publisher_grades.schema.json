@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/publisher_grades.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/publisher_grades.schema.json",
   "title": "Publisher grades",
   "description": "Default grade of media publishers. Only C and E apply to news (6.2). Changes need two approvals, one from a senior editor.",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/event.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/event.schema.json",
   "title": "Event front matter",
   "description": "Applies to the YAML front matter of events/<YYYY>/ev-*.md. Length limits and content rules belong to validate (CI-04 to CI-23), not to this schema.",
   "type": "object",

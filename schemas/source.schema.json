@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/source.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/source.schema.json",
   "title": "Source file",
   "description": "Applies to sources/<YYYY>/src-*.yaml. The schema has no body or full_text property: additionalProperties false rejects them for every source (D11, CI-21). The class-to-grade table (CI-06) and B-grade publisher rule (CI-07) belong to validate.",
   "type": "object",

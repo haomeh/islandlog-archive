@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/term_list.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/term_list.schema.json",
   "title": "Term list",
   "description": "Applies to banned_terms.yaml (CI-11) and sensitive_terms.yaml (CI-15). Changes to banned_terms.yaml need a senior editor.",
   "type": "object",

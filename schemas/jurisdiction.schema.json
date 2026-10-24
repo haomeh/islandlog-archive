@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/jurisdiction.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/jurisdiction.schema.json",
   "title": "Jurisdiction file",
   "description": "Applies to jurisdictions/jur-*.yaml. jur-tw is the hand-written central jurisdiction (D17): it has no official_code, parent_id or geometry_ref. Every other jurisdiction needs official_code.",
   "type": "object",

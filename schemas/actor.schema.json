@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gitlab.com/howmay/islandlog/archive/schemas/actor.schema.json",
+  "$id": "https://github.com/haomeh/islandlog-archive/schemas/actor.schema.json",
   "title": "Actor front matter",
   "description": "Applies to the YAML front matter of actors/ac-*.md.",
   "type": "object",
