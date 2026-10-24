@@ -19,10 +19,13 @@ if str(REPO_ROOT) not in sys.path:
 
 from typing import Dict, List, Set, Tuple
 
+from tools.newsfetch.classify import Classifier
 from tools.newsfetch.crawler import PoliteCrawler
 from tools.newsfetch.filter import NewsFilter
 from tools.newsfetch.parser import (
+    TZ_TW,
     is_date_in_range,
+    parse_ltn_ajax_json,
     parse_ltn_search_html,
     parse_news_sitemap_xml,
     parse_rss_xml,
@@ -33,7 +36,9 @@ DEFAULT_FEEDS_PATH = BASE_DIR / "feeds.json"
 DEFAULT_TERMS_PATH = BASE_DIR / "terms.json"
 DEFAULT_OUT_PATH = BASE_DIR / "out" / "news.jsonl"
 DEFAULT_CACHE_DIR = BASE_DIR / ".cache"
-LTN_MAX_PAGES = 10
+LTN_MAX_PAGES = 40
+LTN_LIST_MAX_PAGES = 60
+LTN_AJAX_URL = "https://news.ltn.com.tw/ajax/breakingnews"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -70,9 +75,13 @@ def _fetch_ltn_window(
     found: List[Dict] = []
     seen: Set[str] = set()
     for page in range(1, LTN_MAX_PAGES + 1):
+        # LTN reads end_time as exclusive, so ask for the day after the last wanted day.
+        end_excl = (
+            datetime.datetime.strptime(w_end, "%Y%m%d") + datetime.timedelta(days=1)
+        ).strftime("%Y%m%d")
         query_url = (
             f"{url}?keyword={urllib.parse.quote(term)}&sort=date"
-            f"&start_time={w_start}&end_time={w_end}&type=all&page={page}"
+            f"&start_time={w_start}&end_time={end_excl}&type=all&page={page}"
         )
         content = crawler.fetch_raw(query_url)
         if not content:
@@ -89,6 +98,46 @@ def _fetch_ltn_window(
                 LTN_MAX_PAGES, term, w_start, w_end,
             )
     return found
+
+
+def _fetch_ltn_list(
+    crawler: PoliteCrawler, category: str, since: str, today: str
+) -> List[Dict]:
+    """Reads the LTN breaking-news list of one category, newest first, until items are older than since."""
+    found: List[Dict] = []
+    for page in range(1, LTN_LIST_MAX_PAGES + 1):
+        content = crawler.fetch_raw(f"{LTN_AJAX_URL}/{category}/{page}")
+        if not content:
+            break
+        page_items = parse_ltn_ajax_json(content, today=today)
+        if not page_items:
+            break
+        found.extend(page_items)
+        if all(i["published_on"] < since for i in page_items):
+            break
+    return found
+
+
+def build_record(
+    item: Dict, publisher: str, fetched_on: str, matched: List[str], classifier: Classifier
+) -> Dict:
+    """Builds one JSONL record with the shared schema. A sensitive item keeps only its title as snippet."""
+    flags = classifier.classify(item["title"], item.get("summary", ""))
+    snippet = item["title"] if flags["sensitive"] else item["snippet"]
+    return {
+        "url": item["url"],
+        "title": item["title"],
+        "publisher": publisher,
+        "published_on": item["published_on"],
+        "snippet": snippet[:150],
+        "fetched_on": fetched_on,
+        "matched_terms": matched,
+        "negative": flags["negative"],
+        "topics": flags["topics"],
+        "clarification": flags["clarification"],
+        "sensitive": flags["sensitive"],
+        "source_class": "news",
+    }
 
 
 def fetch_source_items(
@@ -116,7 +165,13 @@ def fetch_source_items(
             if s_content:
                 items.extend(parse_news_sitemap_xml(s_content, publisher=publisher))
 
-        terms = feed_cfg.get("search_terms", ["立法院", "行政院"])
+        # Date lists first: every item of the recent days. The keyword search is the fallback for older days.
+        today = datetime.datetime.now(TZ_TW).strftime("%Y-%m-%d")
+        for category in feed_cfg.get("list_categories", []):
+            logger.info("Fetching %s breaking-news list %s ...", publisher, category)
+            items.extend(_fetch_ltn_list(crawler, category, since, today))
+
+        terms = feed_cfg.get("search_terms", [])
         windows = generate_weekly_windows(since, until)
         for w_start, w_end in windows:
             for term in terms:
@@ -204,6 +259,7 @@ def main():
 
     feeds = load_feeds(args.feeds)
     news_filter = NewsFilter()
+    classifier = Classifier()
 
     # Filter feeds by source if requested
     if args.source and args.source != "all":
@@ -247,15 +303,7 @@ def main():
                 continue
             seen_urls.add(url)
 
-            record = {
-                "url": url,
-                "title": item["title"],
-                "publisher": pub_name,
-                "published_on": pub_date,
-                "snippet": item["snippet"],
-                "fetched_on": now_iso,
-                "matched_terms": matched,
-            }
+            record = build_record(item, pub_name, now_iso, matched, classifier)
             out_f.write(json.dumps(record, ensure_ascii=False) + "\n")
             out_f.flush()
             record_count += 1

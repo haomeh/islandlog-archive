@@ -38,11 +38,14 @@ PATTERN_SHORT = re.compile(
 PUBLIC_FIGURES_PATH = Path(__file__).parent / "public_figures.json"
 
 # 2-4 character name (surname + 1 to 3 characters) right before a verdict/action word.
+VICTIM_WORDS = (
+    "失聯|失蹤|身亡|死亡|送醫|不治|受傷|罹難|喪生|遇害|輕生|墜海|墜樓|落海|溺水|猝死|[(（]\\d{1,3}歲"
+)
 PATTERN_NAME_BEFORE_VERDICT = re.compile(
-    rf"(?<![{SURNAMES}])([{SURNAMES}][\u4e00-\u9fff]{{1,3}})(?=[涉遭被])"
+    rf"(?<![{SURNAMES}])([{SURNAMES}][\u4e00-\u9fff]{{1,3}})(?=[涉遭被]|{VICTIM_WORDS})"
 )
 # A personal name does not contain these characters (organizations, places, phrases).
-NON_NAME_CHARS = set("的之與及和或市縣鄉鎮區部會院署局處長案委員黨團府校所館站隊組社業費款國中生元戰方陸")
+NON_NAME_CHARS = set("的之與及和或市縣鄉鎮區部會院署局處長案委員黨團府校所館站隊組社業費款國中生元戰方陸門船機車輛廠港島山海河湖路街橋道線艦艇客貨班列")
 # A surname that is also a verb: skip when the previous character shows a word such as 照顧.
 VERB_SURNAME_PREFIX = {"顧": set("照關愛看兼眷光"), "白": set("明告坦"), "易": set("交貿輕容")}
 
@@ -119,9 +122,38 @@ def mask_private_person(text: str) -> str:
     return masked
 
 
+# Victim details: age, street address, workplace, medical information.
+PATTERN_AGE = re.compile(
+    r"[(（]\s*(?:年約|約|年僅|未滿)?\d{1,3}(?:多|出頭)?歲\s*[)）]"
+    r"|(?:年約|約|年僅|未滿|年滿)?\d{1,3}(?:多|出頭)?歲(?:的)?"
+)
+PATTERN_ADDRESS = re.compile(
+    r"(?:[\u4e00-\u9fff]{1,6}[縣市])?(?:[\u4e00-\u9fff]{1,4}[鄉鎮市區])?"
+    r"[\u4e00-\u9fff]{1,8}(?:路|街|大道)(?:[一二三四五六七八九十]+段)?"
+    r"(?:\d+巷)?(?:\d+弄)?\d+(?:之\d+)?號(?:\d+樓|[一二三四五六七八九十]+樓)?"
+)
+PATTERN_WORKPLACE = re.compile(
+    r"(?:任職|服務|就讀|任教|受僱|受雇|上班)(?:於|在)[^，,。；;、\s]{1,20}"
+)
+PATTERN_MEDICAL = re.compile(
+    r"(?:罹患|患有|診斷出|病歷|病史|就醫紀錄)[^，,。；;、\s]{0,12}"
+)
+
+
+def strip_victim_details(text: str) -> str:
+    """Removes age, address, workplace and medical details from a title or snippet."""
+    if not text:
+        return ""
+    out = PATTERN_ADDRESS.sub("[地址]", text)
+    out = PATTERN_WORKPLACE.sub("[單位]", out)
+    out = PATTERN_MEDICAL.sub("[醫療資訊]", out)
+    out = PATTERN_AGE.sub("", out)
+    return out
+
+
 def mask_title(text: str) -> str:
-    """Masks a title: civilian references plus a name before a verdict word."""
-    return _mask_name_before_verdict(mask_private_person(text))
+    """Masks a title: names, civilian references and victim details."""
+    return strip_victim_details(_mask_name_before_verdict(mask_private_person(text)))
 
 
 def make_snippet(text: str, max_chars: int = 150) -> str:
@@ -133,7 +165,7 @@ def make_snippet(text: str, max_chars: int = 150) -> str:
     # Unescape HTML entities
     cleaned = html.unescape(cleaned)
     # Apply privacy filter
-    cleaned = mask_private_person(cleaned)
+    cleaned = mask_title(cleaned)
     # Normalize whitespaces
     cleaned = " ".join(cleaned.split())
     if len(cleaned) <= max_chars:
@@ -408,4 +440,48 @@ def parse_ltn_search_html(html_str: str, publisher: str = "自由時報") -> Lis
             }
         )
 
+    return items
+
+
+def parse_ltn_ajax_json(data: bytes, today: str, publisher: str = "自由時報") -> List[Dict]:
+    """Parses one page of the LTN breaking-news list (ajax JSON) into news items.
+
+    Page 1 lists the items of today by clock time only. Those items get the date `today`.
+    Image fields are not kept.
+    """
+    try:
+        doc = json.loads(data)
+    except (ValueError, TypeError):
+        return []
+    entries = doc.get("data") if isinstance(doc, dict) else None
+    if isinstance(entries, dict):
+        entries = list(entries.values())
+    if not isinstance(entries, list):
+        return []
+
+    items: List[Dict] = []
+    for en in entries:
+        if not isinstance(en, dict):
+            continue
+        url = (en.get("url") or "").strip()
+        title = (en.get("title") or "").strip()
+        time_raw = (en.get("time") or "").strip()
+        if not url or not title or not time_raw:
+            continue
+        try:
+            published_on = today if re.fullmatch(r"\d{1,2}:\d{2}", time_raw) else parse_date(time_raw)
+        except Exception:
+            continue
+        summary_raw = (en.get("summary") or "").strip()
+        masked_title = mask_title(title)
+        items.append(
+            {
+                "url": url,
+                "title": masked_title,
+                "publisher": publisher,
+                "published_on": published_on,
+                "snippet": make_snippet(summary_raw if summary_raw else masked_title),
+                "summary": summary_raw,
+            }
+        )
     return items

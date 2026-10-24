@@ -43,7 +43,8 @@ class TestLtnPagination(unittest.TestCase):
 
     def test_cap_at_ten_pages_and_logs(self):
         c = PagedCrawler({p: [p * 10 + 1, p * 10 + 2] for p in range(1, 30)})
-        with self.assertLogs("newsfetch", level="WARNING") as logs:
+        with mock.patch.object(fetch, "LTN_MAX_PAGES", 10), \
+                self.assertLogs("newsfetch", level="WARNING") as logs:
             items = fetch.fetch_source_items(CFG, c, since="2026-05-01", until="2026-05-01")
         self.assertEqual(len(c.urls), 10)
         self.assertEqual(len(items), 20)

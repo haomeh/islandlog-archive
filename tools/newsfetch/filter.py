@@ -1,4 +1,6 @@
-"""Topic and keyword filtering for news items.
+"""Exclusion filter for news items: drops sports results and entertainment gossip.
+
+Public-body terms only fill matched_terms. They are not required.
 
 Standard library only.
 """
@@ -22,10 +24,6 @@ class NewsFilter:
                 terms_data = {"include_terms": [], "exclude_categories": {}}
 
         self.include_terms: List[str] = terms_data.get("include_terms", [])
-        self.broad_terms: List[str] = terms_data.get("broad_terms", [])
-        self.taiwan_body_terms: List[str] = terms_data.get("taiwan_public_body_terms", [])
-        self.foreign_soft_terms: List[str] = terms_data.get("foreign_soft_terms", [])
-        self.taiwan_government_terms: List[str] = terms_data.get("taiwan_government_terms", [])
         self.exclude_categories: Dict[str, List[str]] = terms_data.get(
             "exclude_categories", {}
         )
@@ -49,11 +47,7 @@ class NewsFilter:
             if term in masked:
                 matched.append(term)
 
-        # A broad word counts only when a Taiwan public body term is also present
-        if self.broad_terms and not any(t in text for t in self.taiwan_body_terms):
-            matched = [t for t in matched if t not in self.broad_terms]
-
-        # Check exclusions (sports, entertainment, crime_victim)
+        # Check exclusions (sports, entertainment)
         is_excluded = False
         for category, words in self.exclude_categories.items():
             for word in words:
@@ -62,11 +56,6 @@ class NewsFilter:
                     break
             if is_excluded:
                 break
-
-        # Soft foreign words exclude only when no Taiwan government body is named
-        if not is_excluded and any(t in text for t in self.foreign_soft_terms):
-            if not any(t in text for t in self.taiwan_government_terms):
-                is_excluded = True
 
         return matched, is_excluded
 
@@ -77,7 +66,5 @@ class NewsFilter:
         """
         matched, is_excluded = self.check_match(title, summary)
         if is_excluded:
-            return False, []
-        if not matched:
             return False, []
         return True, matched
