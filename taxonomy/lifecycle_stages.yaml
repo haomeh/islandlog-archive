@@ -1,0 +1,14 @@
+schema_version: 1
+name: lifecycle_stages
+description: Lifecycle stages (PRD 5.5). Files use stages 1 to 7 only. Entries with computed true are derived at query time and are rejected in files (CI-23).
+multi_valued: false
+values:
+  - { slug: emergence, label_zh: 浮現, order: 1, scope_zh: 第一次公開報導、陳情、檢舉 }
+  - { slug: escalation, label_zh: 擴大, order: 2, scope_zh: 媒體大量報導、抗議、質詢 }
+  - { slug: institutional_response, label_zh: 制度回應, order: 3, scope_zh: 公聽會、調查、環評審查、提案 }
+  - { slug: decision, label_zh: 決策, order: 4, scope_zh: 表決、判決、核定、糾正 }
+  - { slug: implementation, label_zh: 執行, order: 5, scope_zh: 施工、執法、預算執行 }
+  - { slug: contestation, label_zh: 救濟與挑戰, order: 6, scope_zh: 訴訟、釋憲、罷免、公投 }
+  - { slug: resolution, label_zh: 落幕, order: 7, scope_zh: 結案、撤回、和解 }
+  - { slug: dormant, label_zh: 沉寂, order: 8, computed: true, scope_zh: 最新時間軸項目距今超過 12 個月，且目前階段不是 resolution }
+  - { slug: reopened, label_zh: 再起, order: 9, computed: true, scope_zh: 最新的 resolution 項目之後，另有時間軸項目 }

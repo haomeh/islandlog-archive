@@ -1,0 +1,14 @@
+schema_version: 1
+name: source_classes
+description: Source classes and the grades that each class allows (PRD 6.2, CI-06). Class news is C, except a publisher that publisher_grades.yaml lists as E. Class dataset is A for government datasets and D for others.
+values:
+  - { slug: official_record, label_zh: 政府機關的一手紀錄, allowed_grades: [A] }
+  - { slug: official_statement, label_zh: 政府機關對自身立場或行為的聲明, allowed_grades: [B] }
+  - { slug: actor_statement, label_zh: 非政府行動者對自身立場的聲明, allowed_grades: [B] }
+  - { slug: news, label_zh: 新聞報導, allowed_grades: [C, E] }
+  - { slug: fact_check, label_zh: 查核報告, allowed_grades: [C] }
+  - { slug: advocacy, label_zh: 第三方倡議, allowed_grades: [D] }
+  - { slug: academic, label_zh: 學術論文、學者意見, allowed_grades: [D] }
+  - { slug: party_publication, label_zh: 政黨對他方的分析或評論, allowed_grades: [D] }
+  - { slug: social_media, label_zh: 非行動者本人的社群貼文, allowed_grades: [E] }
+  - { slug: dataset, label_zh: 資料集, allowed_grades: [A, D], note: A for government datasets. D for others. }

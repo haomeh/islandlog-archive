@@ -1,0 +1,22 @@
+# proposal, needs senior editor review
+schema_version: 1
+name: sensitive_terms
+description: >-
+  Terms tied to special categories of personal data under Personal Data Protection Act article 6 (CI-15, PRD R-03).
+  A hit makes an Event or Decision sensitive. CI-15 does not scan this file.
+terms:
+  - { term: 病歷, category: medical }
+  - { term: 病史, category: medical }
+  - { term: 診斷, category: medical }
+  - { term: 就醫, category: medical }
+  - { term: 精神疾病, category: medical }
+  - { term: 罹患, category: medical }
+  - { term: 醫療紀錄, category: medical }
+  - { term: 基因, category: genetic }
+  - { term: 性生活, category: sex_life }
+  - { term: 性傾向, category: sex_life }
+  - { term: 健康檢查, category: health_exam }
+  - { term: 體檢, category: health_exam }
+  - { term: 前科, category: criminal_record }
+  - { term: 犯罪紀錄, category: criminal_record }
+  - { term: 刑案紀錄, category: criminal_record }

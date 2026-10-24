@@ -1,0 +1,4 @@
+schema_version: 1
+name: publisher_grades
+description: Default grades of media publishers (PRD 6.2). News from a publisher not in this list is grade C. Changes need two approvals, one from a senior editor.
+publishers: []

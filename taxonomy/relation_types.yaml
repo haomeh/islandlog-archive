@@ -1,0 +1,13 @@
+schema_version: 1
+name: relation_types
+description: Relation types between events and decisions (PRD 5.3.8). The indexer creates the inverse direction. A file writes one direction only. Types caused_by and led_to need source_ids.
+values:
+  - { slug: part_of, label_zh: 屬於, inverse: has_part }
+  - { slug: has_part, label_zh: 包含, inverse: part_of }
+  - { slug: precedes, label_zh: 先於, inverse: follows }
+  - { slug: follows, label_zh: 後於, inverse: precedes }
+  - { slug: caused_by, label_zh: 起因於, inverse: led_to }
+  - { slug: led_to, label_zh: 導致, inverse: caused_by }
+  - { slug: same_issue_other_jurisdiction, label_zh: 其他轄區的同類議題, inverse: same_issue_other_jurisdiction }
+  - { slug: supersedes, label_zh: 取代, note: "Inverse is computed as superseded_by in the API." }
+  - { slug: related, label_zh: 相關, inverse: related }
