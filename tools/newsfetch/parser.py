@@ -12,6 +12,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
+from tools.newsfetch.namemask import mask_names
+
 TZ_TW = timezone(timedelta(hours=8))
 TAG_RE = re.compile(r"<[^>]+>")
 
@@ -151,9 +153,16 @@ def strip_victim_details(text: str) -> str:
     return out
 
 
+def mask_title_collect(text: str):
+    """Masks a title. Returns (masked text, private names removed by the context rules)."""
+    base = _mask_name_before_verdict(mask_private_person(text))
+    masked, names = mask_names(base, _public_figures())
+    return strip_victim_details(masked), names
+
+
 def mask_title(text: str) -> str:
     """Masks a title: names, civilian references and victim details."""
-    return strip_victim_details(_mask_name_before_verdict(mask_private_person(text)))
+    return mask_title_collect(text)[0]
 
 
 def make_snippet(text: str, max_chars: int = 150) -> str:
