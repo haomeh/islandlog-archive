@@ -1,0 +1,10 @@
+# Local tooling and secrets
+.env
+.env.*
+.claude/settings.local.json
+.claude/launch.json
+.venv/
+venv*/
+node_modules/
+*.log
+.DS_Store
