@@ -209,5 +209,25 @@ class TestParsers(unittest.TestCase):
         self.assertIn("行政院", items[0]["snippet"])
 
 
+class TestCLI(unittest.TestCase):
+    """Test CLI execution and arguments."""
+
+    def test_cli_help(self):
+        import subprocess
+        import sys
+
+        fetch_script = Path(__file__).parent / "fetch.py"
+        res = subprocess.run(
+            [sys.executable, str(fetch_script), "--help"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        self.assertIn("Fetch and filter Taiwan news metadata", res.stdout)
+        self.assertIn("--since", res.stdout)
+        self.assertIn("--until", res.stdout)
+        self.assertIn("--out", res.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()
