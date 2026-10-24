@@ -101,12 +101,15 @@ def cluster_items(items):
     topic_nodes = []
     for members in same_content_groups:
         representative = min(members, key=_order_key)
-        topic_nodes.append({"members": members, "representative": representative})
+        union = set()
+        for member in members:
+            union |= bigrams(member["title"])
+        topic_nodes.append({"members": members, "representative": representative, "bigrams": union})
 
     topic_components = _components(
         topic_nodes,
         lambda left, right: abs((_day(left["representative"]) - _day(right["representative"])).days) <= TOPIC_DAYS
-        and _similarity(left["representative"], right["representative"]) >= TOPIC_THRESHOLD,
+        and jaccard(left["bigrams"], right["bigrams"]) >= TOPIC_THRESHOLD,
     )
 
     output = []

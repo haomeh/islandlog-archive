@@ -79,3 +79,16 @@ KNOWN_CASES = [
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TopicUnionTest(unittest.TestCase):
+    def test_topic_links_use_union_of_group_bigrams(self):
+        def item(url, title, day):
+            return {"url": url, "title": title, "publisher": "x", "published_on": day}
+
+        items = [
+            item("u1", "縣政府公布環評審查結果引發爭議", "2026-06-01"),
+            item("u2", "縣政府公布環評審查結果引發爭議 居民反應", "2026-06-02"),
+            item("u3", "環評審查結果居民提出異議", "2026-06-10"),
+        ]
+        self.assertEqual(len(cluster_items(items)), 1)
