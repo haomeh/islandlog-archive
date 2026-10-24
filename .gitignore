@@ -1,4 +1,6 @@
 # Local tooling and secrets
+__pycache__/
+*.py[cod]
 .env
 .env.*
 .claude/settings.local.json
