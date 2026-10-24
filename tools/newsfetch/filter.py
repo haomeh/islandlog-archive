@@ -40,7 +40,13 @@ class NewsFilter:
         # Check positive matches
         matched: List[str] = []
         for term in self.include_terms:
-            if term in text:
+            # A term counts only as a whole name: hide longer listed terms that contain it
+            # (法院 inside 立法院, 議會 inside 縣議會) before testing.
+            masked = text
+            for longer in sorted(self.include_terms, key=len, reverse=True):
+                if longer != term and term in longer:
+                    masked = masked.replace(longer, "\x00" * len(longer))
+            if term in masked:
                 matched.append(term)
 
         # A broad word counts only when a Taiwan public body term is also present

@@ -84,3 +84,26 @@ class TestLowFindings(unittest.TestCase):
         items = parse_ltn_search_html(html)
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]["url"], "https://n/1")
+
+
+class WholeTermMatchTest(unittest.TestCase):
+    def test_court_is_not_matched_inside_longer_body_names(self):
+        from tools.newsfetch.filter import NewsFilter
+
+        f = NewsFilter()
+        for title in ("立法院三讀通過預算案", "司法院公布年度報告", "行政法院判決出爐"):
+            matched, _ = f.check_match(title)
+            self.assertNotIn("法院", matched, title)
+
+    def test_court_still_matches_when_standalone(self):
+        from tools.newsfetch.filter import NewsFilter
+
+        matched, _ = NewsFilter().check_match("台灣法院宣判縣政府敗訴")
+        self.assertIn("法院", matched)
+
+    def test_council_not_matched_inside_county_council(self):
+        from tools.newsfetch.filter import NewsFilter
+
+        matched, _ = NewsFilter().check_match("縣議會質詢縣政府預算")
+        self.assertNotIn("議會", matched)
+        self.assertIn("縣政府", matched)
