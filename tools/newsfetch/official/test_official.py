@@ -178,3 +178,13 @@ class RoutineTests(unittest.TestCase):
         src = {"publisher": "X", "source_class": "official_statement"}
         rec = fetch_official.build_record(src, {"url": "u", "title": "春季市集開幕", "published_on": "2026-05-01"}, "t", [])
         self.assertIs(rec["routine"], True)
+
+
+class TitleAttrListTests(unittest.TestCase):
+    def test_parse_anchor_with_inner_date(self):
+        html_str = (FIX / "sample_titleattr_list.html").read_text(encoding="utf-8")
+        items = listing.parse_titleattr_list(html_str, "https://www.ey.gov.tw/Page/6485009ABEC1CB9C")
+        self.assertEqual([(i["title"], i["published_on"]) for i in items],
+                         [("行政院會通過預算案", "2026-10-08"), ("頒獎表彰選手", "2026-09-24")])
+        self.assertEqual(items[0]["url"], "https://www.ey.gov.tw/Page/9277F759E41CCD91/aaa-111")
+        self.assertEqual(items[0]["summary"], "")

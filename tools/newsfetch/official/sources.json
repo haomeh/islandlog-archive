@@ -1,8 +1,10 @@
 [
   {"id": "ey", "publisher": "行政院", "source_class": "official_statement", "actor_hint": "executive-yuan",
    "feeds": [
-     {"type": "rss", "url": "https://www.ey.gov.tw/RSS_Content.aspx?ModuleType=3"},
-     {"type": "rss", "url": "https://www.ey.gov.tw/RSS_Content.aspx?ModuleType=4"}
+     {"type": "titleattr_list", "url": "https://www.ey.gov.tw/Page/6485009ABEC1CB9C?page={page}&PS=15", "max_pages": 80},
+     {"type": "titleattr_list", "url": "https://www.ey.gov.tw/Page/B31C61707D4FEEEF?page={page}&PS=15", "max_pages": 80},
+     {"type": "titleattr_list", "url": "https://www.ey.gov.tw/Page/5519E969E8931E4E?page={page}&PS=15", "max_pages": 40},
+     {"type": "rss", "url": "https://www.ey.gov.tw/RSS_Content.aspx?ModuleType=3"}
    ]},
   {"id": "ly", "publisher": "立法院", "source_class": "official_record", "actor_hint": "legislative-yuan",
    "note": "no legal dated listing: ly.gov.tw list pages are script-rendered; /sitemap.xml returns HTML"},

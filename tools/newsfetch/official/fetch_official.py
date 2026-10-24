@@ -84,7 +84,7 @@ def fetch_feed(feed: Dict, crawler: PoliteCrawler, since: str) -> List[Dict]:
     if kind == "rss":
         data = crawler.fetch_raw(feed["url"])
         return listing.parse_rss(data) if data else []
-    if kind == "html_list":
+    if kind in ("html_list", "titleattr_list"):
         items: List[Dict] = []
         seen_first: Optional[str] = None
         for page in range(1, feed.get("max_pages", 60) + 1):
@@ -93,7 +93,10 @@ def fetch_feed(feed: Dict, crawler: PoliteCrawler, since: str) -> List[Dict]:
             if not data:
                 break
             html_str = data.decode(feed.get("encoding", "utf-8"), errors="ignore")
-            page_items = listing.parse_html_list(html_str, url, feed.get("date_before", False))
+            if kind == "titleattr_list":
+                page_items = listing.parse_titleattr_list(html_str, url)
+            else:
+                page_items = listing.parse_html_list(html_str, url, feed.get("date_before", False))
             if not page_items or page_items[0]["url"] == seen_first:
                 break
             seen_first = page_items[0]["url"]

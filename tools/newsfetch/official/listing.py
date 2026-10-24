@@ -99,3 +99,29 @@ def parse_html_list(html_str: str, base_url: str, date_before: bool = False) -> 
             }
         )
     return items
+
+
+def parse_titleattr_list(html_str: str, base_url: str) -> List[Dict]:
+    """Parse anchors that hold a title attribute and a date inside the anchor (ey.gov.tw).
+
+    The teaser paragraph is not kept.
+    """
+    items = []
+    for m in ANCHOR_RE.finditer(html_str):
+        attrs, inner = m.group(1), m.group(2)
+        href_m, title_m = HREF_RE.search(attrs), TITLE_ATTR_RE.search(attrs)
+        if not (href_m and title_m):
+            continue
+        date = textutil.find_date(textutil.TAG_RE.sub(" ", inner))
+        title = " ".join(unescape(title_m.group(1)).split())
+        if date is None or len(title) < 4:
+            continue
+        items.append(
+            {
+                "url": urllib.parse.urljoin(base_url, unescape(href_m.group(1)).strip()),
+                "title": title,
+                "published_on": date,
+                "summary": "",
+            }
+        )
+    return items
