@@ -1,0 +1,19 @@
+# Teams must exist in the haomeh organization: @haomeh/editors, @haomeh/senior-editors, @haomeh/maintainers.
+# The last matching pattern wins.
+
+*                                  @haomeh/editors
+
+# Schemas and taxonomy: maintainers merge, editors review.
+/schemas/                          @haomeh/maintainers
+/taxonomy/                         @haomeh/maintainers
+
+# Evaluative-term list, publisher grades and sensitive-term list: a senior editor must approve.
+/taxonomy/banned_terms.yaml        @haomeh/senior-editors
+/taxonomy/publisher_grades.yaml    @haomeh/senior-editors
+/taxonomy/sensitive_terms.yaml     @haomeh/senior-editors
+
+# Central jurisdiction file is hand-written (D17).
+/jurisdictions/jur-tw.yaml         @haomeh/maintainers
+
+# Takedown and privacy records
+/corrections/                      @haomeh/senior-editors
