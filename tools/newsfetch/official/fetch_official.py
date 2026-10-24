@@ -77,7 +77,7 @@ def fetch_feed(feed: Dict, crawler: PoliteCrawler, since: str) -> List[Dict]:
     """Fetch one feed definition. Return raw items (all dates)."""
     kind = feed["type"]
     if kind == "rss":
-        if "{page}" not in feed["url"]:
+        if "{page}" not in feed["url"] and "{start_index}" not in feed["url"]:
             data = crawler.fetch_raw(feed["url"])
             return listing.parse_rss(data) if data else []
         items = []

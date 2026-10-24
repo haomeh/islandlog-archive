@@ -292,3 +292,25 @@ class FeedFlagTests(unittest.TestCase):
                 self.assertIn(f["type"], ("rss", "html_list", "titleattr_list"))
         tfc = next(s for s in srcs if s["id"] == "tfc")
         self.assertEqual(tfc["source_class"], "fact_check")
+
+
+class RssPagingTests(unittest.TestCase):
+    def test_start_index_url_is_paged(self):
+        def rss(day, link):
+            return (f"<rss><channel><item><title>標題標題</title><link>{link}</link>"
+                    f"<pubDate>2026-05-{day:02d}T00:00:00+08:00</pubDate></item></channel></rss>").encode()
+
+        class Fake:
+            def __init__(self):
+                self.urls = []
+
+            def fetch_raw(self, url):
+                self.urls.append(url)
+                n = len(self.urls)
+                return rss(20 - n, f"https://x.example/{n}") if n <= 2 else None
+
+        fake = Fake()
+        feed = {"type": "rss", "url": "https://x.example/f?start-index={start_index}", "page_size": 100, "max_pages": 5}
+        items = fetch_official.fetch_feed(feed, fake, "2026-01-01")
+        self.assertEqual(len(items), 2)
+        self.assertTrue(fake.urls[1].endswith("start-index=101"))
