@@ -276,6 +276,10 @@ class RecordV2Tests(unittest.TestCase):
         self.assertNotIn("歲", r["title"])
         self.assertNotIn("歲", r["snippet"])
 
+    def test_link_hint_removed_from_title(self):
+        r = self.rec("行政院會通過預算案(另開視窗)")
+        self.assertEqual(r["title"], "行政院會通過預算案")
+
     def test_keeps_all_news_no_term_filter(self):
         r = self.rec("職棒球員全壘打")
         self.assertEqual(r["url"], "u")

@@ -28,6 +28,7 @@ from crawler import PoliteCrawler  # noqa: E402
 DEFAULT_OUT = HERE / "out" / "official.jsonl"
 DEFAULT_SOURCES = HERE / "sources.json"
 
+LINK_HINT_RE = re.compile(r"\s*[(（]另開(?:新)?視窗[)）]\s*$")
 RECORD_RE = re.compile(r"判決|裁定|裁判書|憲法判決|公報|會議紀錄|議事錄|議事日程|會議記錄|解釋文")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="%H:%M:%S")
@@ -51,7 +52,7 @@ def is_routine(title: str) -> bool:
 
 def build_record(source: Dict, item: Dict, fetched_on: str, lex: Dict, feed: Dict) -> Dict:
     """Build one output record. Title and snippet pass the privacy mask and victim redaction."""
-    raw_title = item["title"]
+    raw_title = LINK_HINT_RE.sub("", item["title"]).strip()
     summary = item.get("summary") or ""
     flags = classify.classify(raw_title, summary, lex, force_clarification=bool(feed.get("clarification")))
     title = textutil.redact_victim(textutil.mask_title(raw_title)).strip()
