@@ -1,6 +1,15 @@
 import unittest
 
-from tools.newsfetch.cluster import cluster_items, same_content
+import json
+import random
+import re
+import tempfile
+import time
+from pathlib import Path
+
+from tools.newsfetch.cluster import (
+    as_news_groups, cluster_items, main, normalize_title, same_content,
+)
 
 
 FIXTURE = [
@@ -77,10 +86,6 @@ KNOWN_CASES = [
 ]
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TopicUnionTest(unittest.TestCase):
     def test_topic_links_use_union_of_group_bigrams(self):
         def item(url, title, day):
@@ -92,3 +97,110 @@ class TopicUnionTest(unittest.TestCase):
             item("u3", "環評審查結果居民提出異議", "2026-06-10"),
         ]
         self.assertEqual(len(cluster_items(items)), 1)
+
+
+def make(url, title, day, publisher="x"):
+    return {"url": url, "title": title, "publisher": publisher, "published_on": day}
+
+
+A = "甲乙丙丁戊己庚辛壬癸"
+B = "丙丁戊己庚辛壬癸子丑"
+C = "戊己庚辛壬癸子丑寅卯"
+
+
+class AnchorTests(unittest.TestCase):
+    def test_chain_does_not_merge_into_one_report_group(self):
+        result = cluster_items([make("u1", A, "2026-06-01"), make("u2", B, "2026-06-02"),
+                                make("u3", C, "2026-06-03")])
+        self.assertEqual(len(result), 1)
+        self.assertEqual([g["member_urls"] for g in result[0]["groups"]], [["u1", "u2"], ["u3"]])
+        self.assertEqual([g["kind"] for g in result[0]["groups"]], ["report", "report"])
+
+    def test_date_window_is_measured_from_representative(self):
+        items = [make(f"u{i}", A, d) for i, d in enumerate(["2026-06-01", "2026-06-03", "2026-06-05"])]
+        groups = cluster_items(items)[0]["groups"]
+        self.assertEqual([g["member_urls"] for g in groups], [["u0", "u1"], ["u2"]])
+
+    def test_clarification_word_item_does_not_join_plain_report(self):
+        items = [make("u1", A, "2026-06-01"), make("u2", A + "回應", "2026-06-01")]
+        groups = cluster_items(items)[0]["groups"]
+        self.assertEqual([g["kind"] for g in groups], ["report", "clarification"])
+
+
+class ClarificationTests(unittest.TestCase):
+    def test_lone_clarification_word_is_a_report(self):
+        result = cluster_items([make("u1", "縣府澄清道路工程預算案", "2026-06-01")])
+        self.assertEqual(result[0]["groups"][0]["kind"], "report")
+
+    def test_first_group_is_never_clarification(self):
+        items = [make("u1", A + "說明", "2026-06-01"), make("u2", C + "更正", "2026-06-02")]
+        kinds = [g["kind"] for g in cluster_items(items)[0]["groups"]]
+        self.assertEqual(kinds, ["report", "clarification"])
+
+
+class NormalizeTests(unittest.TestCase):
+    def test_publisher_suffixes_after_separators(self):
+        for suffix in ["｜風傳媒", " | Newtalk新聞", " - 自由時報", "｜聯合新聞網", " | TVBS新聞網", " - TVBS"]:
+            self.assertEqual(normalize_title("核三公投結果" + suffix), "核三公投結果", suffix)
+
+    def test_brackets_removed_only_at_start(self):
+        self.assertEqual(normalize_title("【快訊】[獨家]核三公投"), "核三公投")
+        self.assertEqual(normalize_title("核三【重點】公投"), "核三重點公投")
+
+    def test_nfkc(self):
+        self.assertEqual(normalize_title("公投１２３％"), normalize_title("公投123%"))
+
+
+class RobustnessTests(unittest.TestCase):
+    def test_bad_date_is_skipped_with_warning(self):
+        items = [make("u1", A, "2026-06-01"), make("u2", B, "not-a-date"), make("u3", B, None)]
+        with self.assertLogs("tools.newsfetch.cluster", level="WARNING") as logs:
+            result = cluster_items(items)
+        self.assertEqual(len(logs.records), 2)
+        self.assertEqual(result[0]["groups"][0]["member_urls"], ["u1"])
+
+    def test_cluster_id_ignores_input_order(self):
+        items = [make("u1", A, "2026-06-01"), make("u2", B, "2026-06-02"), make("u3", C, "2026-06-03")]
+        self.assertEqual(cluster_items(items)[0]["cluster_id"], cluster_items(items[::-1])[0]["cluster_id"])
+
+    def test_twenty_thousand_items_under_thirty_seconds(self):
+        rng = random.Random(1)
+        pool = [chr(0x4E00 + i) for i in range(600)]
+        items = [make(f"https://x.example/{i}", "".join(rng.choices(pool, k=14)),
+                      f"2026-{1 + (i % 120) // 30:02d}-{1 + i % 28:02d}")
+                 for i in range(20000)]
+        start = time.monotonic()
+        cluster_items(items)
+        self.assertLess(time.monotonic() - start, 30)
+
+
+class NewsGroupsTests(unittest.TestCase):
+    def setUp(self):
+        self.items = [make("https://a.example/news/1", A, "2026-06-01"),
+                      make("https://b.example/news/2", A, "2026-06-02"),
+                      make("https://c.example/news/3", C + "回應", "2026-06-03")]
+
+    def test_shape_and_mapping(self):
+        clusters = cluster_items(self.items)
+        groups, mapping = as_news_groups(clusters, self.items)
+        self.assertEqual([g["id"] for g in groups[0]["news_groups"]], ["ng-01", "ng-02"])
+        first = groups[0]["news_groups"][0]
+        self.assertEqual(first["source_ids"], ["https://a.example/news/1", "https://b.example/news/2"])
+        self.assertEqual(first["kind"], "report")
+        for url in (i["url"] for i in self.items):
+            self.assertRegex(mapping[url], r"^src-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*$")
+        self.assertEqual(len(set(mapping.values())), 3)
+        self.assertTrue(mapping["https://b.example/news/2"].startswith("src-20260602-"))
+
+    def test_main_writes_sources_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src, out = Path(tmp, "in.jsonl"), Path(tmp, "out.json")
+            src.write_text("\n".join(json.dumps(i, ensure_ascii=False) for i in self.items), encoding="utf-8")
+            main([str(src), str(out), "--as-news-groups"])
+            self.assertIn("news_groups", json.loads(out.read_text(encoding="utf-8"))[0])
+            mapping = json.loads(Path(tmp, "out.json.sources.json").read_text(encoding="utf-8"))
+            self.assertEqual(len(mapping), 3)
+
+
+if __name__ == "__main__":
+    unittest.main()
