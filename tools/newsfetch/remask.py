@@ -13,7 +13,7 @@ import argparse
 import html
 import json
 import sys
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 from tools.newsfetch.filter import NewsFilter
 from tools.newsfetch.namemask import MASK
@@ -29,8 +29,28 @@ def _filter() -> NewsFilter:
     return _FILTER
 
 
-def remask_item(item: Dict, since: str = "", until: str = "") -> Optional[Dict]:
-    """Returns the masked copy of an item, or None when the item must be dropped."""
+MIN_PROPAGATE_CHARS = 3
+
+
+def _replace_names(text: str, names) -> str:
+    for name in sorted(names, key=len, reverse=True):
+        text = text.replace(name, MASK)
+    return text
+
+
+def collect_names(items) -> Set[str]:
+    """Names that the context rules mask in any title. Names of 3 or more characters only."""
+    found: Set[str] = set()
+    for item in items:
+        found.update(n for n in mask_title_collect(item.get("title", ""))[1] if len(n) >= MIN_PROPAGATE_CHARS)
+    return found
+
+
+def remask_item(item: Dict, since: str = "", until: str = "", known_names=()) -> Optional[Dict]:
+    """Returns the masked copy of an item, or None when the item must be dropped.
+
+    known_names are names that the rules masked in other titles. The tool removes them here too.
+    """
     day = item.get("published_on", "")
     if since and until and not (since <= day <= until):
         return None
@@ -39,14 +59,15 @@ def remask_item(item: Dict, since: str = "", until: str = "") -> Optional[Dict]:
     if _filter().check_match(title, snippet)[1]:
         return None
     masked_title, names = mask_title_collect(title)
+    masked_title = _replace_names(masked_title, known_names)
+    names = list(names) + list(known_names)
     out = dict(item)
     out["title"] = masked_title
     if not snippet or snippet == title:
         out["snippet"] = make_snippet(masked_title)
     else:
         cleaned = html.unescape(snippet)
-        for name in names:
-            cleaned = cleaned.replace(name, MASK)
+        cleaned = _replace_names(cleaned, names)
         out["snippet"] = make_snippet(cleaned)
     return out
 
@@ -58,13 +79,13 @@ def main(argv=None) -> int:
     ap.add_argument("--since", default="")
     ap.add_argument("--until", default="")
     args = ap.parse_args(argv)
+    with open(args.src, "r", encoding="utf-8") as fin:
+        items = [json.loads(line) for line in fin if line.strip()]
+    known = collect_names(items)
     kept = dropped = changed = 0
-    with open(args.src, "r", encoding="utf-8") as fin, open(args.dst, "w", encoding="utf-8") as fout:
-        for line in fin:
-            if not line.strip():
-                continue
-            item = json.loads(line)
-            new = remask_item(item, args.since, args.until)
+    with open(args.dst, "w", encoding="utf-8") as fout:
+        for item in items:
+            new = remask_item(item, args.since, args.until, known)
             if new is None:
                 dropped += 1
                 continue
@@ -72,7 +93,7 @@ def main(argv=None) -> int:
                 changed += 1
             kept += 1
             fout.write(json.dumps(new, ensure_ascii=False) + "\n")
-    print(f"kept={kept} dropped={dropped} changed={changed}", file=sys.stderr)
+    print(f"kept={kept} dropped={dropped} changed={changed} propagated_names={len(known)}", file=sys.stderr)
     return 0
 
 

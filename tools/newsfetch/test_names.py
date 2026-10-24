@@ -33,7 +33,7 @@ class TestNameMask(unittest.TestCase):
 
     def test_place_org_and_title_kept(self):
         for t in ("與高雄市政府協商", "載運貨物前往林口", "張家界旅遊團遭困", "林口電廠停機",
-                  "李先生說明", "與林務局協調", "帶高鐵乘客返鄉", "和平島遭淹"):
+                  "李先生說明", "草屯8旬翁採筍失蹤11天", "熱湯淋賊判拘役", "孫綻規劃結婚", "高下立判", "逆溫層危害", "與林務局協調", "帶高鐵乘客返鄉", "和平島遭淹"):
             self.assertEqual(mask_title(t), t)
 
     def test_idempotent(self):
@@ -43,7 +43,7 @@ class TestNameMask(unittest.TestCase):
 
 class TestRemask(unittest.TestCase):
     def item(self, title, snippet=None, day="2026-06-01"):
-        return {"url": "https://x/" + str(abs(hash(title))), "title": title, "snippet": snippet or title,
+        return {"url": "https://x/" + str(len(title)) + "-" + str(ord(title[0])), "title": title, "snippet": snippet or title,
                 "published_on": day, "publisher": "p"}
 
     def test_title_and_snippet_masked(self):
@@ -58,6 +58,18 @@ class TestRemask(unittest.TestCase):
     def test_noise_dropped(self):
         for t in ("生活小撇步：冰箱除臭", "專欄／能源政策的盲點", "社論－電價", "時事評論 預算案"):
             self.assertIsNone(remask.remask_item(self.item(t)), t)
+
+    def test_name_propagates_to_other_titles(self):
+        with tempfile.TemporaryDirectory() as d:
+            src, dst = Path(d, "a.jsonl"), Path(d, "b.jsonl")
+            rows = [self.item("開車載張俊傑台南避追查"), self.item("張俊傑逃亡爽住五星酒店")]
+            src.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
+            remask.main(["--in", str(src), "--out", str(dst)])
+            self.assertNotIn("張俊傑", dst.read_text(encoding="utf-8").replace(rows[0]["url"], ""))
+
+    def test_news_with_comment_word_in_body_kept(self):
+        item = self.item("王定宇轟國台辦", "網友評論兩岸關係")
+        self.assertIsNotNone(remask.remask_item(item))
 
     def test_window(self):
         self.assertIsNone(remask.remask_item(self.item("市府公告", day="2026-04-23"), since="2026-04-24", until="2026-10-24"))

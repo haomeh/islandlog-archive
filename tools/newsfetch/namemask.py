@@ -39,7 +39,7 @@ ACTION_WORDS = (
 VERDICT_WORDS = (
     "涉|遭|被|嫌|判|獲判|起訴|不起訴|羈押|收押|聲押|交保|落網|肇事|死亡|罹難|喪生|身亡|不治|送醫|受傷|失聯|失蹤|"
     "遇害|輕生|墜海|墜樓|落海|溺水|猝死|認罪|否認|自首|投案|求刑|宣判|約談|逮捕|被捕|酒駕|毒駕|詐|偷|搶|殺|砍|"
-    "無罪|定讞|重判|逃逸|持刀|"
+    "無罪|定讞|重判|逃逸|逃亡|逃匿|潛逃|偷渡|持刀|"
     r"[(（]\s*(?:年約|約|年僅|未滿)?\d{1,3}(?:多|出頭)?歲?\s*[)）]"
 )
 
@@ -72,6 +72,11 @@ GUARD_WORDS = (
     "潘朵", "余額", "余裕", "余震", "梁柱", "蘇花", "蘇澳", "蘇丹", "蘇俄", "蘇聯", "蘇打", "蘇格蘭",
     "賴皮", "莊園", "莊稼", "葉片", "葉菜", "謝絕", "謝謝", "謝罪", "謝票", "謝神", "魏晉", "薛丁格",
     "盧森堡", "呂宋", "尤其", "尤指", "吳郭魚", "徐州", "徐徐", "施耐德", "鍾點", "鐘點", "鐘擺", "鐘錶",
+    "高下立", "高效", "高考", "高手", "高管", "高跟", "高三", "高專", "高金", "高照",
+    "黃金", "黃牛", "黃岩", "黃燈", "黃復興", "董事", "董座", "陳情", "陳屍", "王子", "王室", "古樹", "古厝",
+    "韓流", "韓國", "韓檢", "韓首", "溫層", "溫泉", "溫度", "溫暖", "孫女", "簡歷", "彭佳嶼", "馬太鞍", "馬上", "馬蘭",
+    "湯淋", "翁採", "翁放", "上官媒", "傅家關", "鄭背", "孫綻", "連坐", "連天", "連奪", "洪監", "戴智慧", "戴羞", "藍爭", "藍雙", "康隱", "顏面", "程索", "曾當", "蔣家", "蔣捐",
+    "孫找", "陳守住", "卓揆", "蔣相", "柯前", "謝版", "胡言", "韓仁", "沈父", "林杏", "范范", "卓蘭", "連撞", "連查", "連兩",
     "古巴", "古埃及", "歐盟", "歐洲", "歐美", "歐元", "歐債", "歐式", "歐系", "歐陽修",
 )
 # A candidate whose given part starts with a title word is a title, not a name.
@@ -82,7 +87,14 @@ NON_NAME_CHARS = set(
     "的之與及和或市縣鄉鎮區部會院署局處長案委員黨團府校所館站隊組社業費款國中生元戰方陸門船機車輛廠港島山海河湖路街橋道線艦艇客貨班列"
     "年月日時分秒號萬億個人次起件名位項筆場期屆週度級場區帶圈型式制法"
     "與及並但而且卻均皆將已仍再又更最很都就也還只"
+    "撞疑查獲被遭涉殺砍搶偷詐屍暴虐因為是在了不有無打請說表指稱送落離昏散入出回去來到讓把用要會能可該應"
+    "救爆接受收批嗆喊拉辭噴險單戀自然談輔選層泉牛燈樹厝男女祖兄弟姊妹夫妻兒"
+    "屋餐農外術匹太怎另上跟鞋骨色電師恐治首爾蚵限縮歸甩馗斬岩系流檢婦烈拍突整對照重效考管手積虛下樣跟"
 )
+# Verdict characters: a given name before a verdict word does not contain them.
+VERDICT_CHARS = set("涉遭被嫌判獲起羈押收聲交落肇死罹喪身送受失遇輕墜溺猝認否自投求宣約逮酒毒詐偷搶殺砍無定重逃持")
+# A surname that is also a common word: it needs a given name of 2 characters before a verdict word.
+AMBIGUOUS_SURNAMES = set("連翁曾施溫孫嚴馬高柯韓蔣侯洪鐘鍾何游許黎康古宋湯彭戴羅范卓顏董程簡周江莊藍梁余邱鄒傅")
 VERB_SURNAME_PREFIX = {"顧": set("照關愛看兼眷光"), "白": set("明告坦"), "易": set("交貿輕容")}
 
 _NAME = rf"(?:{_SURNAME_ALT}){_HAN}{{1,2}}"
@@ -90,7 +102,7 @@ PATTERN_AFTER_ACTION = re.compile(rf"(?P<pre>{ACTION_WORDS})(?P<name>{_NAME})")
 PATTERN_BEFORE_VERDICT = re.compile(rf"(?P<name>(?:{_SURNAME_ALT}){_HAN}{{1,2}})(?=(?:{VERDICT_WORDS}))")
 
 
-def _trim(name: str) -> str:
+def _trim(name: str, strict: bool = False) -> str:
     """Returns the part of name that is a plausible private name, or '' if none."""
     if any(name.startswith(g) for g in GUARD_WORDS):
         return ""
@@ -98,6 +110,12 @@ def _trim(name: str) -> str:
     given = name[surname_len:]
     if any(given.startswith(t) for t in TITLE_AFTER_SURNAME):
         return ""
+    if strict:
+        # Before a verdict word the whole candidate must be a name.
+        if any(ch in NON_NAME_CHARS or ch in VERDICT_CHARS for ch in given):
+            return ""
+        if len(given) < 2 and name[0] in AMBIGUOUS_SURNAMES:
+            return ""
     # Cut the given part at the first character that is not part of a personal name.
     for i, ch in enumerate(given):
         if ch in NON_NAME_CHARS:
@@ -122,7 +140,7 @@ def mask_names(text: str, figures: Iterable[str] = ()) -> Tuple[str, List[str]]:
     figs = set(figures)
     found: List[str] = []
 
-    def candidate(s: str, m: "re.Match") -> str:
+    def candidate(s: str, m: "re.Match", strict: bool) -> str:
         """Returns the name to mask, or '' when the match must stay."""
         name = m.group("name")
         start = m.start("name")
@@ -135,13 +153,13 @@ def mask_names(text: str, figures: Iterable[str] = ()) -> Tuple[str, List[str]]:
         prefixes = VERB_SURNAME_PREFIX.get(name[0])
         if prefixes and start > 0 and s[start - 1] in prefixes:
             return ""
-        return _trim(name)
+        return _trim(name, strict)
 
-    def apply(pattern: "re.Pattern", s: str) -> str:
+    def apply(pattern: "re.Pattern", s: str, strict: bool) -> str:
         out: List[str] = []
         pos = 0
         for m in pattern.finditer(s):
-            kept = candidate(s, m)
+            kept = candidate(s, m, strict)
             if not kept:
                 continue
             start = m.start("name")
@@ -152,6 +170,6 @@ def mask_names(text: str, figures: Iterable[str] = ()) -> Tuple[str, List[str]]:
         out.append(s[pos:])
         return "".join(out)
 
-    s = apply(PATTERN_AFTER_ACTION, text)
-    s = apply(PATTERN_BEFORE_VERDICT, s)
+    s = apply(PATTERN_AFTER_ACTION, text, False)
+    s = apply(PATTERN_BEFORE_VERDICT, s, True)
     return s, found

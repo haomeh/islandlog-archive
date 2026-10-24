@@ -27,6 +27,8 @@ class NewsFilter:
         self.exclude_categories: Dict[str, List[str]] = terms_data.get(
             "exclude_categories", {}
         )
+        # Columns, commentary and life tips: matched in the title only.
+        self.noise_title_terms: List[str] = terms_data.get("noise_title_terms", [])
 
     def check_match(self, title: str, summary: str = "") -> Tuple[List[str], bool]:
         """Checks text for positive include terms and negative exclusions.
@@ -48,7 +50,7 @@ class NewsFilter:
                 matched.append(term)
 
         # Check exclusions (sports, entertainment)
-        is_excluded = False
+        is_excluded = any(word in title for word in self.noise_title_terms)
         for category, words in self.exclude_categories.items():
             for word in words:
                 if word in text:
