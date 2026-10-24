@@ -1,0 +1,6 @@
+schema_version: 1
+id: jur-99000000
+official_code: "99000000"
+name: 範例縣
+gov_level: county_city
+parent_id: jur-tw

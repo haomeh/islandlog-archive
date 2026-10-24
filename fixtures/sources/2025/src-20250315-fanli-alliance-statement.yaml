@@ -1,0 +1,12 @@
+schema_version: 1
+id: src-20250315-fanli-alliance-statement
+source_class: actor_statement
+grade: B
+title: 範例溪流聯盟聲明：疏濬計畫應先做環境影響評估（虛構範例）
+publisher: 範例溪流聯盟
+publisher_actor_id: ac-fanli-river-alliance
+url: https://example.com/alliance/statement-20250315
+published_on: 2025-03-15
+accessed_on: 2026-10-24
+has_archive_url: false
+license: unknown

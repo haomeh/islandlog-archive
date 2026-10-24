@@ -1,0 +1,6 @@
+schema_version: 1
+id: jur-99000010
+official_code: "99000010"
+name: 範例鄉
+gov_level: township
+parent_id: jur-99000000

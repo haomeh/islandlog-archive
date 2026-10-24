@@ -1,0 +1,12 @@
+schema_version: 1
+id: src-20250312-fanli-news-a
+source_class: news
+grade: C
+title: 漁會：疏濬期與魚苗季重疊（虛構範例）
+publisher: 範例日報
+url: https://example.com/news-a/20250312
+published_on: 2025-03-12
+accessed_on: 2026-10-24
+has_archive_url: false
+quote: 漁會表示，施工期與魚苗季重疊。
+license: all-rights-reserved
