@@ -1,0 +1,7 @@
+schema_version: 1
+id: jur-09020000
+official_code: "09020000"
+name: 金門縣
+gov_level: county_city
+parent_id: jur-tw
+geometry_ref: jur-09020000

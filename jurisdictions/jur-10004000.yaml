@@ -1,0 +1,7 @@
+schema_version: 1
+id: jur-10004000
+official_code: "10004000"
+name: 新竹縣
+gov_level: county_city
+parent_id: jur-tw
+geometry_ref: jur-10004000

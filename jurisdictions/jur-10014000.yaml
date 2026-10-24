@@ -1,0 +1,7 @@
+schema_version: 1
+id: jur-10014000
+official_code: "10014000"
+name: 臺東縣
+gov_level: county_city
+parent_id: jur-tw
+geometry_ref: jur-10014000

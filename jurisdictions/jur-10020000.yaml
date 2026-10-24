@@ -1,0 +1,7 @@
+schema_version: 1
+id: jur-10020000
+official_code: "10020000"
+name: 嘉義市
+gov_level: county_city
+parent_id: jur-tw
+geometry_ref: jur-10020000

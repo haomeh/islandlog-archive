@@ -1,0 +1,7 @@
+schema_version: 1
+id: jur-10015000
+official_code: "10015000"
+name: 花蓮縣
+gov_level: county_city
+parent_id: jur-tw
+geometry_ref: jur-10015000
