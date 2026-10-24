@@ -1,0 +1,11 @@
+schema_version: 1
+id: src-20250523-moj-nuclear-act
+source_class: official_record
+grade: A
+title: "核子反應器設施管制法（全國法規資料庫）"
+publisher: "全國法規資料庫"
+url: "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=J0160019"
+published_on: 2025-05-23
+accessed_on: 2026-10-24
+has_archive_url: false
+license: unknown
