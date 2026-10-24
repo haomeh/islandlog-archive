@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /search
+Disallow: /private/
+Allow: /xml/sitemap.xml
+Allow: /sitemap.xml
+Allow: /rss/

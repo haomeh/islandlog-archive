@@ -1,0 +1,96 @@
+"""Tests for the title masker and the topic filter (real terms.json)."""
+
+import time
+import unittest
+from unittest import mock
+
+from tools.newsfetch.filter import NewsFilter
+from tools.newsfetch.parser import mask_title
+
+
+class TestTitleMasking(unittest.TestCase):
+    def test_name_before_verdict_word_masked(self):
+        self.assertEqual(mask_title("新北市陳大文被控詐欺"), "新北市[當事人]被控詐欺")
+        self.assertEqual(mask_title("王小明涉貪遭起訴"), "[當事人]涉貪遭起訴")
+
+    def test_allowlisted_public_figure_kept(self):
+        self.assertEqual(mask_title("蔣萬安遭質疑"), "蔣萬安遭質疑")
+        self.assertEqual(mask_title("憂蔡康永遭跨境鎮壓加派警力"), "憂蔡康永遭跨境鎮壓加派警力")
+
+    def test_phrase_false_positive_news_line_5(self):
+        # 顧 is a surname, but 照顧民眾 is a phrase.
+        self.assertEqual(mask_title("內政部：照顧民眾比較少"), "內政部：照顧民眾比較少")
+
+    def test_place_and_number_words_not_masked(self):
+        for t in ("台大陸生被驅逐出境　陸委會：這只是個案",
+                  "地方選戰恐被國會攻防牽動",
+                  "索賄370萬元涉貪 桃市經發局前科長"):
+            self.assertEqual(mask_title(t), t)
+
+
+class TestRealTermsFilter(unittest.TestCase):
+    def setUp(self):
+        self.filter = NewsFilter()
+
+    def keep(self, title, summary=""):
+        return self.filter.should_keep(title, summary)[0]
+
+    def test_entertainment_dropped(self):
+        for t in ("知名演員行政院外拍片", "偶像團體赴立法院"):
+            self.assertFalse(self.keep(t), t)
+
+    def test_victim_and_foreign_items_are_kept_and_flagged_elsewhere(self):
+        # The all-news scope keeps these. The sensitive flag marks them for review.
+        for t in ("2個月害死55人！交通部：毒駕涉刑責", "紐約市議會通過禁令", "川普限制跨性別受刑人醫療　美最高法院駁回"):
+            self.assertTrue(self.keep(t), t)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class TestLowFindings(unittest.TestCase):
+    def test_zoneless_rfc2822_is_taipei(self):
+        from tools.newsfetch.parser import parse_date
+
+        with mock.patch.dict("os.environ", {"TZ": "America/Los_Angeles"}):
+            time.tzset()
+            try:
+                self.assertEqual(parse_date("2026-10-24 23:30:00"), "2026-10-24")
+                self.assertEqual(parse_date("2026-10-24T23:30:00"), "2026-10-24")
+            finally:
+                pass
+        time.tzset()
+
+    def test_nested_div_in_cont_block(self):
+        from tools.newsfetch.parser import parse_ltn_search_html
+
+        html = ('<div class="cont"><div class="img"><img src="a.jpg"></div>'
+                '<a href="https://n/1" class="tit">立法院開會</a>'
+                '<span class="time">2026/05/01</span><p>內文</p></div>')
+        items = parse_ltn_search_html(html)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["url"], "https://n/1")
+
+
+class WholeTermMatchTest(unittest.TestCase):
+    def test_court_is_not_matched_inside_longer_body_names(self):
+        from tools.newsfetch.filter import NewsFilter
+
+        f = NewsFilter()
+        for title in ("立法院三讀通過預算案", "司法院公布年度報告", "行政法院判決出爐"):
+            matched, _ = f.check_match(title)
+            self.assertNotIn("法院", matched, title)
+
+    def test_court_still_matches_when_standalone(self):
+        from tools.newsfetch.filter import NewsFilter
+
+        matched, _ = NewsFilter().check_match("台灣法院宣判縣政府敗訴")
+        self.assertIn("法院", matched)
+
+    def test_council_not_matched_inside_county_council(self):
+        from tools.newsfetch.filter import NewsFilter
+
+        matched, _ = NewsFilter().check_match("縣議會質詢縣政府預算")
+        self.assertNotIn("議會", matched)
+        self.assertIn("縣政府", matched)

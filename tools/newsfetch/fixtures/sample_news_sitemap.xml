@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+  <url>
+    <loc>https://news.example.com/article/1001</loc>
+    <news:news>
+      <news:publication>
+        <news:name>測試新聞網</news:name>
+        <news:language>zh-tw</news:language>
+      </news:publication>
+      <news:publication_date>2026-10-24T10:30:00+08:00</news:publication_date>
+      <news:title>立法院院會三讀通過環境保護法修正案</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://news.example.com/article/1002</loc>
+    <news:news>
+      <news:publication>
+        <news:name>測試新聞網</news:name>
+        <news:language>zh-tw</news:language>
+      </news:publication>
+      <news:publication_date>2026-10-23T14:15:00+08:00</news:publication_date>
+      <news:title>職棒總冠軍賽開打 市政府派員維護交通</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://news.example.com/article/1003</loc>
+    <news:news>
+      <news:publication>
+        <news:name>測試新聞網</news:name>
+        <news:language>zh-tw</news:language>
+      </news:publication>
+      <news:publication_date>2026-10-22T08:00:00+08:00</news:publication_date>
+      <news:title>陳姓男子涉違法傾倒廢棄物 遭地檢署裁罰起訴</news:title>
+    </news:news>
+  </url>
+</urlset>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>測試新聞網 RSS</title>
+    <link>https://news.example.com</link>
+    <description>即時新聞</description>
+    <item>
+      <title>行政院通過明年度總預算案 函送立法院審議</title>
+      <link>https://news.example.com/rss/2001</link>
+      <pubDate>Sat, 24 Oct 2026 09:00:00 +0800</pubDate>
+      <description><![CDATA[<p>行政院院會今日通過明年度中央政府總預算案，將函送立法院審議。</p>]]></description>
+    </item>
+    <item>
+      <title>某韓團演唱會門票秒殺 歌迷徹夜排隊</title>
+      <link>https://news.example.com/rss/2002</link>
+      <pubDate>Fri, 23 Oct 2026 15:30:00 +0800</pubDate>
+      <description><![CDATA[某韓團今日開賣演唱會門票，數萬名歌迷上線搶購。]]></description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,86 @@
+[
+  {
+    "id": "pts",
+    "publisher": "公視新聞網",
+    "type": "sitemap",
+    "url": "https://news.pts.org.tw/xml/sitemap.xml"
+  },
+  {
+    "id": "cna",
+    "publisher": "中央通訊社",
+    "type": "sitemap",
+    "url": "https://www.cna.com.tw/GoogleNewsSitemap_fromRemote_cfp.xml"
+  },
+  {
+    "id": "tvbs",
+    "publisher": "TVBS",
+    "type": "sitemap",
+    "url": "https://news.tvbs.com.tw/sitemap/news-sitemap"
+  },
+  {
+    "id": "newtalk",
+    "publisher": "Newtalk",
+    "type": "sitemap",
+    "url": "https://newtalk.tw/sitemap/news/1067"
+  },
+  {
+    "id": "storm",
+    "publisher": "風傳媒",
+    "type": "sitemap",
+    "url": "https://www.storm.mg/sitemaps/1/article-news-1.xml"
+  },
+  {
+    "id": "ltn",
+    "publisher": "自由時報",
+    "type": "ltn_search",
+    "url": "https://search.ltn.com.tw/list",
+    "sitemap_url": "https://news.ltn.com.tw/sitemap.xml",
+    "search_terms": [
+      "事故",
+      "火災",
+      "爆炸",
+      "死亡",
+      "災害",
+      "地震",
+      "颱風",
+      "停電",
+      "詐騙",
+      "污染",
+      "食安",
+      "弊案",
+      "貪污",
+      "涉嫌",
+      "羈押",
+      "起訴",
+      "判決",
+      "罷工",
+      "抗議",
+      "爭議",
+      "道歉",
+      "召回",
+      "外洩",
+      "駭客",
+      "失聯",
+      "澄清",
+      "更正",
+      "闢謠",
+      "不實",
+      "回應",
+      "駁斥",
+      "否認"
+    ],
+    "list_categories": [
+      "politics",
+      "society",
+      "life",
+      "local",
+      "world"
+    ]
+  },
+  {
+    "id": "udn",
+    "publisher": "聯合新聞網",
+    "type": "sitemap",
+    "url": "https://udn.com/sitemap/gnews_contents/2/1"
+  }
+]
