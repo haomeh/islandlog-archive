@@ -48,10 +48,14 @@ def load_feeds(feeds_path: Path) -> List[Dict]:
 
 
 def generate_weekly_windows(since: str, until: str) -> List[Tuple[str, str]]:
-    """Splits a date window [since, until] into contiguous weekly (7-day) slices."""
+    """Splits a date window [since, until] into weekly slices, including start boundary."""
     dt_since = datetime.datetime.strptime(since, "%Y-%m-%d")
     dt_until = datetime.datetime.strptime(until, "%Y-%m-%d")
     windows = []
+    # Always include the exact start date window to guarantee reaching the start boundary
+    since_compact = dt_since.strftime("%Y%m%d")
+    windows.append((since_compact, since_compact))
+
     cur = dt_since
     while cur <= dt_until:
         w_end = min(cur + datetime.timedelta(days=6), dt_until)
