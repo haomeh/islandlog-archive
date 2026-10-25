@@ -101,6 +101,21 @@ class RulesTest(unittest.TestCase):
         child["titles"] = ["台中續放颱風假"] * 11  # under 10% mention 薔琵
         self.assertEqual(tf.link_subtopics([parent, child, other]), {})
 
+    @unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+    def test_refresh_sensitive_reads_source_quotes(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as root:
+            (Path(root) / "events/2026").mkdir(parents=True)
+            (Path(root) / "sources/2026").mkdir(parents=True)
+            (Path(root) / "sources/2026/src-20261023-cna-aaaaaaaa.yaml").write_text(
+                'title: "颱風期間醫院門診"\nquote: "民眾可就近就醫"\n', encoding="utf-8")
+            ev = Path(root) / "events/2026/ev-x.md"
+            ev.write_text("---\nid: ev-x\nreview:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
+                          "  status: draft-review\n---\n\n報導 [@src-20261023-cna-aaaaaaaa]。\n", encoding="utf-8")
+            self.assertEqual(tf.refresh_sensitive(root), ["ev-x"])
+            self.assertIn("sensitive: true", ev.read_text(encoding="utf-8"))
+
     def test_topic_id_is_stable_ascii(self):
         a = tf.topic_id("仁愛圓環", "2026-09-26", "https://example.com/1")
         self.assertEqual(a, tf.topic_id("仁愛圓環", "2026-09-26", "https://example.com/1"))

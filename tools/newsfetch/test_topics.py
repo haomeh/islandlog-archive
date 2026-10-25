@@ -121,6 +121,24 @@ class TopicTest(unittest.TestCase):
         self.assertEqual(topics.event_kind([{"actor_id": "a", "stance": "support"}, {"actor_id": "b", "stance": "oppose"}]), "controversy")
         self.assertEqual(topics.event_kind([{"actor_id": "a", "stance": "support"}, {"actor_id": "a", "stance": "oppose"}]), "historical_event")
 
+    @unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+    def test_sensitive_from_source_quotes(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as root:
+            for d in ("events/2026", "sources/2026", "actors"):
+                (Path(root) / d).mkdir(parents=True)
+            seed = dict(SEED, gov_levels=["special_municipality"], jurisdiction_ids=["jur-63000000"],
+                        controversy_types=["environment"], policy_domains=["environment"], actors=[])
+            event = topics.build_event(seed, CORPUS, self.df, actors_by_host={})
+            topics.write_event(event, seed, root, {}, actors_by_host={})
+            text = (Path(root) / "events/2026" / f"{seed['event_id']}.md").read_text(encoding="utf-8")
+            self.assertIn("sensitive: false", text)
+            quote = {CORPUS[1]["url"]: {"url": CORPUS[1]["url"], "status": "ok", "quote": "公園處表示將協助民眾就醫"}}
+            topics.write_event(event, seed, root, quote, actors_by_host={})
+            text = (Path(root) / "events/2026" / f"{seed['event_id']}.md").read_text(encoding="utf-8")
+            self.assertIn("sensitive: true", text)
+
     def test_review_status_is_draft(self):
         event = topics.build_event(SEED, CORPUS, self.df, actors_by_host={})
         self.assertEqual(event["review"]["status"], "draft-review")

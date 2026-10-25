@@ -431,6 +431,18 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
     }
 
 
+_TERMS_PATH = Path(__file__).resolve().parents[2] / "taxonomy" / "sensitive_terms.yaml"
+try:
+    SENSITIVE_TERMS = tuple(t.strip() for t in re.findall(r"term: ([^,}]+)", _TERMS_PATH.read_text(encoding="utf-8")))
+except OSError:
+    SENSITIVE_TERMS = ()
+
+
+def has_sensitive_term(texts):
+    """R76: a sensitive term in a source title or a source quote makes the event sensitive (CI-15)."""
+    return any(term in t for t in texts if t for term in SENSITIVE_TERMS)
+
+
 def event_kind(positions):
     """R73: controversy needs real stances from 2 or more actors (PRD 4.4 item 3). Else historical_event."""
     actors = {p["actor_id"] for p in positions if p.get("stance") not in (None, "not_found")}
@@ -480,6 +492,10 @@ def write_event(ev, seed, root, enrich, actors_by_host=HOSTS, overwrite_sources=
         if g.get("note"):
             out["note"] = g["note"]
         groups.append(out)
+    source_docs = [_source_doc(it, enrich, actors_by_host) for it in ev["used"].values()]
+    review = dict(ev["review"])
+    if has_sensitive_term([d["title"] for d in source_docs] + [d["quote"] for d in source_docs]):
+        review["sensitive"] = True
     doc = {"schema_version": 1, "id": ev["id"], "kind": event_kind(ev["positions"]), "status": "published", "title": ev["title"],
            "summary": ev["summary"], "start_date": ev["start_date"], "start_date_precision": "day",
            "gov_levels": seed["gov_levels"], "jurisdiction_ids": seed["jurisdiction_ids"],
@@ -487,7 +503,7 @@ def write_event(ev, seed, root, enrich, actors_by_host=HOSTS, overwrite_sources=
            "actors": [{"actor_id": a, "role": r} for a, r in ev["actors"]],
            "questions": [{"id": "q-01", "text": ev["question"]}], "positions": ev["positions"],
            "timeline": timeline, "news_groups": groups,
-           "privacy": {"contains_private_persons": False, "basis_source_ids": []}, "review": ev["review"]}
+           "privacy": {"contains_private_persons": False, "basis_source_ids": []}, "review": review}
     root = Path(root)
     (root / "events/2026" / f"{ev['id']}.md").write_text("---\n" + _dump(doc) + "---\n\n" + "\n\n".join(ev["body"]) + "\n", encoding="utf-8")
     for it in ev["used"].values():
