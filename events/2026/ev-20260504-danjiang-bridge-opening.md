@@ -4,7 +4,7 @@ id: ev-20260504-danjiang-bridge-opening
 kind: historical_event
 status: published
 title: 新北市淡江大橋
-summary: 2026-05-03至2026-05-20，自由時報共 31 則報導提及淡江大橋 [@src-20260503-ltn-e7f19998]。行政院等機關發布 2 則相關說明 [@src-20260507-ey-e498d6a6]。
+summary: 2026-05-03至2026-05-20，自由時報共 32 則報導提及淡江大橋 [@src-20260503-ltn-e7f19998]。內政部等機關發布 1 則相關說明 [@src-20260508-moi-ca6d8a28]。
 start_date: '2026-05-03'
 start_date_precision: day
 gov_levels:
@@ -22,8 +22,6 @@ actors:
   role: decision_maker
 - actor_id: ac-new-taipei-city-government
   role: affected_party
-- actor_id: ac-executive-yuan
-  role: other
 - actor_id: ac-ministry-of-the-interior
   role: other
 questions:
@@ -50,11 +48,9 @@ timeline:
 - id: tl-03
   date: '2026-05-07'
   date_precision: day
-  title: 1 則報導、1 則官方發布
-  attributed_to: ac-executive-yuan
+  title: 1 則報導
   source_ids:
   - src-20260507-ltn-c1cf7387
-  - src-20260507-ey-e498d6a6
 - id: tl-04
   date: '2026-05-08'
   date_precision: day
@@ -73,7 +69,7 @@ timeline:
 - id: tl-06
   date: '2026-05-12'
   date_precision: day
-  title: 11 則報導
+  title: 13 則報導
   source_ids:
   - src-20260512-ltn-d866b944
   - src-20260512-ltn-f27f2584
@@ -81,7 +77,7 @@ timeline:
 - id: tl-07
   date: '2026-05-13'
   date_precision: day
-  title: 5 則報導、1 則回應或澄清
+  title: 6 則報導、1 則回應或澄清
   source_ids:
   - src-20260513-ltn-1292911c
   - src-20260513-ltn-97f15497
@@ -95,16 +91,14 @@ timeline:
 - id: tl-09
   date: '2026-05-17'
   date_precision: day
-  title: 2 則報導
+  title: 1 則報導
   source_ids:
   - src-20260517-ltn-01bef4f8
-  - src-20260519-ltn-c787ba08
 - id: tl-10
   date: '2026-05-20'
   date_precision: day
-  title: 3 則報導
+  title: 2 則報導
   source_ids:
-  - src-20260520-ltn-1d604062
   - src-20260520-ltn-b9226e7b
   - src-20260611-ltn-b8b2f0a0
 news_groups:
@@ -226,11 +220,25 @@ news_groups:
 - id: ng-17
   timeline_id: tl-06
   kind: report
+  title: 蔡錦賢抗議淡江大橋揭牌未獲邀 在地里長直言「很瞎」
+  representative_source_id: src-20260512-ltn-560e4c9f
+  source_ids:
+  - src-20260512-ltn-560e4c9f
+- id: ng-18
+  timeline_id: tl-06
+  kind: report
+  title: 淡江大橋第一張罰單！飆仔爆音車硬闖管制區 吞高額罰單還扣車
+  representative_source_id: src-20260512-ltn-abcd9a63
+  source_ids:
+  - src-20260512-ltn-abcd9a63
+- id: ng-19
+  timeline_id: tl-06
+  kind: report
   title: 淡江大橋今正式通車 護欄、螺帽包覆調整改善
   representative_source_id: src-20260512-ltn-75c275bc
   source_ids:
   - src-20260512-ltn-75c275bc
-- id: ng-18
+- id: ng-20
   timeline_id: tl-07
   kind: clarification
   title: 淡江大橋5/12通車「碰巧」陳世凱生日  公路局急澄清
@@ -238,69 +246,56 @@ news_groups:
   source_ids:
   - src-20260513-ltn-1292911c
   note: 報導中的回應或澄清
-- id: ng-19
+- id: ng-21
   timeline_id: tl-07
   kind: report
   title: 淡江大橋昨通車侯友宜稱「有點混亂」 紓解關渡橋車流奏效
   representative_source_id: src-20260513-ltn-97f15497
   source_ids:
   - src-20260513-ltn-97f15497
-- id: ng-20
+  - src-20260514-ltn-75eb6f63
+- id: ng-22
   timeline_id: tl-07
   kind: report
   title: 淡江大橋5/12通車遭抹黑「為交長慶生」 公路局狠打臉
   representative_source_id: src-20260513-ltn-4d25ce45
   source_ids:
   - src-20260513-ltn-4d25ce45
-- id: ng-21
+- id: ng-23
   timeline_id: tl-07
   kind: report
   title: 淡江大橋通車日逢陳世凱生日 傳公路局稱「市府建議」新北反駁
   representative_source_id: src-20260513-ltn-62b5770c
   source_ids:
   - src-20260513-ltn-62b5770c
-- id: ng-22
+- id: ng-24
   timeline_id: tl-07
   kind: report
   title: 淡江大橋通車第2天！他追撞紅燈車陣 釀首起連環車禍
   representative_source_id: src-20260513-ltn-312f5c23
   source_ids:
   - src-20260513-ltn-312f5c23
-- id: ng-23
+- id: ng-25
   timeline_id: tl-07
   kind: report
   title: 淡江大橋通車首日 行人大讚友善、機車飆仔被開4張罰單
   representative_source_id: src-20260513-ltn-a9a13b59
   source_ids:
   - src-20260513-ltn-a9a13b59
-- id: ng-24
+- id: ng-26
   timeline_id: tl-08
   kind: report
   title: 喊淡江大橋機車道寬度要改善 李四川：雙北橋樑機車分隔島要重新檢討
   representative_source_id: src-20260514-ltn-620ecab6
   source_ids:
   - src-20260514-ltn-620ecab6
-- id: ng-25
+- id: ng-27
   timeline_id: tl-09
   kind: report
   title: 李四川稱當選要中央改善淡江大橋機車道寬 蘇巧慧：中央地方一起努力
   representative_source_id: src-20260517-ltn-01bef4f8
   source_ids:
   - src-20260517-ltn-01bef4f8
-- id: ng-26
-  timeline_id: tl-09
-  kind: report
-  title: 扯！淡江大橋通車前機車硬闖挨罰扣車 異想天開偷貨車來載
-  representative_source_id: src-20260519-ltn-c787ba08
-  source_ids:
-  - src-20260519-ltn-c787ba08
-- id: ng-27
-  timeline_id: tl-10
-  kind: report
-  title: 淡江大橋通車滿1週！ 洪孟楷緊盯淡水端交織回堵、螺絲鬆動問題
-  representative_source_id: src-20260520-ltn-1d604062
-  source_ids:
-  - src-20260520-ltn-1d604062
 - id: ng-28
   timeline_id: tl-10
   kind: report
@@ -332,9 +327,7 @@ review:
 
 自由時報以「淡江大橋機車道被嫌太窄 李四川：需要進行工程改善」為題報導 [@src-20260504-ltn-fd8f4042]。
 
-## 2026-05-07　1 則報導、1 則官方發布
-
-行政院發布「淡江大橋5/12通車 卓揆：打造臺灣最新名片 展現國家實力與文明的新地標」 [@src-20260507-ey-e498d6a6]。
+## 2026-05-07　1 則報導
 
 自由時報以「李四川質疑淡江大橋機車道有危險 交通部：符合法規」為題報導 [@src-20260507-ltn-c1cf7387]。
 
@@ -352,7 +345,7 @@ review:
 
 自由時報以「淡江大橋通車祈福未邀新北市府 藍議員江怡臻：令人心寒」為題報導 [@src-20260511-ltn-cd3fa581]。
 
-## 2026-05-12　11 則報導
+## 2026-05-12　13 則報導
 
 自由時報以「公路局致電不要參加淡江大橋通車 淡水、八里區長：一起祈福是好事」為題報導 [@src-20260512-ltn-d866b944]。
 
@@ -372,9 +365,13 @@ review:
 
 自由時報以「淡江大橋今通車 藍營民代批陳世凱為剪綵缺席總質詢」為題報導 [@src-20260512-ltn-9514f34b]。
 
+自由時報以「蔡錦賢抗議淡江大橋揭牌未獲邀 在地里長直言「很瞎」」為題報導 [@src-20260512-ltn-560e4c9f]。
+
+自由時報以「淡江大橋第一張罰單！飆仔爆音車硬闖管制區 吞高額罰單還扣車」為題報導 [@src-20260512-ltn-abcd9a63]。
+
 自由時報以「淡江大橋今正式通車 護欄、螺帽包覆調整改善」為題報導 [@src-20260512-ltn-75c275bc]。
 
-## 2026-05-13　5 則報導、1 則回應或澄清
+## 2026-05-13　6 則報導、1 則回應或澄清
 
 自由時報以「淡江大橋5/12通車「碰巧」陳世凱生日  公路局急澄清」為題報導 [@src-20260513-ltn-1292911c]。
 
@@ -392,15 +389,11 @@ review:
 
 自由時報以「喊淡江大橋機車道寬度要改善 李四川：雙北橋樑機車分隔島要重新檢討」為題報導 [@src-20260514-ltn-620ecab6]。
 
-## 2026-05-17　2 則報導
+## 2026-05-17　1 則報導
 
 自由時報以「李四川稱當選要中央改善淡江大橋機車道寬 蘇巧慧：中央地方一起努力」為題報導 [@src-20260517-ltn-01bef4f8]。
 
-自由時報以「扯！淡江大橋通車前機車硬闖挨罰扣車 異想天開偷貨車來載」為題報導 [@src-20260519-ltn-c787ba08]。
-
-## 2026-05-20　3 則報導
-
-自由時報以「淡江大橋通車滿1週！ 洪孟楷緊盯淡水端交織回堵、螺絲鬆動問題」為題報導 [@src-20260520-ltn-1d604062]。
+## 2026-05-20　2 則報導
 
 自由時報以「淡江大橋假日人車爆量 新北啟動交管、車流疏導措施」為題報導 [@src-20260520-ltn-b9226e7b]。
 

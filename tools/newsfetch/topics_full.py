@@ -506,15 +506,14 @@ def run(corpus, clusters, existing_seeds, root, report_path):
     window_items = sorted(corpus, key=lambda j: j["published_on"])
     out_seeds, published, published_sets = [], [], []
     for (key, lo, hi), seeds in ordered:
-        anchors = tp.anchor_terms([s["title"] for s in seeds], [key], df, len(corpus))
         members, seen_titles = [], set()
         for it in window_items:
-            if lo <= _day(it["published_on"]) <= hi and key in it["title"] and not tp.DROP.search(it["title"]) \
-                    and (not anchors or tp.has_anchor(it["title"], anchors)):
+            if lo <= _day(it["published_on"]) <= hi and key in it["title"] and not tp.DROP.search(it["title"]):
                 norm = tp.normalize_title(it["title"])
                 if norm not in seen_titles:
                     seen_titles.add(norm)
                     members.append(it)
+        members = tp.anchored(members, [s["title"] for s in seeds], [key], df, len(corpus))
         if not any(m.get("source_class") in ("news", "fact_check") for m in members):
             stats["rejected_no_news"] += 1
             continue

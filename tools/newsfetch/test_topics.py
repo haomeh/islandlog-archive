@@ -103,6 +103,58 @@ class TopicTest(unittest.TestCase):
         urls = {m["url"] for m in topics.members(seed, corpus, df)}
         self.assertEqual(urls, {"s1", "s2", "m1", "m2"})
 
+    def _members(self, seeds, others, filler=()):
+        """Member urls of a topic. `filler` titles are background news that make a word common."""
+        corpus = [item(u, t, d) for u, t, d in seeds + others]
+        corpus += [item(f"f{i}", t, "2026-03-01") for i, t in enumerate(filler)]
+        df = topics.document_frequency(corpus)
+        seed = {"event_id": "e", "seed_urls": [u for u, _, _ in seeds], "jurisdiction_names": ["臺中市"],
+                "jurisdiction_ids": ["jur-66000000"]}
+        return {m["url"] for m in topics.members(seed, corpus, df)}
+
+    COSTCO_SEEDS = [
+        ("s1", "離譜！台中市府上訴逾期1天遞狀 好市多A肝莓果案200萬免罰", "2026-06-17"),
+        ("s2", "行政作業出包好市多閃過200萬罰單 中市衛生局長道歉自請處分", "2026-06-18"),
+        ("s3", "好市多「A肝莓果案」中市府出包變免罰 他嘆：盧媽媽又把責任推給基層", "2026-06-18"),
+        ("s4", "中市府「慢1天上訴」好市多閃過200萬罰單 綠轟公信力失守", "2026-06-18"),
+    ]
+    COSTCO_OTHERS = [
+        ("kaohsiung", "高市好市多雞蛋沙拉遭控吃到衛生紙 衛生局二度稽查無異狀", "2026-06-15"),
+        ("oil", "中聯致癌油、美國蔬菜及蛋白粉連出包 好市多回應下架", "2026-07-15"),
+        ("later", "台中食安事件連發 天選之肉、非洲豬瘟、好市多A肝莓果官司被翻出", "2026-07-16"),
+        ("paper", "《逾期一天上訴》好市多重罰遭撤銷 議員批盧市府螺絲鬆", "2026-06-19"),
+    ]
+    # Common words: 衛生局 and 出包 are in many unrelated items of the corpus.
+    COMMON = [f"第{i}區衛生局稽查餐廳" for i in range(60)] + [f"第{i}號工程出包" for i in range(60)]
+
+    def test_a_common_word_does_not_join_another_issue(self):
+        urls = self._members(self.COSTCO_SEEDS, self.COSTCO_OTHERS, self.COMMON)
+        self.assertNotIn("kaohsiung", urls)  # shares only the common word 衛生局
+        self.assertNotIn("oil", urls)        # shares only the common word 出包
+
+    def test_a_rare_word_of_two_core_titles_is_an_anchor(self):
+        urls = self._members(self.COSTCO_SEEDS, self.COSTCO_OTHERS, self.COMMON)
+        self.assertIn("later", urls)   # A肝莓果 is in no seed title, but in two core titles
+        self.assertIn("paper", urls)   # 逾期一天上訴 / 螺絲
+
+    def test_a_title_of_a_sub_issue_in_the_seeds_joins(self):
+        seeds = [("a", "統促黨幹部 屏東里長參選人送肉粽遭偵辦", "2026-10-03"),
+                 ("b", "持刀闖花蓮東大門夜市！ 統促黨男殺人未遂收押", "2026-10-09"),
+                 ("c", "內政部聲請解散統促黨 學者：切斷中國在台協力者執行體系", "2026-07-30")]
+        others = [("moi", "141黨員涉殺人未遂、毒品近百案 刑事局：統促黨實為犯罪組織", "2026-07-31"),
+                  ("far", "統促黨成立三十週年餐敘", "2026-08-01")]
+        urls = self._members(seeds, others)
+        self.assertIn("moi", urls)
+        self.assertNotIn("far", urls)
+
+    def test_a_common_event_word_does_not_join_another_county(self):
+        seeds = [("a", "一觸即發！彰化芳苑火葬場今辦說明會 自救會：選址不當立即撤案", "2026-05-05"),
+                 ("b", "彰化生命園區抗議聲中動土！王惠美堅持一定要做：這裡最適合", "2026-07-28"),
+                 ("c", "反設芳苑生命園區 數百鄉親抗議", "2026-05-06")]
+        others = [("pingtung", "內政部挹注1.47億元 強化東港生命園區聯外交通 屏東公道三新闢工程動土", "2026-07-23")]
+        common = [f"第{i}校舍動土典禮" for i in range(60)]
+        self.assertNotIn("pingtung", self._members(seeds, others, common))
+
     def test_kinds(self):
         self.assertEqual(topics.kind_of(CORPUS[0]), "report")
         self.assertEqual(topics.kind_of(CORPUS[1]), "clarification")
