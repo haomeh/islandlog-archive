@@ -590,6 +590,32 @@ class SplitCasesTest(unittest.TestCase):
         self.assertEqual(len(tf.split_cases(self.members(titles))), 1)
 
 
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class ReasonLabelTest(unittest.TestCase):
+    """R112.5: the label of a rejection names the real reason."""
+
+    def reject(self, titles, publisher_count=2):
+        import tempfile
+        from pathlib import Path
+        corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        topic = [item(f"t{i}", t, "2026-10-23", f"出版社{i % publisher_count}") for i, t in enumerate(titles)]
+        clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
+        with tempfile.TemporaryDirectory() as tmp:
+            stats, published, _ = tf.run(corpus + topic, clusters, [], Path(tmp), Path(tmp) / "r.json", today="2026-10-25")
+        return {k: v for k, v in stats.items() if k.startswith("rejected_") and v}, published
+
+    def test_a_domestic_fraud_without_an_actor_is_not_labeled_foreign(self):
+        stats, published = self.reject(["清潔公司掛羊頭賣狗肉2-2》假洗冷氣真推銷 律師：恐涉加重詐欺未遂", "清潔公司掛羊頭賣狗肉2-1》999洗冷氣進門不洗強推銷 民眾怒批受騙"])
+        self.assertEqual(published, [])
+        self.assertNotIn("rejected_foreign", stats)
+        self.assertEqual(sum(stats.values()), 1)
+
+    def test_a_topic_that_names_a_foreign_country_is_labeled_foreign(self):
+        stats, published = self.reject(["美國宣布新關稅政策 川普簽署命令", "川普關稅政策衝擊美國進口商 外界關注"])
+        self.assertEqual(published, [])
+        self.assertEqual(stats, {"rejected_foreign": 1})
+
+
 class TopicConfigTest(unittest.TestCase):
     """R107a: the thresholds live in topic_config.py, each with a comment."""
 

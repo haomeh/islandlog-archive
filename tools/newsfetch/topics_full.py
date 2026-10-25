@@ -800,7 +800,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
                 stats["rejected_name_quality"] += 1
                 fail("rejected_name_quality", [m["url"] for m in members])
                 continue
-            if not taiwan_relevant(titles) and names_foreign(titles):  # R112.5: no foreign name, no foreign label
+            irrelevant = not taiwan_relevant(titles)
+            if irrelevant and names_foreign(titles):  # R112.5: only a title that names a foreign country gets the foreign label
                 stats["rejected_foreign"] += 1
                 fail("rejected_foreign", [m["url"] for m in members])
                 continue
@@ -824,6 +825,10 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
             if not actors:
                 stats["rejected_no_gov_actor"] += 1
                 fail("rejected_no_gov_actor", [m["url"] for m in members])
+                continue
+            if irrelevant:  # the gate still rejects a topic with no Taiwan term; a later gate above gave the label first
+                stats["rejected_not_taiwan"] += 1
+                fail("rejected_not_taiwan", [m["url"] for m in members])
                 continue
             local = [j for j in jids if j != "jur-tw"]
             names = [next(n for jid, _, n, _ in JURS if jid == j)[:-2] for j in local]
