@@ -29,7 +29,7 @@ from tools.newsfetch.topic_config import (
     BODY_VERB_NAME_MAX_LEN, BOUNDARY_SHARE, CAMPAIGN_DAYS, CLASSIFY_SHARE, ELECTION_DAY, ELECTION_DISPUTE_MIN_GRADE_A, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
     CONTINUATION_MIN_USES, DISEASE_NAME_MAX_LEN, FOREIGN_NAMED_SHARE, GENERIC_NAME_MAX_LEN, GOV_NAME_SHARE, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
     RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SPLIT_MIN_TITLES, SUBTOPIC_SHARE,
-    WITHDRAW_AFTER_FAILS)
+    WITHDRAW_AFTER_FAILS, WITHDRAW_MAX_COUNT, WITHDRAW_MAX_SHARE)
 
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票|對手陣營|競辦|競總")  # R106: the last 3 name a campaign without an election word
@@ -660,6 +660,14 @@ def apply_hysteresis(state, failed, day):
     return new, due, pending
 
 
+def limit_withdrawals(due, published_total):
+    """R133: (allowed, blocked). A run that would withdraw more than WITHDRAW_MAX_COUNT topics, or more than
+    WITHDRAW_MAX_SHARE of the published system topics (one topic is always allowed), withdraws none."""
+    if len(due) > WITHDRAW_MAX_COUNT or len(due) > max(1, WITHDRAW_MAX_SHARE * published_total):
+        return {}, dict(due)
+    return dict(due), {}
+
+
 def stable_id(published, title, first_day, last_day, new_id):
     """A rebuilt topic keeps the id of a published topic with the same title and an overlapping window."""
     for p in sorted(published, key=lambda p: p["first"]):
@@ -822,6 +830,18 @@ def regate_seed(doc, text, seed, urls_by_id, by_url):
     return seed, set(cited)
 
 
+def file_items(root, ids):
+    """R132: the items that the source files of a topic record (url, title, date, publisher, class)."""
+    import yaml
+    out = []
+    for p in sorted((Path(root) / "sources").glob("*/*.yaml")):
+        if p.stem in ids:
+            d = yaml.safe_load(p.read_text(encoding="utf-8"))
+            out.append({"url": d["url"], "title": d["title"], "published_on": str(d["published_on"]), "publisher": d["publisher"],
+                        "source_class": d["source_class"], "quote": d.get("quote")})
+    return out
+
+
 def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
     """R126: checks one old topic with the current gates. The members are built again (R112.1) and the ID stays.
     Returns the record of the check: id, gate (None when it passes), the source ids before and after, the titles."""
@@ -835,6 +855,14 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
     if not keys or not any(m.get("source_class") in ("news", "fact_check") for m in members):
         record["gate"] = "rejected_no_key" if not keys else "rejected_no_news"
         return record
+    # R132: a source of the file stays when the corpus lacks it, unless its own title fails the membership rule (R112.1).
+    have = {m["url"] for m in members}
+    seed_titles = [by_url[u]["title"] for u in seed["seed_urls"]]
+    second = tp.second_anchors(seed_titles, keys, df, len(corpus))
+    members = members + [it for it in file_items(root, before)
+                         if it["url"] not in have and it["url"] not in by_url and any(k in it["title"] for k in keys)
+                         and (it["title"] in seed_titles or not second or tp.has_anchor(it["title"], second) or tp.is_response(it))]
+    members.sort(key=lambda m: (m["published_on"], m["url"]))
     key = keys[0]
     full = extend_to_boundary(key, [m["title"] for m in members])
     if full != key:
@@ -1038,12 +1066,18 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
             regate_keys[doc["id"]] = rec["key"]
     failing = {pid: gate for pid, gate in failed.items() if pid not in covered}
     kept_withdrawn = {pid: gate for pid, gate in failing.items() if prior_event(root, pid)[0] == "withdrawn"}
-    state, withdrawn, pending = apply_hysteresis(read_topic_state(root), {p: g for p, g in failing.items() if p not in kept_withdrawn},
-                                                  today or taipei_day())
+    day = today or taipei_day()
+    old_state = read_topic_state(root)
+    state, withdrawn, pending = apply_hysteresis(old_state, {p: g for p, g in failing.items() if p not in kept_withdrawn}, day)
+    withdrawn, blocked = limit_withdrawals(withdrawn, len(old_system_topics(root)))  # R133
+    for pid, gate in blocked.items():  # the fail count stays; the PM decides
+        prior = old_state.get(pid, {})
+        state[pid] = {"fails": prior.get("fails", 0) + (0 if prior.get("day") == day else 1), "gate": gate, "day": day}
     for pid, gate in sorted({**kept_withdrawn, **withdrawn}.items()):
         withdraw_topic(root, pid, gate, today=today)  # a withdrawn topic gets its file back and no new record
     write_topic_state(root, state)
     stats["withdrawn"] = len(withdrawn)
+    stats["withdraw_blocked"] = len(blocked)
     stats["withdraw_pending"] = len(pending)
     stats["withdrawn_kept"] = len(kept_withdrawn)
     keys = {k[0]: k[1] for k in existing_key_by_id}
@@ -1052,7 +1086,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     links = apply_subtopic_links(root, keys)
     stats["part_of_links"] = len(links)
     stats["sensitive_from_sources"] = len(refresh_sensitive(root))
-    Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links, "withdrawn": withdrawn, "regate": regated}, ensure_ascii=False, indent=1),
+    Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links, "withdrawn": withdrawn, "withdraw_blocked": blocked, "regate": regated}, ensure_ascii=False, indent=1),
                                  encoding="utf-8")
     return stats, published, out_seeds
 

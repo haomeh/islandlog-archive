@@ -83,9 +83,13 @@ SPLIT_MIN_TITLES = 2  # A jurisdiction splits a topic off when this many titles 
 
 # --- Re-gate of old topics and gate fixes of the second precision sample (T22 round 3, R126 to R130) ---
 BODY_VERB_NAME_MAX_LEN = 6  # A name of this length or less that is a body short name and a verb (北高行駁回, 5 characters) is not a topic name. Sample T22-P: e142b3a9 (R128).
-ELECTION_DAY = "2026-11-28"  # Day of the 2026 local elections. The campaign period is the CAMPAIGN_DAYS before it. Start (R130).
-CAMPAIGN_DAYS = 90  # An election dispute dated this many days or fewer before ELECTION_DAY counts as inside the campaign period. Sample T22-P: e142b3a9 is dated 37 days before; the PM rules it inside (R130).
+ELECTION_DAY = "2026-11-28"  # Day of the 2026 local elections. The campaign period is the CAMPAIGN_DAYS before it. Start (R130); provisional until the user confirms (R136).
+CAMPAIGN_DAYS = 90  # An election dispute dated this many days or fewer before ELECTION_DAY counts as inside the campaign period. Sample T22-P: e142b3a9 is dated 37 days before; the PM rules it inside (R130). Provisional until the user confirms (R136).
 ELECTION_DISPUTE_MIN_GRADE_A = 1  # An election dispute inside the campaign period needs this many grade A sources, else it is rejected_election_campaign. PRD R-10. Sample T22-P: e142b3a9 had 3 grade C sources (R130).
 
 # --- Hysteresis (R107b) ---
 WITHDRAW_AFTER_FAILS = 2  # A published topic is withdrawn after this many failing runs in a row. Ruling R107.
+
+# --- Safety stop for withdrawals (R133) ---
+WITHDRAW_MAX_COUNT = 3  # A run that would withdraw more topics than this withdraws none and writes withdraw_blocked. Ruling R133.
+WITHDRAW_MAX_SHARE = 0.1  # ... also when it would withdraw more than this share of the published system topics (at least 1 topic is always allowed). Ruling R133.

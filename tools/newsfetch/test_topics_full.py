@@ -756,6 +756,43 @@ class ElectionDisputeGradeATest(unittest.TestCase):
         self.assertIsNone(tf.exclusion_reason(self.items(day="2027-03-01")))
 
 
+class WithdrawLimitTest(unittest.TestCase):
+    """R133: a run that would withdraw more than 3 topics, or more than 10% of the published system topics, withdraws none."""
+
+    def due(self, n):
+        return {f"ev-{i}": "rejected_name_quality" for i in range(n)}
+
+    def test_r133_four_topics_are_blocked(self):
+        allowed, blocked = tf.limit_withdrawals(self.due(4), 34)
+        self.assertEqual((allowed, sorted(blocked)), ({}, sorted(self.due(4))))
+
+    def test_r133_one_topic_of_34_is_withdrawn(self):
+        allowed, blocked = tf.limit_withdrawals(self.due(1), 34)
+        self.assertEqual((allowed, blocked), (self.due(1), {}))
+
+    def test_r133_the_share_limit_blocks_two_of_five(self):
+        self.assertEqual(tf.limit_withdrawals(self.due(2), 5)[0], {})
+        self.assertEqual(tf.limit_withdrawals(self.due(1), 1)[0], self.due(1))
+
+    def test_r133_a_blocked_run_writes_withdraw_blocked_and_keeps_the_fail_counts(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        due = self.due(4)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "events/2026").mkdir(parents=True)
+            with mock.patch.object(tf, "apply_hysteresis", return_value=({}, due, [])), mock.patch.object(tf, "withdraw_topic") as w:
+                stats, _, _ = tf.run([], [], [], root, root / "report.json", today="2026-10-25")
+            w.assert_not_called()
+            self.assertEqual((stats["withdrawn"], stats["withdraw_blocked"]), (0, 4))
+            report = json.loads((root / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(sorted(report["withdraw_blocked"]), sorted(due))
+            state = json.loads((root / "tools/newsfetch/topic_state.json").read_text(encoding="utf-8"))
+            self.assertEqual(sorted(state), sorted(due))
+
+
 @unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
 class RegateTest(unittest.TestCase):
     """R126: each run checks every published system topic with review.status draft-review again."""
@@ -808,16 +845,26 @@ class RegateTest(unittest.TestCase):
         from pathlib import Path
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            corpus, seed, _ = self.setup(root)
-            for it in corpus:
-                if it["url"] in ("t1", "t3", "off"):
-                    it["publisher"] = "自由時報"  # one news publisher is left
+            corpus, seed, _ = self.setup(root, publishers=1)  # the file cites one news publisher and one off-topic item
             before = (root / "events/2026" / f"{self.ID}.md").read_text(encoding="utf-8")
             stats, _, _ = self.run_gate(root, corpus, seed)
             self.assertEqual((stats["regate_failed"], stats["withdrawn"], stats["withdraw_pending"]), (1, 0, 1))
             self.assertEqual((root / "events/2026" / f"{self.ID}.md").read_text(encoding="utf-8"), before)
             state = json.loads((root / "tools/newsfetch/topic_state.json").read_text(encoding="utf-8"))
             self.assertEqual(state[self.ID]["fails"], 1)
+
+    def test_r132_the_sources_of_the_file_count_when_the_corpus_lacks_them(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            corpus, seed, off_id = self.setup(root)  # the file cites 自由時報 and 聯合新聞網
+            corpus = [it for it in corpus if it["publisher"] != "聯合新聞網"]  # the corpus holds one news publisher
+            stats, _, _ = self.run_gate(root, corpus, seed)
+            text = (root / "events/2026" / f"{self.ID}.md").read_text(encoding="utf-8")
+            self.assertEqual((stats["regate_passed"], stats["regate_failed"]), (1, 0))
+            self.assertIn("udn", text)  # a file source that the corpus lacks stays
+            self.assertNotIn(off_id, text)  # a file source whose own title fails the membership rule leaves
 
     def test_r126_an_editor_approved_topic_is_not_touched(self):
         import json
