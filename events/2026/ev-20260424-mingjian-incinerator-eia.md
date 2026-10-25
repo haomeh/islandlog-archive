@@ -4,7 +4,7 @@ id: ev-20260424-mingjian-incinerator-eia
 kind: historical_event
 status: published
 title: 南投縣焚化爐
-summary: 2026-04-24至2026-08-27，自由時報共 43 則報導提及焚化爐 [@src-20260424-ltn-b391e398]。臺南市政府等機關發布 1 則相關說明 [@src-20260818-tainan-a520c9d2]。
+summary: 2026-04-24至2026-08-27，自由時報共 32 則報導提及焚化爐 [@src-20260424-ltn-b391e398]。
 start_date: '2026-04-24'
 start_date_precision: day
 gov_levels:
@@ -20,8 +20,6 @@ actors:
   role: proposer
 - actor_id: ac-mingjian-incinerator-self-help
   role: opponent
-- actor_id: ac-tainan-city-government
-  role: other
 questions:
 - id: q-01
   text: 焚化爐的經過與各方說明為何？
@@ -38,11 +36,10 @@ timeline:
 - id: tl-01
   date: '2026-04-24'
   date_precision: day
-  title: 5 則報導
+  title: 3 則報導
   source_ids:
   - src-20260424-ltn-b391e398
   - src-20260424-ltn-8b1a7586
-  - src-20260424-ltn-3a3fa18d
 - id: tl-02
   date: '2026-04-27'
   date_precision: day
@@ -52,7 +49,7 @@ timeline:
 - id: tl-03
   date: '2026-04-28'
   date_precision: day
-  title: 6 則報導、1 則回應或澄清
+  title: 3 則報導、1 則回應或澄清
   source_ids:
   - src-20260428-ltn-fc1f9ba4
   - src-20260428-ltn-6650c505
@@ -60,7 +57,7 @@ timeline:
 - id: tl-04
   date: '2026-05-07'
   date_precision: day
-  title: 5 則報導
+  title: 4 則報導
   source_ids:
   - src-20260507-ltn-3d56edb1
   - src-20260507-ltn-2732185f
@@ -68,18 +65,17 @@ timeline:
 - id: tl-05
   date: '2026-05-13'
   date_precision: day
-  title: 8 則報導
+  title: 6 則報導
   source_ids:
   - src-20260513-ltn-a4fc894f
   - src-20260513-ltn-c5d8cfc6
-  - src-20260519-ltn-aadccb98
+  - src-20260527-ltn-8690c2da
 - id: tl-06
   date: '2026-06-16'
   date_precision: day
-  title: 4 則報導
+  title: 3 則報導
   source_ids:
   - src-20260616-ltn-0ce01be6
-  - src-20260630-ltn-2dc98893
   - src-20260707-ltn-1869b3e2
 - id: tl-07
   date: '2026-08-02'
@@ -91,26 +87,25 @@ timeline:
 - id: tl-08
   date: '2026-08-12'
   date_precision: day
-  title: 4 則報導
+  title: 2 則報導
   source_ids:
   - src-20260812-ltn-cbcffcff
   - src-20260812-ltn-80d1950b
-  - src-20260813-ltn-10a9362a
 - id: tl-09
-  date: '2026-08-18'
+  date: '2026-08-13'
   date_precision: day
-  title: 1 則官方發布
-  attributed_to: ac-tainan-city-government
+  title: 2 則報導
   source_ids:
-  - src-20260818-tainan-a520c9d2
+  - src-20260813-ltn-10a9362a
+  - src-20260813-ltn-0af7d731
 - id: tl-10
   date: '2026-08-27'
   date_precision: day
-  title: 6 則報導
+  title: 4 則報導
   source_ids:
   - src-20260827-ltn-fbc31f97
-  - src-20260827-ltn-0313ae0a
-  - src-20260828-ltn-bfe21177
+  - src-20260903-ltn-c588cf6d
+  - src-20260915-ltn-9683609f
 news_groups:
 - id: ng-01
   timeline_id: tl-01
@@ -128,20 +123,6 @@ news_groups:
   source_ids:
   - src-20260424-ltn-8b1a7586
 - id: ng-03
-  timeline_id: tl-01
-  kind: report
-  title: 驚悚！日本旭山動物園員工殺妻後丟進園內焚化爐  隔天還冷靜上班
-  representative_source_id: src-20260424-ltn-3a3fa18d
-  source_ids:
-  - src-20260424-ltn-3a3fa18d
-- id: ng-04
-  timeline_id: tl-01
-  kind: report
-  title: 遺體下落不明！日男涉殺妻棄屍焚化爐  旭山動物園恐延後開園
-  representative_source_id: src-20260425-ltn-19a3e1b4
-  source_ids:
-  - src-20260425-ltn-19a3e1b4
-- id: ng-05
   timeline_id: tl-02
   kind: report
   title: 名間焚化爐二階環評會 自救會遙請濁水媽祖 現場點香爆衝突
@@ -149,7 +130,7 @@ news_groups:
   source_ids:
   - src-20260427-ltn-e44403f6
   - src-20260428-ltn-982eb219
-- id: ng-06
+- id: ng-04
   timeline_id: tl-03
   kind: clarification
   title: 南投焚化爐環評會爆衝突  警否認強制力致傷
@@ -157,7 +138,7 @@ news_groups:
   source_ids:
   - src-20260428-ltn-fc1f9ba4
   note: 報導中的回應或澄清
-- id: ng-07
+- id: ng-05
   timeline_id: tl-03
   kind: report
   title: 南投名間焚化爐環評會 鄉民射紙飛機抗議場面混亂
@@ -165,70 +146,42 @@ news_groups:
   source_ids:
   - src-20260428-ltn-6650c505
   - src-20260429-ltn-5e2e236b
-- id: ng-08
+- id: ng-06
   timeline_id: tl-03
   kind: report
   title: 南投名間蓋焚化爐 自救會抗議恐毀千億飲料產業鏈
   representative_source_id: src-20260428-ltn-e50a1ce0
   source_ids:
   - src-20260428-ltn-e50a1ce0
-- id: ng-09
-  timeline_id: tl-03
-  kind: report
-  title: 日男殺妻焚屍 旭山動物園焚化爐發現疑似部分人體
-  representative_source_id: src-20260430-ltn-82b3ea58
-  source_ids:
-  - src-20260430-ltn-82b3ea58
-- id: ng-10
-  timeline_id: tl-03
-  kind: report
-  title: 最狂保夾震撼實境！黑市上億毒品重兵押運焚化爐 瞬間成灰燼
-  representative_source_id: src-20260501-ltn-c31eff72
-  source_ids:
-  - src-20260501-ltn-c31eff72
-- id: ng-11
-  timeline_id: tl-03
-  kind: report
-  title: 台中文山焚化爐周遭飄「酸臭噴」味 疑垃圾平台異味待查
-  representative_source_id: src-20260505-ltn-e5257197
-  source_ids:
-  - src-20260505-ltn-e5257197
-- id: ng-12
+- id: ng-07
   timeline_id: tl-04
   kind: report
   title: 南投焚化爐花1億購地遭質疑 縣府：有納入預算
   representative_source_id: src-20260507-ltn-3d56edb1
   source_ids:
   - src-20260507-ltn-3d56edb1
-- id: ng-13
+- id: ng-08
   timeline_id: tl-04
   kind: report
   title: 南投名間焚化爐興建案 環團要求完整討論替代方案
   representative_source_id: src-20260507-ltn-2732185f
   source_ids:
   - src-20260507-ltn-2732185f
-- id: ng-14
+- id: ng-09
   timeline_id: tl-04
   kind: report
   title: 南投名間焚化爐興建案 自救會與環團帶鍋碗瓢盆抗爭要求撤案
   representative_source_id: src-20260508-ltn-048ec8ab
   source_ids:
   - src-20260508-ltn-048ec8ab
-- id: ng-15
+- id: ng-10
   timeline_id: tl-04
   kind: report
   title: 反名間焚化爐演行動劇 要求南投縣府撤案
   representative_source_id: src-20260509-ltn-ee8a7004
   source_ids:
   - src-20260509-ltn-ee8a7004
-- id: ng-16
-  timeline_id: tl-04
-  kind: report
-  title: 台東焚化爐濾管頻傳損壞 歲修換掉480根花費近1500萬
-  representative_source_id: src-20260512-ltn-6ad87ae7
-  source_ids:
-  - src-20260512-ltn-6ad87ae7
-- id: ng-17
+- id: ng-11
   timeline_id: tl-05
   kind: report
   title: 南投名間焚化爐環評會 未先討論替代方案惹議
@@ -236,49 +189,35 @@ news_groups:
   source_ids:
   - src-20260513-ltn-a4fc894f
   - src-20260514-ltn-95858702
-- id: ng-18
+- id: ng-12
   timeline_id: tl-05
   kind: report
   title: 名間焚化爐環評再爆衝突 鄉長衝主席台遭架離
   representative_source_id: src-20260513-ltn-c5d8cfc6
   source_ids:
   - src-20260513-ltn-c5d8cfc6
-- id: ng-19
-  timeline_id: tl-05
-  kind: report
-  title: 盧秀燕改建文山焚化爐比林佳龍貴9倍零動工 「超級爛攤子給丟下任」
-  representative_source_id: src-20260519-ltn-aadccb98
-  source_ids:
-  - src-20260519-ltn-aadccb98
-- id: ng-20
-  timeline_id: tl-05
-  kind: report
-  title: 文山焚化爐改建 盧秀燕挨批任內都沒動
-  representative_source_id: src-20260520-ltn-42b36d53
-  source_ids:
-  - src-20260520-ltn-42b36d53
-- id: ng-21
+- id: ng-13
   timeline_id: tl-05
   kind: report
   title: 南投名間焚化爐環評再爆衝突 尖叫雞尖聲鳴叫
   representative_source_id: src-20260527-ltn-8690c2da
   source_ids:
   - src-20260527-ltn-8690c2da
-- id: ng-22
+- id: ng-14
   timeline_id: tl-05
   kind: report
   title: 南投名間焚化爐環評 史無前例連開24次會議惹議
   representative_source_id: src-20260528-ltn-5ed0f0ff
   source_ids:
   - src-20260528-ltn-5ed0f0ff
-- id: ng-23
+- id: ng-15
   timeline_id: tl-05
   kind: report
   title: 名間焚化爐案完成二階環評範疇界定會議 投縣府開會24次 自救會批疲勞轟炸
   representative_source_id: src-20260529-ltn-1ca895ed
   source_ids:
   - src-20260529-ltn-1ca895ed
-- id: ng-24
+- id: ng-16
   timeline_id: tl-06
   kind: report
   title: 南投焚化爐預定地拍到石虎 農業部重申三原則嚴格把關
@@ -286,21 +225,14 @@ news_groups:
   source_ids:
   - src-20260616-ltn-0ce01be6
   - src-20260617-ltn-96a8a6f6
-- id: ng-25
-  timeline_id: tl-06
-  kind: report
-  title: 災後泡水傢俱、家電經破碎 崁頂焚化爐不收相關處理費
-  representative_source_id: src-20260630-ltn-2dc98893
-  source_ids:
-  - src-20260630-ltn-2dc98893
-- id: ng-26
+- id: ng-17
   timeline_id: tl-06
   kind: report
   title: 南投名間焚化爐抗爭衝突6人被告  自救會盼司法彰顯公義
   representative_source_id: src-20260707-ltn-1869b3e2
   source_ids:
   - src-20260707-ltn-1869b3e2
-- id: ng-27
+- id: ng-18
   timeline_id: tl-07
   kind: clarification
   title: 温世政砲轟焚化爐、蚊子館 南投縣府回應了
@@ -308,42 +240,42 @@ news_groups:
   source_ids:
   - src-20260802-ltn-0138a0d3
   note: 報導中的回應或澄清
-- id: ng-28
+- id: ng-19
   timeline_id: tl-07
   kind: report
   title: 直攻許淑華痛點 温世政：南投免蓋焚化爐
   representative_source_id: src-20260803-ltn-138518c8
   source_ids:
   - src-20260803-ltn-138518c8
-- id: ng-29
+- id: ng-20
   timeline_id: tl-08
   kind: report
   title: 南投焚化爐案再爆爭議 居民抗議地下水鑽探未知會地方
   representative_source_id: src-20260812-ltn-cbcffcff
   source_ids:
   - src-20260812-ltn-cbcffcff
-- id: ng-30
+- id: ng-21
   timeline_id: tl-08
   kind: report
   title: 自由說新聞》焚化爐爭議再起！直擊縣府「突襲施工」 名間人、鄉長全怒了
   representative_source_id: src-20260812-ltn-80d1950b
   source_ids:
   - src-20260812-ltn-80d1950b
-- id: ng-31
-  timeline_id: tl-08
+- id: ng-22
+  timeline_id: tl-09
   kind: report
   title: 南投焚化爐爭議升溫！ 縣府「怕抗爭」偷動工 鄉長肉身擋機具轟：欺負名間人
   representative_source_id: src-20260813-ltn-10a9362a
   source_ids:
   - src-20260813-ltn-10a9362a
-- id: ng-32
-  timeline_id: tl-08
+- id: ng-23
+  timeline_id: tl-09
   kind: report
   title: 名間焚化爐鑽探 温世政肉身擋施工
   representative_source_id: src-20260813-ltn-0af7d731
   source_ids:
   - src-20260813-ltn-0af7d731
-- id: ng-33
+- id: ng-24
   timeline_id: tl-10
   kind: report
   title: 拍到了！名間焚化爐預定地驚見獨眼石虎 自救會要求全面停工
@@ -351,28 +283,14 @@ news_groups:
   source_ids:
   - src-20260827-ltn-fbc31f97
   - src-20260828-ltn-edc64a66
-- id: ng-34
-  timeline_id: tl-10
-  kind: report
-  title: 外縣市垃圾洗產地混入高雄焚化爐  7人被逮起訴
-  representative_source_id: src-20260827-ltn-0313ae0a
-  source_ids:
-  - src-20260827-ltn-0313ae0a
-- id: ng-35
-  timeline_id: tl-10
-  kind: report
-  title: 台中文山新焚化爐蓋好還要4年 藍議員不忍問30年舊爐「撐不撐得住」
-  representative_source_id: src-20260828-ltn-bfe21177
-  source_ids:
-  - src-20260828-ltn-bfe21177
-- id: ng-36
+- id: ng-25
   timeline_id: tl-10
   kind: report
   title: 名間鄉長選舉登記開戰！自救會堵人簽「撤銷焚化爐」 藍綠參選人態度大不同
   representative_source_id: src-20260903-ltn-c588cf6d
   source_ids:
   - src-20260903-ltn-c588cf6d
-- id: ng-37
+- id: ng-26
   timeline_id: tl-10
   kind: report
   title: 名間焚化爐鑽探 湧水引爆鄉民怒火
@@ -388,21 +306,17 @@ review:
   status: draft-review
 ---
 
-## 2026-04-24　5 則報導
+## 2026-04-24　3 則報導
 
 自由時報以「「埔中茶」已登錄無形文化資產  學者連署反對南投名間焚化爐」為題報導 [@src-20260424-ltn-b391e398]。
 
 自由時報以「反對南投名間鄉設焚化爐  250位學者批恐衝擊農業籲縣府重新審視」為題報導 [@src-20260424-ltn-8b1a7586]。
 
-自由時報以「驚悚！日本旭山動物園員工殺妻後丟進園內焚化爐  隔天還冷靜上班」為題報導 [@src-20260424-ltn-3a3fa18d]。
-
-自由時報以「遺體下落不明！日男涉殺妻棄屍焚化爐  旭山動物園恐延後開園」為題報導 [@src-20260425-ltn-19a3e1b4]。
-
 ## 2026-04-27　2 則報導
 
 自由時報以「名間焚化爐二階環評會 自救會遙請濁水媽祖 現場點香爆衝突」為題報導 [@src-20260427-ltn-e44403f6]。
 
-## 2026-04-28　6 則報導、1 則回應或澄清
+## 2026-04-28　3 則報導、1 則回應或澄清
 
 自由時報以「南投焚化爐環評會爆衝突  警否認強制力致傷」為題報導 [@src-20260428-ltn-fc1f9ba4]。
 
@@ -410,13 +324,7 @@ review:
 
 自由時報以「南投名間蓋焚化爐 自救會抗議恐毀千億飲料產業鏈」為題報導 [@src-20260428-ltn-e50a1ce0]。
 
-自由時報以「日男殺妻焚屍 旭山動物園焚化爐發現疑似部分人體」為題報導 [@src-20260430-ltn-82b3ea58]。
-
-自由時報以「最狂保夾震撼實境！黑市上億毒品重兵押運焚化爐 瞬間成灰燼」為題報導 [@src-20260501-ltn-c31eff72]。
-
-自由時報以「台中文山焚化爐周遭飄「酸臭噴」味 疑垃圾平台異味待查」為題報導 [@src-20260505-ltn-e5257197]。
-
-## 2026-05-07　5 則報導
+## 2026-05-07　4 則報導
 
 自由時報以「南投焚化爐花1億購地遭質疑 縣府：有納入預算」為題報導 [@src-20260507-ltn-3d56edb1]。
 
@@ -426,17 +334,11 @@ review:
 
 自由時報以「反名間焚化爐演行動劇 要求南投縣府撤案」為題報導 [@src-20260509-ltn-ee8a7004]。
 
-自由時報以「台東焚化爐濾管頻傳損壞 歲修換掉480根花費近1500萬」為題報導 [@src-20260512-ltn-6ad87ae7]。
-
-## 2026-05-13　8 則報導
+## 2026-05-13　6 則報導
 
 自由時報以「南投名間焚化爐環評會 未先討論替代方案惹議」為題報導 [@src-20260513-ltn-a4fc894f]。
 
 自由時報以「名間焚化爐環評再爆衝突 鄉長衝主席台遭架離」為題報導 [@src-20260513-ltn-c5d8cfc6]。
-
-自由時報以「盧秀燕改建文山焚化爐比林佳龍貴9倍零動工 「超級爛攤子給丟下任」」為題報導 [@src-20260519-ltn-aadccb98]。
-
-自由時報以「文山焚化爐改建 盧秀燕挨批任內都沒動」為題報導 [@src-20260520-ltn-42b36d53]。
 
 自由時報以「南投名間焚化爐環評再爆衝突 尖叫雞尖聲鳴叫」為題報導 [@src-20260527-ltn-8690c2da]。
 
@@ -444,11 +346,9 @@ review:
 
 自由時報以「名間焚化爐案完成二階環評範疇界定會議 投縣府開會24次 自救會批疲勞轟炸」為題報導 [@src-20260529-ltn-1ca895ed]。
 
-## 2026-06-16　4 則報導
+## 2026-06-16　3 則報導
 
 自由時報以「南投焚化爐預定地拍到石虎 農業部重申三原則嚴格把關」為題報導 [@src-20260616-ltn-0ce01be6]。
-
-自由時報以「災後泡水傢俱、家電經破碎 崁頂焚化爐不收相關處理費」為題報導 [@src-20260630-ltn-2dc98893]。
 
 自由時報以「南投名間焚化爐抗爭衝突6人被告  自救會盼司法彰顯公義」為題報導 [@src-20260707-ltn-1869b3e2]。
 
@@ -458,27 +358,21 @@ review:
 
 自由時報以「直攻許淑華痛點 温世政：南投免蓋焚化爐」為題報導 [@src-20260803-ltn-138518c8]。
 
-## 2026-08-12　4 則報導
+## 2026-08-12　2 則報導
 
 自由時報以「南投焚化爐案再爆爭議 居民抗議地下水鑽探未知會地方」為題報導 [@src-20260812-ltn-cbcffcff]。
 
 自由時報以「自由說新聞》焚化爐爭議再起！直擊縣府「突襲施工」 名間人、鄉長全怒了」為題報導 [@src-20260812-ltn-80d1950b]。
 
+## 2026-08-13　2 則報導
+
 自由時報以「南投焚化爐爭議升溫！ 縣府「怕抗爭」偷動工 鄉長肉身擋機具轟：欺負名間人」為題報導 [@src-20260813-ltn-10a9362a]。
 
 自由時報以「名間焚化爐鑽探 温世政肉身擋施工」為題報導 [@src-20260813-ltn-0af7d731]。
 
-## 2026-08-18　1 則官方發布
-
-臺南市政府發布「台南強化廢棄物減量與資源循環 黃偉哲：提高資源再利用，減輕焚化爐負擔」 [@src-20260818-tainan-a520c9d2]。
-
-## 2026-08-27　6 則報導
+## 2026-08-27　4 則報導
 
 自由時報以「拍到了！名間焚化爐預定地驚見獨眼石虎 自救會要求全面停工」為題報導 [@src-20260827-ltn-fbc31f97]。
-
-自由時報以「外縣市垃圾洗產地混入高雄焚化爐  7人被逮起訴」為題報導 [@src-20260827-ltn-0313ae0a]。
-
-自由時報以「台中文山新焚化爐蓋好還要4年 藍議員不忍問30年舊爐「撐不撐得住」」為題報導 [@src-20260828-ltn-bfe21177]。
 
 自由時報以「名間鄉長選舉登記開戰！自救會堵人簽「撤銷焚化爐」 藍綠參選人態度大不同」為題報導 [@src-20260903-ltn-c588cf6d]。
 

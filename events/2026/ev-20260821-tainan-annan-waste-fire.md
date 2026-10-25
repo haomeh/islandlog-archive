@@ -4,7 +4,7 @@ id: ev-20260821-tainan-annan-waste-fire
 kind: historical_event
 status: published
 title: 臺南市安南區
-summary: 2026-08-21至2026-09-16，自由時報共 10 則報導提及安南區 [@src-20260821-tainan-944e33e5]。臺南市政府等機關發布 8 則相關說明 [@src-20260821-tainan-944e33e5]。
+summary: 2026-08-21至2026-09-16，自由時報共 10 則報導提及安南區 [@src-20260821-tainan-944e33e5]。臺南市政府等機關發布 5 則相關說明 [@src-20260821-tainan-944e33e5]。
 start_date: '2026-08-21'
 start_date_precision: day
 gov_levels:
@@ -67,26 +67,11 @@ timeline:
   source_ids:
   - src-20260825-tainan-06433aac
 - id: tl-06
-  date: '2026-09-13'
-  date_precision: day
-  title: 1 則官方發布
-  attributed_to: ac-tainan-city-government
-  source_ids:
-  - src-20260913-tainan-50bb3fa9
-- id: tl-07
-  date: '2026-09-14'
-  date_precision: day
-  title: 1 則官方發布
-  attributed_to: ac-tainan-city-government
-  source_ids:
-  - src-20260914-tainan-33e9e020
-- id: tl-08
   date: '2026-09-16'
   date_precision: day
-  title: 2 則官方發布
+  title: 1 則官方發布
   attributed_to: ac-tainan-city-government
   source_ids:
-  - src-20260916-tainan-5e309fc6
   - src-20260916-tainan-4b6f54d6
 news_groups:
 - id: ng-01
@@ -206,16 +191,6 @@ review:
 
 臺南市政府發布「安南區火災爆炸事故 趙卿惠副市長慰問嚴重受災戶 市府全力協助家園復原」 [@src-20260825-tainan-06433aac]。
 
-## 2026-09-13　1 則官方發布
-
-臺南市政府發布「安南區萌萌寵物嘉年華登場 黃偉哲籲響應認養代替購買」 [@src-20260913-tainan-50bb3fa9]。
-
-## 2026-09-14　1 則官方發布
-
-臺南市政府發布「愛心相挺迎開學 安南區360份文具大禮包助學童安心學習」 [@src-20260914-tainan-33e9e020]。
-
-## 2026-09-16　2 則官方發布
-
-臺南市政府發布「安南區全民運動館結合在地學校 帶領九份子國小學童體驗植栽落實永續回饋」 [@src-20260916-tainan-5e309fc6]。
+## 2026-09-16　1 則官方發布
 
 臺南市政府發布「安南區火災爆炸事故 市府提供車損慰助金 以降低民眾財損壓力」 [@src-20260916-tainan-4b6f54d6]。

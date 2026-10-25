@@ -86,6 +86,23 @@ class TopicTest(unittest.TestCase):
         self.assertNotIn(CORPUS[7]["url"], urls)  # 仁愛路, not 仁愛圓環
         self.assertNotIn(CORPUS[4]["url"], urls)
 
+    def test_members_need_an_anchor_term(self):
+        titles = [
+            ("s1", "離譜！台中市府上訴逾期1天遞狀 好市多A肝莓果案200萬免罰", "2026-06-17"),
+            ("s2", "行政作業出包好市多閃過200萬罰單 中市衛生局長道歉自請處分", "2026-06-18"),
+            ("m1", "中市府「慢1天上訴」好市多閃過200萬罰單 綠轟公信力失守", "2026-06-18"),
+            ("m2", "台中食安事件連發 天選之肉、非洲豬瘟、好市多A肝莓果官司被翻出", "2026-07-16"),
+            ("x1", "確定了！全台最大間好市多新高雄店7/3開幕", "2026-06-12"),
+            ("x2", "台南芒果首銷英國超市 上架日本好市多", "2026-07-08"),
+            ("x3", "桃園市蘆竹饋線跳脫釀565戶停電 好市多一度受影響", "2026-07-15"),
+        ]
+        # No background: 好市多 news is concentrated in the window, so the place filter does not start.
+        corpus = [item(u, t, d) for u, t, d in titles]
+        df = topics.document_frequency(corpus)
+        seed = {"event_id": "e", "seed_urls": ["s1", "s2"], "jurisdiction_names": ["臺中市"], "jurisdiction_ids": ["jur-66000000"]}
+        urls = {m["url"] for m in topics.members(seed, corpus, df)}
+        self.assertEqual(urls, {"s1", "s2", "m1", "m2"})
+
     def test_kinds(self):
         self.assertEqual(topics.kind_of(CORPUS[0]), "report")
         self.assertEqual(topics.kind_of(CORPUS[1]), "clarification")

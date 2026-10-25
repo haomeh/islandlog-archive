@@ -235,6 +235,7 @@ def members(seed, corpus, df):
     generic = (not national and len(names) == 1 and bool(keys) and df.get(keys[0], 0) > PLACE_FILTER_DF
                and burst < GENERIC_BURST and not PLACE.search(keys[0]))
     seed["_generic"] = generic
+    anchors = anchor_terms(titles, keys, df, len(corpus))
     places = _place_terms(names) if generic else []
     if generic:
         # Local anchors: short phrases in many seed titles that are rare in the corpus (for example 名間).
@@ -251,6 +252,8 @@ def members(seed, corpus, df):
             continue
         if places and not any(p in it["title"] for p in places):
             continue
+        if anchors and not has_anchor(it["title"], anchors):
+            continue  # same key, other issue (好市多 opening vs 好市多 fine appeal)
         norm = normalize_title(it["title"])
         if norm in seen:
             continue
@@ -262,6 +265,26 @@ def members(seed, corpus, df):
 def _grams2(title):
     text = unicodedata.normalize("NFKC", title or "")
     return {run[i:i + 2] for run in CJK_RUN.findall(text) for i in range(len(run) - 1)}
+
+
+ANCHOR_SHARE = 0.1
+
+
+def anchor_terms(seed_titles, keys, df, total):
+    """Words of the seed titles that tell the issue apart from other news with the same key (R63).
+    A word of 2 or more characters, not part of a key, in ANCHOR_SHARE of the seed titles (at least 1),
+    and not a word in more than GENERIC_DF_SHARE of all items."""
+    cover = Counter()
+    for t in seed_titles:
+        cover.update(g for g in _grams(t) if len(g) >= 2)
+    generic = max(50, GENERIC_DF_SHARE * total)
+    need = max(1, ANCHOR_SHARE * len(seed_titles))
+    return {g for g, c in cover.items() if c >= need and df.get(g, 0) <= generic
+            and not any(g in k or k in g for k in keys)}
+
+
+def has_anchor(title, anchors):
+    return any(a in title for a in anchors)
 
 
 def kind_of(it):

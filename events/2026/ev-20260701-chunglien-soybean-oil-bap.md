@@ -4,7 +4,7 @@ id: ev-20260701-chunglien-soybean-oil-bap
 kind: historical_event
 status: published
 title: 中聯油脂
-summary: 2026-07-01至2026-07-15，自由時報共 45 則報導提及中聯油脂 [@src-20260701-ltn-9e6942bd]。臺南市政府等機關發布 10 則相關說明 [@src-20260703-tainan-130954d4]。
+summary: 2026-07-01至2026-07-15，自由時報共 44 則報導提及中聯油脂 [@src-20260701-ltn-9e6942bd]。臺南市政府等機關發布 10 則相關說明 [@src-20260703-tainan-130954d4]。
 start_date: '2026-07-01'
 start_date_precision: day
 gov_levels:
@@ -55,7 +55,7 @@ timeline:
 - id: tl-01
   date: '2026-07-01'
   date_precision: day
-  title: 12 則報導
+  title: 14 則報導
   source_ids:
   - src-20260701-ltn-9e6942bd
   - src-20260701-ltn-46eb0f65
@@ -124,7 +124,7 @@ timeline:
 - id: tl-10
   date: '2026-07-15'
   date_precision: day
-  title: 8 則報導、11 則回應或澄清、1 則引述貼文、5 則官方發布
+  title: 6 則報導、10 則回應或澄清、1 則引述貼文、5 則官方發布
   attributed_to: ac-taiwan-fda
   source_ids:
   - src-20260715-ltn-14c67250
@@ -217,6 +217,20 @@ news_groups:
   source_ids:
   - src-20260702-ltn-72fea0cc
 - id: ng-13
+  timeline_id: tl-01
+  kind: report
+  title: 中聯大豆沙拉油致癌物超標 北市大賣場已全數下架
+  representative_source_id: src-20260702-ltn-4d5635b5
+  source_ids:
+  - src-20260702-ltn-4d5635b5
+- id: ng-14
+  timeline_id: tl-01
+  kind: report
+  title: 中聯1300噸大豆沙拉油 一級致癌物超標／供應泰山、福壽、福懋 20品項已啟動收回 台中市府下令中聯停產
+  representative_source_id: src-20260702-ltn-32abc7ef
+  source_ids:
+  - src-20260702-ltn-32abc7ef
+- id: ng-15
   timeline_id: tl-02
   kind: clarification
   title: 不只苯駢芘！中聯問題油另3種致癌風險物質超標 食安處說明
@@ -224,7 +238,7 @@ news_groups:
   source_ids:
   - src-20260703-ltn-184727eb
   note: 報導中的回應或澄清
-- id: ng-14
+- id: ng-16
   timeline_id: tl-03
   kind: clarification
   title: 1300噸致癌油流入市面 中聯油脂何時復工？衛生局回應了
@@ -232,7 +246,7 @@ news_groups:
   source_ids:
   - src-20260704-ltn-6ce80195
   note: 報導中的回應或澄清
-- id: ng-15
+- id: ng-17
   timeline_id: tl-04
   kind: clarification
   title: 下游4月即反映苯駢芘超標   中聯油脂6月才通報涉隱匿？廠方不回應
@@ -240,7 +254,7 @@ news_groups:
   source_ids:
   - src-20260705-ltn-e943fb18
   note: 報導中的回應或澄清
-- id: ng-16
+- id: ng-18
   timeline_id: tl-05
   kind: clarification
   title: 中聯致癌油流竄！在野黨喊「失能官員下台」  姜至剛回應了
@@ -248,7 +262,7 @@ news_groups:
   source_ids:
   - src-20260706-ltn-d3f1f56e
   note: 報導中的回應或澄清
-- id: ng-17
+- id: ng-19
   timeline_id: tl-05
   kind: report
   title: 清查中聯問題油品流向 周春米：確認屏縣學校營養午餐未使用
@@ -256,7 +270,7 @@ news_groups:
   source_ids:
   - src-20260706-ltn-448a6612
   - src-20260707-ltn-e6f5c2f1
-- id: ng-18
+- id: ng-20
   timeline_id: tl-06
   kind: clarification
   title: 中聯油脂案延燒！ 公衛師公會批「沒回應民眾焦慮」
@@ -264,7 +278,7 @@ news_groups:
   source_ids:
   - src-20260707-ltn-1fc5f63c
   note: 報導中的回應或澄清
-- id: ng-19
+- id: ng-21
   timeline_id: tl-06
   kind: clarification
   title: 致癌油延燒！台中巿府重罰300萬 中聯公司低調不回應
@@ -272,7 +286,7 @@ news_groups:
   source_ids:
   - src-20260707-ltn-b78b88ce
   note: 報導中的回應或澄清
-- id: ng-20
+- id: ng-22
   timeline_id: tl-06
   kind: clarification
   title: 食藥署3度說明中聯油脂案 專區揭232項受影響產品明細
@@ -280,7 +294,7 @@ news_groups:
   source_ids:
   - src-20260707-ltn-d5bdefcc
   note: 報導中的回應或澄清
-- id: ng-21
+- id: ng-23
   timeline_id: tl-07
   kind: clarification
   title: 泰山又一油品超標！原料疑來自中聯油脂 中聯最新回應曝光
@@ -288,7 +302,7 @@ news_groups:
   source_ids:
   - src-20260708-ltn-aaae48c0
   note: 報導中的回應或澄清
-- id: ng-22
+- id: ng-24
   timeline_id: tl-08
   kind: clarification
   title: 桃園、台中問中聯油何時恢復上架？衛福部澄清實際情況
@@ -296,7 +310,7 @@ news_groups:
   source_ids:
   - src-20260709-ltn-6888c6ca
   note: 報導中的回應或澄清
-- id: ng-23
+- id: ng-25
   timeline_id: tl-09
   kind: report
   title: 台中地檢追致癌油！中聯總經理涉滅證聲押禁見 董事長2000萬交保
@@ -304,7 +318,7 @@ news_groups:
   source_ids:
   - src-20260710-ltn-7b474ce9
   - src-20260712-ltn-4343bde4
-- id: ng-24
+- id: ng-26
   timeline_id: tl-09
   kind: report
   title: 中聯油、泰山高層沒食安專業惹議 石崇良：檢調持續調查
@@ -312,7 +326,7 @@ news_groups:
   source_ids:
   - src-20260714-ltn-fb5914b1
   - src-20260715-ltn-67da9dd3
-- id: ng-25
+- id: ng-27
   timeline_id: tl-10
   kind: clarification
   title: 中聯致癌油、美國蔬菜及蛋白粉連出包 好市多回應下架
@@ -320,7 +334,7 @@ news_groups:
   source_ids:
   - src-20260715-ltn-14c67250
   note: 報導中的回應或澄清
-- id: ng-26
+- id: ng-28
   timeline_id: tl-10
   kind: clarification
   title: 謠言終結站》網傳中聯毒油吹哨者「被衛福部壓下」 食藥署斥假訊息
@@ -328,14 +342,14 @@ news_groups:
   source_ids:
   - src-20260717-ltn-b00b3237
   note: 報導中的回應或澄清
-- id: ng-27
+- id: ng-29
   timeline_id: tl-10
   kind: post
   title: 溫朗東在臉書質疑盧市府對中聯接連抽驗放水？中市府：烏龍爆料
   representative_source_id: src-20260720-ltn-1ecaf68d
   source_ids:
   - src-20260720-ltn-1ecaf68d
-- id: ng-28
+- id: ng-30
   timeline_id: tl-10
   kind: clarification
   title: 中聯油品抽驗次數為何各說各話？還原台中市政府稽查數字
@@ -343,7 +357,7 @@ news_groups:
   source_ids:
   - src-20260724-tfc-782fb89d
   note: 台灣事實查核中心的查核
-- id: ng-29
+- id: ng-31
   timeline_id: tl-10
   kind: clarification
   title: 網指中聯油脂「朝中有人」 經濟部駁斥：沒有後台
@@ -351,7 +365,7 @@ news_groups:
   source_ids:
   - src-20260727-ltn-a5d0f69e
   note: 報導中的回應或澄清
-- id: ng-30
+- id: ng-32
   timeline_id: tl-10
   kind: clarification
   title: 中聯油脂案調查報告出爐 陳時中、石崇良15:00親上火線說明
@@ -359,7 +373,7 @@ news_groups:
   source_ids:
   - src-20260727-ltn-8803732a
   note: 報導中的回應或澄清
-- id: ng-31
+- id: ng-33
   timeline_id: tl-10
   kind: clarification
   title: 中聯致癌油延燒！福壽發千字文 澄清董座、中國設備質疑
@@ -367,7 +381,7 @@ news_groups:
   source_ids:
   - src-20260730-ltn-8979e966
   note: 報導中的回應或澄清
-- id: ng-32
+- id: ng-34
   timeline_id: tl-10
   kind: clarification
   title: 藍委質疑中聯油脂案有「門神」 食藥署澄清：絕非事實
@@ -375,7 +389,7 @@ news_groups:
   source_ids:
   - src-20260730-ltn-0069514e
   note: 報導中的回應或澄清
-- id: ng-33
+- id: ng-35
   timeline_id: tl-10
   kind: report
   title: 中聯致癌油案再逆轉！廠長交保遭撤銷 認「隱匿案情共識」發回更裁
@@ -383,7 +397,7 @@ news_groups:
   source_ids:
   - src-20260731-ltn-a6e7e719
   - src-20260801-ltn-c8cd01b0
-- id: ng-34
+- id: ng-36
   timeline_id: tl-10
   kind: clarification
   title: 員工4月就反映黃豆「爛爛的」高層不理？ 中聯油：不便回應
@@ -391,15 +405,7 @@ news_groups:
   source_ids:
   - src-20260804-ltn-384a5b1d
   note: 報導中的回應或澄清
-- id: ng-35
-  timeline_id: tl-10
-  kind: clarification
-  title: 中聯4月就知情卻蓋牌？不理會員工早反映原料黃豆「怪怪的」  中檢回應了
-  representative_source_id: src-20260804-ltn-a348c2cd
-  source_ids:
-  - src-20260804-ltn-a348c2cd
-  note: 報導中的回應或澄清
-- id: ng-36
+- id: ng-37
   timeline_id: tl-10
   kind: report
   title: 中聯油會議紀錄僅1頁半！綠營轟盧市府護航 怒批「根本就是大門神」
@@ -407,7 +413,7 @@ news_groups:
   source_ids:
   - src-20260807-ltn-d78298c7
   - src-20260808-ltn-412bdb05
-- id: ng-37
+- id: ng-38
   timeline_id: tl-10
   kind: clarification
   title: 中聯油品事件資訊專區
@@ -415,7 +421,7 @@ news_groups:
   source_ids:
   - src-20260811-tfc-948d2839
   note: 台灣事實查核中心的查核
-- id: ng-38
+- id: ng-39
   timeline_id: tl-10
   kind: clarification
   title: 中聯致癌油案起訴15人 市府回應「重罰2100萬」這件事也有新進度
@@ -423,7 +429,7 @@ news_groups:
   source_ids:
   - src-20260818-ltn-6f3f0e55
   note: 報導中的回應或澄清
-- id: ng-39
+- id: ng-40
   timeline_id: tl-10
   kind: report
   title: 檢調火速起訴中聯油！立委疑「幫官員脫罪」 石崇良：去留不在我心中
@@ -431,14 +437,6 @@ news_groups:
   source_ids:
   - src-20260819-ltn-120bfec7
   - src-20260820-ltn-55831ff5
-- id: ng-40
-  timeline_id: tl-10
-  kind: report
-  title: 致癌油事件  泰山控告中聯、福壽、福懋、南僑4公司求償10億元
-  representative_source_id: src-20260908-ltn-af9b5300
-  source_ids:
-  - src-20260908-ltn-af9b5300
-  - src-20260909-ltn-ab754af2
 privacy:
   contains_private_persons: false
   basis_source_ids: []
@@ -448,7 +446,7 @@ review:
   status: draft-review
 ---
 
-## 2026-07-01　12 則報導
+## 2026-07-01　14 則報導
 
 自由時報以「中聯「大豆沙拉油」致癌物超標 泰山、福壽、福懋15品項火速下架」為題報導 [@src-20260701-ltn-9e6942bd]。
 
@@ -473,6 +471,10 @@ review:
 自由時報以「中聯油脂出包！雲林火速查市售油品 下架215瓶」為題報導 [@src-20260702-ltn-e6e1b6ec]。
 
 自由時報以「中聯油脂原料驗出致癌物  彰化縣衛生局：問題油品已下架回收」為題報導 [@src-20260702-ltn-72fea0cc]。
+
+自由時報以「中聯大豆沙拉油致癌物超標 北市大賣場已全數下架」為題報導 [@src-20260702-ltn-4d5635b5]。
+
+自由時報以「中聯1300噸大豆沙拉油 一級致癌物超標／供應泰山、福壽、福懋 20品項已啟動收回 台中市府下令中聯停產」為題報導 [@src-20260702-ltn-32abc7ef]。
 
 ## 2026-07-03　1 則回應或澄清、1 則官方發布
 
@@ -524,7 +526,7 @@ review:
 
 自由時報以「中聯油、泰山高層沒食安專業惹議 石崇良：檢調持續調查」為題報導 [@src-20260714-ltn-fb5914b1]。
 
-## 2026-07-15　8 則報導、11 則回應或澄清、1 則引述貼文、5 則官方發布
+## 2026-07-15　6 則報導、10 則回應或澄清、1 則引述貼文、5 則官方發布
 
 自由時報以「中聯致癌油、美國蔬菜及蛋白粉連出包 好市多回應下架」為題報導 [@src-20260715-ltn-14c67250]。
 
@@ -556,8 +558,6 @@ review:
 
 自由時報以「員工4月就反映黃豆「爛爛的」高層不理？ 中聯油：不便回應」為題報導 [@src-20260804-ltn-384a5b1d]。
 
-自由時報以「中聯4月就知情卻蓋牌？不理會員工早反映原料黃豆「怪怪的」  中檢回應了」為題報導 [@src-20260804-ltn-a348c2cd]。
-
 自由時報以「中聯油會議紀錄僅1頁半！綠營轟盧市府護航 怒批「根本就是大門神」」為題報導 [@src-20260807-ltn-d78298c7]。
 
 台灣事實查核中心發布查核報告「中聯油品事件資訊專區」 [@src-20260811-tfc-948d2839]。
@@ -565,5 +565,3 @@ review:
 自由時報以「中聯致癌油案起訴15人 市府回應「重罰2100萬」這件事也有新進度」為題報導 [@src-20260818-ltn-6f3f0e55]。
 
 自由時報以「檢調火速起訴中聯油！立委疑「幫官員脫罪」 石崇良：去留不在我心中」為題報導 [@src-20260819-ltn-120bfec7]。
-
-自由時報以「致癌油事件  泰山控告中聯、福壽、福懋、南僑4公司求償10億元」為題報導 [@src-20260908-ltn-af9b5300]。

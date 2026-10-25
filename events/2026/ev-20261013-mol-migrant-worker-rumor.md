@@ -4,7 +4,7 @@ id: ev-20261013-mol-migrant-worker-rumor
 kind: historical_event
 status: published
 title: 移工懷孕
-summary: 2026-10-08至2026-10-24，自由時報、中央通訊社、TVBS等共 19 則報導提及移工懷孕 [@src-20261008-ltn-59ef117c]。行政院等機關發布 3 則相關說明 [@src-20261013-mol-454380f3]。
+summary: 2026-10-08至2026-10-24，自由時報、中央通訊社、TVBS等共 18 則報導提及移工懷孕 [@src-20261008-ltn-59ef117c]。行政院等機關發布 3 則相關說明 [@src-20261013-mol-454380f3]。
 start_date: '2026-10-08'
 start_date_precision: day
 gov_levels:
@@ -85,9 +85,8 @@ timeline:
 - id: tl-09
   date: '2026-10-22'
   date_precision: day
-  title: 3 則報導
+  title: 2 則報導
   source_ids:
-  - src-20261022-ltn-bb62a1bf
   - src-20261022-cna-04f6ff17
   - src-20261022-cna-f5503712
 - id: tl-10
@@ -206,46 +205,39 @@ news_groups:
 - id: ng-15
   timeline_id: tl-09
   kind: report
-  title: 「面帶笑容」離開就不是性侵？越籍移工辯詞被法官打臉
-  representative_source_id: src-20261022-ltn-bb62a1bf
-  source_ids:
-  - src-20261022-ltn-bb62a1bf
-- id: ng-16
-  timeline_id: tl-09
-  kind: report
   title: 移民署查獲14名失聯移工及逾期停留者台南打黑工
   representative_source_id: src-20261022-cna-04f6ff17
   source_ids:
   - src-20261022-cna-04f6ff17
-- id: ng-17
+- id: ng-16
   timeline_id: tl-09
   kind: report
   title: 印尼移工網售藥物仲介診所助墮胎　一審判刑2年6月
   representative_source_id: src-20261022-cna-f5503712
   source_ids:
   - src-20261022-cna-f5503712
-- id: ng-18
+- id: ng-17
   timeline_id: tl-10
   kind: report
   title: 逃逸移工觀浪遇查拔腿狂奔  岸巡人員追到草叢遭蜂螫2人送醫
   representative_source_id: src-20261024-ltn-5e101a8e
   source_ids:
   - src-20261024-ltn-5e101a8e
-- id: ng-19
+- id: ng-18
   timeline_id: tl-10
   kind: report
   title: 失聯移工颱風天觀浪被逮！岸巡員衝草叢圍捕　慘遭蜂螫急送醫
   representative_source_id: src-20261024-tvbs-66f7d57e
   source_ids:
   - src-20261024-tvbs-66f7d57e
-- id: ng-20
+- id: ng-19
   timeline_id: tl-10
   kind: report
   title: 追捕失聯越南籍移工 2海巡人員遭蜂螫傷無生命危險
   representative_source_id: src-20261024-udn-cda2df53
   source_ids:
   - src-20261024-udn-cda2df53
-- id: ng-21
+- id: ng-20
   timeline_id: tl-10
   kind: report
   title: 外籍移工福利優於台灣勞工？懷孕拿60天薪水、8周全薪假　生育補助最高10萬誰能領？
@@ -311,9 +303,7 @@ MyGoPen發布查核報告「【錯誤】網傳「印尼群組攻略」教移工�
 
 自由時報以「騎註銷車牌機車還闖紅燈 警壓制逮越南失聯移工」為題報導 [@src-20261021-ltn-860bd367]。
 
-## 2026-10-22　3 則報導
-
-自由時報以「「面帶笑容」離開就不是性侵？越籍移工辯詞被法官打臉」為題報導 [@src-20261022-ltn-bb62a1bf]。
+## 2026-10-22　2 則報導
 
 中央通訊社以「移民署查獲14名失聯移工及逾期停留者台南打黑工」為題報導 [@src-20261022-cna-04f6ff17]。
 

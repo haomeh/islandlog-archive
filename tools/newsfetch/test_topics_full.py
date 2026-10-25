@@ -9,6 +9,19 @@ def item(url, title, day, publisher="自由時報", cls="news", **extra):
     return d
 
 
+class StableIdTest(unittest.TestCase):
+    published = [{"id": "ev-20261023-topic-365f0f47", "title": "臺中市續放颱風假", "first": "2026-10-23", "last": "2026-10-24"}]
+
+    def test_rebuilt_topic_keeps_the_published_id(self):
+        got = tf.stable_id(self.published, "臺中市續放颱風假", "2026-10-22", "2026-10-24", "ev-20261022-topic-51b325e0")
+        self.assertEqual(got, "ev-20261023-topic-365f0f47")
+
+    def test_other_title_or_window_gets_the_new_id(self):
+        new = "ev-20261022-topic-51b325e0"
+        self.assertEqual(tf.stable_id(self.published, "高雄颱風假", "2026-10-23", "2026-10-24", new), new)
+        self.assertEqual(tf.stable_id(self.published, "臺中市續放颱風假", "2026-12-01", "2026-12-03", new), new)
+
+
 class RulesTest(unittest.TestCase):
     def test_source_rule_needs_two_c_publishers_or_an_a_source(self):
         one = [item("a", "x", "2026-10-22"), item("b", "y", "2026-10-22")]

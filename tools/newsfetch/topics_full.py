@@ -351,6 +351,40 @@ def topic_id(key, first_day, first_url):
     return f"ev-{first_day.replace('-', '')}-topic-{h}"
 
 
+def published_topics(root, ref="HEAD"):
+    """System topics that a commit already publishes: id, title and the first and last date.
+    The ids come from the git ref, so a rebuild can reuse them after the files are removed.
+    Without git, the files in events/ are read."""
+    import subprocess
+    root = Path(root)
+    texts = []
+    try:
+        names = subprocess.run(["git", "-C", str(root), "ls-tree", "-r", "--name-only", ref, "events/"],
+                               capture_output=True, text=True, check=True).stdout.split()
+        for n in names:
+            if re.search(r"/ev-\d{8}-topic-[0-9a-f]{8}\.md$", n):
+                texts.append(subprocess.run(["git", "-C", str(root), "show", f"{ref}:{n}"],
+                                            capture_output=True, text=True, check=True).stdout)
+    except (OSError, subprocess.CalledProcessError):
+        texts = [p.read_text(encoding="utf-8") for p in sorted((root / "events").glob("*/ev-*-topic-*.md"))]
+    out = []
+    for t in texts:
+        i = re.search(r"^id: (\S+)$", t, re.M)
+        title = re.search(r"^title: (.+)$", t, re.M)
+        days = re.findall(r"^\s*(?:-\s+)?(?:date|start_date): '?(\d{4}-\d{2}-\d{2})", t, re.M)
+        if i and title and days:
+            out.append({"id": i.group(1), "title": title.group(1).strip("'\""), "first": min(days), "last": max(days)})
+    return out
+
+
+def stable_id(published, title, first_day, last_day, new_id):
+    """A rebuilt topic keeps the id of a published topic with the same title and an overlapping window."""
+    for p in sorted(published, key=lambda p: p["first"]):
+        if p["title"] == title and p["first"] <= last_day and first_day <= p["last"]:
+            return p["id"]
+    return new_id
+
+
 class MonthFrequency:
     """Window document frequency from month buckets. A window counts every month it touches."""
 
@@ -454,6 +488,7 @@ def run(corpus, clusters, existing_seeds, root, report_path):
     stats["merged_topics"] = len(merged)
     # 3. existing events
     taken = published_source_urls(root)
+    published_ids = published_topics(root)
     existing_keys, existing_key_by_id = [], []
     for s in existing_seeds:
         taken.update(s["seed_urls"])
@@ -471,9 +506,11 @@ def run(corpus, clusters, existing_seeds, root, report_path):
     window_items = sorted(corpus, key=lambda j: j["published_on"])
     out_seeds, published, published_sets = [], [], []
     for (key, lo, hi), seeds in ordered:
+        anchors = tp.anchor_terms([s["title"] for s in seeds], [key], df, len(corpus))
         members, seen_titles = [], set()
         for it in window_items:
-            if lo <= _day(it["published_on"]) <= hi and key in it["title"] and not tp.DROP.search(it["title"]):
+            if lo <= _day(it["published_on"]) <= hi and key in it["title"] and not tp.DROP.search(it["title"]) \
+                    and (not anchors or tp.has_anchor(it["title"], anchors)):
                 norm = tp.normalize_title(it["title"])
                 if norm not in seen_titles:
                     seen_titles.add(norm)
@@ -518,12 +555,16 @@ def run(corpus, clusters, existing_seeds, root, report_path):
             continue
         local = [j for j in jids if j != "jur-tw"]
         names = [next(n for jid, _, n, _ in JURS if jid == j)[:-2] for j in local]
-        seed = {"event_id": topic_id(key, members[0]["published_on"], members[0]["url"]),
+        name = tp.display_name(key, [s["title"] for s in seeds])
+        title = tp.topic_title(name, names, national="jur-tw" in jids)
+        event_id = stable_id(published_ids, title, members[0]["published_on"], members[-1]["published_on"],
+                             topic_id(key, members[0]["published_on"], members[0]["url"]))
+        seed = {"event_id": event_id,
                 "seed_urls": [s["url"] for s in seeds], "jurisdiction_ids": jids, "jurisdiction_names": names,
                 "gov_levels": _levels(jids), "controversy_types": _classify(titles, CTYPES, "governance_procedure"),
                 "policy_domains": _classify(titles, DOMAINS, "interior"), "actors": [(a, "other") for a in actors[:6]],
                 "sensitive": False, "_keys": [key],
-                "_name": tp.display_name(key, [s["title"] for s in seeds]), "_generic": False}
+                "_name": name, "_generic": False}
         urls = {m["url"] for m in members}
         if any(len(urls & other) >= MERGE_OVERLAP * min(len(urls), len(other)) for other in published_sets):
             stats["skipped_duplicate_topic"] += 1
