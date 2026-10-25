@@ -788,13 +788,15 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
         out_seeds.append({k: v for k, v in seed.items() if not k.startswith("_")})
     stats["published"] = len(published)
     covered.update(p["id"] for p in published)
-    failing = {pid: gate for pid, gate in failed.items() if pid not in covered and prior_event(root, pid)[0] != "withdrawn"}
-    state, withdrawn, pending = apply_hysteresis(read_topic_state(root), failing)
-    for pid, gate in sorted(withdrawn.items()):
-        withdraw_topic(root, pid, gate, today=today)
+    failing = {pid: gate for pid, gate in failed.items() if pid not in covered}
+    kept_withdrawn = {pid: gate for pid, gate in failing.items() if prior_event(root, pid)[0] == "withdrawn"}
+    state, withdrawn, pending = apply_hysteresis(read_topic_state(root), {p: g for p, g in failing.items() if p not in kept_withdrawn})
+    for pid, gate in sorted({**kept_withdrawn, **withdrawn}.items()):
+        withdraw_topic(root, pid, gate, today=today)  # a withdrawn topic gets its file back and no new record
     write_topic_state(root, state)
     stats["withdrawn"] = len(withdrawn)
     stats["withdraw_pending"] = len(pending)
+    stats["withdrawn_kept"] = len(kept_withdrawn)
     keys = {k[0]: k[1] for k in existing_key_by_id}
     keys.update({p["id"]: p["key"] for p in published})
     links = apply_subtopic_links(root, keys)

@@ -196,13 +196,13 @@ class RunHelper:
                  item("c", "【錯誤】南崁溪淤積謠言", "2026-10-24", "MyGoPen", "fact_check")]
         return filler + topic, topic
 
-    def run_in(self, root, second_news_publisher, today="2026-10-25"):
+    def run_in(self, root, second_news_publisher, today="2026-10-25", seed_event=True):
         from tools.newsfetch import topics as tp
         corpus, topic = self.corpus(second_news_publisher)
         clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
         ids = [tp.src_id(t, tp.HOSTS) for t in topic]
         event = root / "events/2026" / f"{self.EVENT_ID}.md"
-        if not event.exists():
+        if seed_event and not event.exists():
             event.parent.mkdir(parents=True)
             (root / "sources/2026").mkdir(parents=True)
             (root / "actors").mkdir()
@@ -270,6 +270,23 @@ class WithdrawTest(RunHelper, unittest.TestCase):
             self.assertEqual(stats["published"], 1)
             self.assertIn("status: published", text)
             self.assertIn(self.EVENT_ID, text)
+
+    def test_a_withdrawn_topic_that_still_fails_is_restored_from_git_without_a_new_record(self):
+        import subprocess
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fail_twice(root, "2026-10-24", "2026-10-25")
+            git = lambda *a: subprocess.run(["git", "-C", str(root), "-c", "user.email=a@b", "-c", "user.name=t", *a], check=True, capture_output=True)
+            git("init", "-q")
+            git("add", "-A")
+            git("commit", "-qm", "base")
+            before = (root / "events/2026" / f"{self.EVENT_ID}.md").read_text(encoding="utf-8")
+            (root / "events/2026" / f"{self.EVENT_ID}.md").unlink()  # the rebuild step removes the file
+            self.run_in(root, second_news_publisher=False, today="2026-10-26", seed_event=False)
+            self.assertEqual((root / "events/2026" / f"{self.EVENT_ID}.md").read_text(encoding="utf-8"), before)
+            self.assertEqual(len(self.records(root)), 1)
 
     def test_matching_published_needs_half_of_the_sources(self):
         published = [{"id": "ev-1", "src_ids": {"s1", "s2", "s3", "s4"}}, {"id": "ev-2", "src_ids": set()}]
