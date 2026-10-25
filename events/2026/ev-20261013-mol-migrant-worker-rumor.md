@@ -3,8 +3,8 @@ schema_version: 1
 id: ev-20261013-mol-migrant-worker-rumor
 kind: controversy
 status: published
-title: 失聯移工
-summary: 2026-10-08至2026-10-24，自由時報、中央通訊社、TVBS等共 19 則報導提及失聯移工 [@src-20261008-ltn-59ef117c]。行政院等機關發布 3 則相關說明 [@src-20261013-mol-454380f3]。
+title: 移工懷孕
+summary: 2026-10-08至2026-10-24，自由時報、中央通訊社、TVBS等共 19 則報導提及移工懷孕 [@src-20261008-ltn-59ef117c]。行政院等機關發布 3 則相關說明 [@src-20261013-mol-454380f3]。
 start_date: '2026-10-08'
 start_date_precision: day
 gov_levels:
@@ -20,7 +20,7 @@ actors:
   role: other
 questions:
 - id: q-01
-  text: 失聯移工的經過與各方說明為何？
+  text: 移工懷孕的經過與各方說明為何？
 positions: []
 timeline:
 - id: tl-01

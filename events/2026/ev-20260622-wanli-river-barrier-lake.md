@@ -3,8 +3,8 @@ schema_version: 1
 id: ev-20260622-wanli-river-barrier-lake
 kind: controversy
 status: published
-title: 萬里溪
-summary: 2026-06-22至2026-07-17，自由時報共 52 則報導提及萬里溪 [@src-20260622-ltn-e862dbc8]。行政院等機關發布 4 則相關說明 [@src-20260627-ey-cd805902]。
+title: 萬里溪堰塞湖
+summary: 2026-06-22至2026-07-17，自由時報共 52 則報導提及萬里溪堰塞湖 [@src-20260622-ltn-e862dbc8]。行政院等機關發布 4 則相關說明 [@src-20260627-ey-cd805902]。
 start_date: '2026-06-22'
 start_date_precision: day
 gov_levels:
@@ -26,7 +26,7 @@ actors:
   role: other
 questions:
 - id: q-01
-  text: 萬里溪的經過與各方說明為何？
+  text: 萬里溪堰塞湖的經過與各方說明為何？
 positions:
 - id: pos-01
   question_id: q-01

@@ -163,14 +163,33 @@ def pick_key(titles, df, total, exclude=(), min_cover=1, dfw=None):
     return max(longer, key=len) if longer else best
 
 
+DOMINANT_SHARE = 0.6
+
+
 def display_name(key, titles):
-    """A short key (薔琵, 和山) is shown in its most common 4-character form in the seed titles (薔琵颱風, 大樹和山)."""
+    """The shown name of a topic. `titles` are the seed titles, oldest first (R69).
+
+    A. A longer form with a noun ending that covers DOMINANT_SHARE of the key's titles (萬里溪 -> 萬里溪堰塞湖).
+    B. A 2-character key takes a 4-character form from the oldest seed title, the topic origin (移工 -> 移工懷孕).
+    C. A 2-character key takes its most common 4-character form (薔琵 -> 薔琵颱風).
+    """
+    with_key = [t for t in titles if key in t]
+    cover = Counter()
+    for t in with_key:
+        cover.update(g for g in _grams(t) if key in g and g != key)
+    # Rule A grows to the right only: a left extension can cut a place name (名間 -> 間焚化爐).
+    noun = [(g, c) for g, c in cover.items() if g.startswith(key) and NOUN_END.search(g) and not VERB_START.search(g)
+            and c >= DOMINANT_SHARE * max(1, len(with_key))]
+    if noun:
+        return max(noun, key=lambda gc: (gc[1], -len(gc[0])))[0]
     if len(key) > 2:
         return key
-    cover = Counter()
-    for t in titles:
-        cover.update(g for g in _grams(t) if key in g and len(g) == 4)
-    forms = [(g, c) for g, c in cover.items() if c >= 2 and not VERB_END.search(g) and not VERB_START.search(g)]
+    ok = lambda g: len(g) == 4 and not VERB_END.search(g) and not VERB_START.search(g)
+    for t in with_key[:1]:
+        origin = [g for g in _grams(t) if key in g and ok(g)]
+        if origin:
+            return max(origin, key=lambda g: (cover[g], g.endswith(key), g.startswith(key)))
+    forms = [(g, c) for g, c in cover.items() if ok(g) and c >= 2]
     return max(forms, key=lambda gc: gc[1])[0] if forms else key
 
 
@@ -207,7 +226,8 @@ def members(seed, corpus, df):
     hi = max(_day(s["published_on"]) for s in seeds) + timedelta(days=WINDOW_AFTER)
     keys = topic_keys(titles, df, len(corpus), dfw=window_frequency(corpus, lo, hi))
     seed["_keys"] = keys
-    seed["_name"] = display_name(keys[0], titles) if keys else ""
+    by_date = [s["title"] for s in sorted(seeds, key=lambda j: (j["published_on"], j["url"]))]
+    seed["_name"] = display_name(keys[0], by_date) if keys else ""
     names = seed.get("jurisdiction_names", [])
     national = "jur-tw" in seed.get("jurisdiction_ids", [])
     dfw = window_frequency(corpus, lo, hi)
@@ -323,8 +343,11 @@ def _station_title(gs):
     return "、".join(parts)
 
 
-def build_event(seed, corpus, df, actors_by_host=HOSTS):
-    items = members(seed, corpus, df)
+def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
+    """Builds one topic. `items` skips the member search when the caller already has the members
+    (the full run); then `seed` must already hold `_keys` and `_name`."""
+    if items is None:
+        items = members(seed, corpus, df)
     groups = group_items([it for it in items
                           if it.get("source_class") not in ("official_statement", "official_record")
                           or (urllib.parse.urlparse(it["url"]).hostname or "") in actors_by_host])
@@ -437,7 +460,7 @@ def _source_doc(it, enrich, actors_by_host):
     return d
 
 
-def write_event(ev, seed, root, enrich, actors_by_host=HOSTS):
+def write_event(ev, seed, root, enrich, actors_by_host=HOSTS, overwrite_sources=True):
     sid = lambda u: src_id(ev["used"][u], actors_by_host)
     timeline = []
     for t in ev["timeline"]:
@@ -462,7 +485,10 @@ def write_event(ev, seed, root, enrich, actors_by_host=HOSTS):
     root = Path(root)
     (root / "events/2026" / f"{ev['id']}.md").write_text("---\n" + _dump(doc) + "---\n\n" + "\n\n".join(ev["body"]) + "\n", encoding="utf-8")
     for it in ev["used"].values():
-        (root / "sources/2026" / f"{src_id(it, actors_by_host)}.yaml").write_text(_dump(_source_doc(it, enrich, actors_by_host)), encoding="utf-8")
+        target = root / "sources/2026" / f"{src_id(it, actors_by_host)}.yaml"
+        if target.exists() and not overwrite_sources:
+            continue  # keep the enriched copy that another event already cites
+        target.write_text(_dump(_source_doc(it, enrich, actors_by_host)), encoding="utf-8")
     for a, _ in ev["actors"]:
         p = root / "actors" / f"{a}.md"
         if p.exists():
