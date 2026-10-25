@@ -31,7 +31,6 @@ timeline:
   date: '2026-09-26'
   date_precision: day
   title: 2 則報導、1 則回應或澄清
-  lifecycle_stage: emergence
   source_ids:
   - src-20260926-ltn-b2721815
   - src-20260926-ltn-1297f572

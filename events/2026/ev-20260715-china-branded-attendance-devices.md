@@ -47,7 +47,6 @@ timeline:
   date_precision: day
   title: 3 則報導、1 則官方發布
   attributed_to: ac-ocean-affairs-council
-  lifecycle_stage: emergence
   source_ids:
   - src-20260715-ltn-456351f6
   - src-20260715-ltn-e0af5abc
@@ -57,7 +56,6 @@ timeline:
   date: '2026-07-16'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260716-ltn-8bea6fc4
 news_groups:

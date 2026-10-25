@@ -39,7 +39,6 @@ timeline:
   date_precision: day
   title: 1 則報導、1 則官方發布
   attributed_to: ac-kaohsiung-city-government
-  lifecycle_stage: emergence
   source_ids:
   - src-20261003-ltn-624dc821
   - src-20261003-kcg-b16f8878
@@ -48,7 +47,6 @@ timeline:
   date_precision: day
   title: 1 則回應或澄清、1 則官方發布
   attributed_to: ac-kaohsiung-city-government
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261004-ltn-b525381e
   - src-20261004-kcg-37ee50b8
@@ -57,7 +55,6 @@ timeline:
   date_precision: day
   title: 1 則報導、1 則官方發布
   attributed_to: ac-ministry-of-economic-affairs
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261005-ltn-d902cced
   - src-20261005-moea-4cb69077

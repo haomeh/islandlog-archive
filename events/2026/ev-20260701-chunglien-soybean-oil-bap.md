@@ -56,7 +56,6 @@ timeline:
   date: '2026-07-01'
   date_precision: day
   title: 12 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260701-ltn-9e6942bd
   - src-20260701-ltn-46eb0f65
@@ -66,7 +65,6 @@ timeline:
   date_precision: day
   title: 1 則回應或澄清、1 則官方發布
   attributed_to: ac-tainan-city-government
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260703-ltn-184727eb
   - src-20260703-tainan-130954d4
@@ -74,21 +72,18 @@ timeline:
   date: '2026-07-04'
   date_precision: day
   title: 1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260704-ltn-6ce80195
 - id: tl-04
   date: '2026-07-05'
   date_precision: day
   title: 1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260705-ltn-e943fb18
 - id: tl-05
   date: '2026-07-06'
   date_precision: day
   title: 2 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260706-ltn-d3f1f56e
   - src-20260706-ltn-448a6612
@@ -97,7 +92,6 @@ timeline:
   date_precision: day
   title: 3 則回應或澄清、2 則官方發布
   attributed_to: ac-tainan-city-government
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260707-ltn-1fc5f63c
   - src-20260707-ltn-b78b88ce
@@ -108,7 +102,6 @@ timeline:
   date: '2026-07-08'
   date_precision: day
   title: 1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260708-ltn-aaae48c0
 - id: tl-08
@@ -116,7 +109,6 @@ timeline:
   date_precision: day
   title: 1 則回應或澄清、1 則官方發布
   attributed_to: ac-executive-yuan
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260709-ltn-6888c6ca
   - src-20260709-ey-718b5de4
@@ -125,7 +117,6 @@ timeline:
   date_precision: day
   title: 4 則報導、1 則官方發布
   attributed_to: ac-executive-yuan
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260710-ltn-7b474ce9
   - src-20260714-ltn-fb5914b1
@@ -135,7 +126,6 @@ timeline:
   date_precision: day
   title: 8 則報導、11 則回應或澄清、1 則引述貼文、5 則官方發布
   attributed_to: ac-taiwan-fda
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260715-ltn-14c67250
   - src-20260717-ltn-b00b3237

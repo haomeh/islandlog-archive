@@ -37,7 +37,6 @@ timeline:
   date: '2026-06-26'
   date_precision: day
   title: 2 則報導、2 則回應或澄清
-  lifecycle_stage: emergence
   source_ids:
   - src-20260626-ltn-f8d3ea75
   - src-20260626-ltn-00b5bcd8
@@ -46,7 +45,6 @@ timeline:
   date: '2026-07-28'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260728-ltn-f6f82066
 news_groups:
