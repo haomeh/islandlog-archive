@@ -117,7 +117,7 @@
         "properties": {
           "id": { "type": "string", "pattern": "^ng-[0-9]{2}$" },
           "timeline_id": { "type": "string", "pattern": "^tl-[0-9]{2}$" },
-          "kind": { "enum": ["report", "clarification"] },
+          "kind": { "enum": ["report", "clarification", "post"] },
           "title": { "type": "string", "minLength": 1 },
           "representative_source_id": { "$ref": "common.schema.json#/$defs/source_id" },
           "source_ids": { "$ref": "common.schema.json#/$defs/source_id_list_nonempty" },

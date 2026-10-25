@@ -4,7 +4,7 @@ id: ev-20241025-legislative-powers-judgment
 kind: decision_record
 status: published
 title: 憲法法庭宣示113年憲判字第9號判決（立法院職權行使法修正條文）
-summary: 憲法法庭於 2024 年 10 月 25 日宣示 113 年憲判字第 9 號判決，審查 2024 年 6 月 24 日修正公布的立法院職權行使法。協同意見書記載，判決宣告部分條文違憲 [@src-20241025-cons-judgment-9-opinion]。行政院院長表示將配合判決行使職權 [@src-20241025-ey-judgment-9-statement]。
+summary: 憲法法庭於 2024 年 10 月 25 日宣示 113 年憲判字第 9 號判決，審查 2024 年 6 月 24 日修正公布的立法院職權行使法。判決摘要載明，部分條文違反權力分立原則而失效 [@src-20241025-judicial-judgment-9-summary]。行政院院長表示將配合判決行使職權 [@src-20241025-ey-judgment-9-statement]。
 start_date: '2024-10-25'
 start_date_precision: day
 gov_levels:
@@ -34,6 +34,7 @@ timeline:
   lifecycle_stage: decision
   decision_id: dc-20241025-cons-judgment-9
   source_ids:
+  - src-20241025-judicial-judgment-9-summary
   - src-20241025-cons-judgment-9-opinion
 - id: tl-02
   date: '2024-10-25'
@@ -50,14 +51,15 @@ privacy:
   basis_source_ids: []
 review:
   sensitive: false
-  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。'
+  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。判決全文在 cons.judicial.gov.tw，該站 robots.txt 回傳 HTML，依 R61 不抓取；目前以司法院網站的判決摘要為主要來源，判決全文待人工取得後補上 A 級來源。'
+  status: draft-review
 ---
 
 ## 判決內容
 
-協同意見書載明，立法委員、行政院、總統及監察院分別就 2024 年 6 月 24 日修正公布的立法院職權行使法部分條文聲請釋憲 [@src-20241025-cons-judgment-9-opinion]。
+憲法法庭書記廳摘錄的判決摘要載明，立法院職權行使法部分條文的立法逾越立法院憲法職權範圍，牴觸憲法權力分立原則，自判決宣示之日起失其效力 [@src-20241025-judicial-judgment-9-summary]。
 
-協同意見書載明，判決對部分條文為合憲限縮解釋；宣告部分條文違憲，自判決宣示之日起失其效力；對部分條文宣告違憲，應依判決意旨修正 [@src-20241025-cons-judgment-9-opinion]。
+黃瑞明大法官的協同意見書載明，立法委員、行政院、總統及監察院分別就 2024 年 6 月 24 日修正公布的立法院職權行使法部分條文聲請釋憲 [@src-20241025-cons-judgment-9-opinion]。
 
 ## 行政院的回應
 

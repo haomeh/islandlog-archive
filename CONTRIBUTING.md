@@ -42,15 +42,24 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 4. Content on health, genes, sex life or criminal records (see `taxonomy/sensitive_terms.yaml`) is sensitive. Set `review.sensitive: true`.
 5. Events with the type `misconduct` or `election` are always sensitive.
 
-## 5. Corrections
+## 5. Topics, news groups and review status (R57 to R65)
+
+1. The system forms and names topics with the clustering tool (`tools/newsfetch/cluster.py`). Editors do not create or name topics by hand. An editor approves, rejects, or corrects facts and membership with sources.
+2. A system topic is published with `review.status: draft-review`. The site shows a draft banner. An editor approval sets `review.status: editor-approved`.
+3. `news_groups[].kind` is `report` (報導), `clarification` (澄清・回應) or `post` (貼文). Reports with the same content form one group. A clarification or a response forms a new group and needs a `note`.
+4. A public commentator post is `social_media`, grade E. Record it only when a news report cites it: the news source is the evidence, and the post URL is added when the report links it. Do not crawl social platforms.
+5. A public commentator (`actor_type: public_commentator`) is named only for public posts, with `named_basis_source_ids` that state the public identity.
+6. A source may carry `section` (版別) and `byline` (記者). The crawler reads them from the article page and never stores the article body.
+
+## 6. Corrections
 
 Never post a correction request, a suggestion or a takedown request in a public issue. Send it through the site contact form (M1). Until the form exists, use GitHub private vulnerability reporting on this repo: <https://github.com/haomeh/islandlog-archive/security/advisories/new>. Do not write private personal data in a public place. Editors reply in 3 working days (proposal). An editor opens a public issue only after triage. If the correction is valid, an editor opens a PR that changes the content and adds a new file in `corrections/`. Correction records are append-only.
 
-## 6. Takedown
+## 7. Takedown
 
-A data subject can ask for removal or masking. Send the request through the private channel in section 5. A senior editor decides, with legal advice when needed. The public record does not repeat the removed data.
+A data subject can ask for removal or masking. Send the request through the private channel in section 6. A senior editor decides, with legal advice when needed. The public record does not repeat the removed data.
 
-## 7. Roles
+## 8. Roles
 
 | Role | Can do |
 |---|---|
@@ -59,7 +68,7 @@ A data subject can ask for removal or masking. Send the request through the priv
 | Senior editor | Approve sensitive PRs. Change banned terms and publisher grades |
 | Maintainer | Merge. Change schemas and taxonomy |
 
-## 8. Files and IDs
+## 9. Files and IDs
 
 1. One object per file. The file name equals the ID plus the extension.
 2. IDs use lowercase ASCII, digits and hyphens. The ID is 64 characters or fewer. IDs never change after publication.

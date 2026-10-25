@@ -49,6 +49,14 @@
     "named_basis_source_ids": { "$ref": "common.schema.json#/$defs/source_id_list" },
     "external_refs": { "$ref": "common.schema.json#/$defs/external_refs" }
   },
-  "if": { "properties": { "actor_type": { "const": "private_individual" } }, "required": ["actor_type"] },
-  "then": { "required": ["named_basis_source_ids"], "properties": { "named_basis_source_ids": { "minItems": 1 } } }
+  "allOf": [
+    {
+      "if": { "properties": { "actor_type": { "const": "private_individual" } }, "required": ["actor_type"] },
+      "then": { "required": ["named_basis_source_ids"], "properties": { "named_basis_source_ids": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "actor_type": { "const": "public_commentator" } }, "required": ["actor_type"] },
+      "then": { "required": ["named_basis_source_ids"], "properties": { "named_basis_source_ids": { "minItems": 1 } } }
+    }
+  ]
 }

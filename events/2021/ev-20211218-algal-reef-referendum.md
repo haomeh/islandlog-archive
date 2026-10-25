@@ -36,7 +36,8 @@ privacy:
   basis_source_ids: []
 review:
   sensitive: false
-  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。'
+  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。票數目前只來自 TVBS 即時報導；中選會網站 robots.txt 回傳 403，依 R61 不抓取，待人工以中選會公告核對票數。'
+  status: draft-review
 ---
 
 ## 結果

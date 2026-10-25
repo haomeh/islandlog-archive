@@ -3,8 +3,8 @@ schema_version: 1
 id: ev-20260926-taipei-renai-roundabout-trees
 kind: controversy
 status: published
-title: 臺北市仁愛圓環樹木減少爭議
-summary: 自由時報報導，有人比對 6 年照片指仁愛圓環綠樹幾乎消失，臺北市公園處回應[@src-20260926-ltn-b2721815]。
+title: 臺北市仁愛圓環
+summary: 2026-09-26，自由時報共 3 則報導提及仁愛圓環 [@src-20260926-ltn-b2721815]。
 start_date: '2026-09-26'
 start_date_precision: day
 gov_levels:
@@ -20,7 +20,7 @@ actors:
   role: decision_maker
 questions:
 - id: q-01
-  text: 臺北市仁愛圓環的樹木管理是否適當？
+  text: 仁愛圓環的經過與各方說明為何？
 positions:
 - id: pos-01
   question_id: q-01
@@ -30,19 +30,26 @@ timeline:
 - id: tl-01
   date: '2026-09-26'
   date_precision: day
-  title: 照片比對引發樹木減少質疑，公園處回應
-  attributed_to: ac-taipei-city-government
+  title: 2 則報導、1 則回應或澄清
   lifecycle_stage: emergence
   source_ids:
   - src-20260926-ltn-b2721815
+  - src-20260926-ltn-1297f572
 news_groups:
 - id: ng-01
   timeline_id: tl-01
-  kind: report
+  kind: clarification
   title: 仁愛圓環6年對比「綠樹幾乎消失」？北市公園處回應了
   representative_source_id: src-20260926-ltn-b2721815
   source_ids:
   - src-20260926-ltn-b2721815
+  note: 報導中的回應或澄清
+- id: ng-02
+  timeline_id: tl-01
+  kind: report
+  title: 仁愛圓環6年對比「綠樹幾乎消失」！杜奕瑾質疑：這麼多棵同時得絕症？
+  representative_source_id: src-20260926-ltn-1297f572
+  source_ids:
   - src-20260926-ltn-1297f572
   - src-20260927-ltn-af196d1f
 privacy:
@@ -50,13 +57,12 @@ privacy:
   basis_source_ids: []
 review:
   sensitive: false
-  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。'
+  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'
+  status: draft-review
 ---
 
-## 2026-09-26　照片比對引發樹木減少質疑，公園處回應
+## 2026-09-26　2 則報導、1 則回應或澄清
 
 自由時報以「仁愛圓環6年對比「綠樹幾乎消失」？北市公園處回應了」為題報導 [@src-20260926-ltn-b2721815]。
 
 自由時報以「仁愛圓環6年對比「綠樹幾乎消失」！杜奕瑾質疑：這麼多棵同時得絕症？」為題報導 [@src-20260926-ltn-1297f572]。
-
-自由時報以「杜奕瑾揭6年對比 仁愛圓環綠樹消失」為題報導 [@src-20260927-ltn-af196d1f]。
