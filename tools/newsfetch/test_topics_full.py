@@ -25,6 +25,7 @@ class RulesTest(unittest.TestCase):
         titles = ["北市金華國中午餐爭議", "台北市教育局回應金華國中", "金華國中校長道歉"]
         self.assertEqual(tf.detect_jurisdictions(titles), ["jur-63000000"])
         self.assertEqual(tf.detect_jurisdictions(["颱風來襲 全台停班課", "政院督導防颱"]), ["jur-tw"])
+        self.assertEqual(tf.detect_jurisdictions(["台北港凸堤效應波及桃園", "桃園南崁溪淤積"]), ["jur-68000000", "jur-65000000"])
 
     def test_gov_actors_from_titles(self):
         actors = tf.detect_gov_actors(["北市府回應金華國中午餐", "衛福部說明"], ["jur-63000000"])

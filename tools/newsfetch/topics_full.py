@@ -233,9 +233,14 @@ def meets_source_rule(items):
     return len(pubs) >= 2
 
 
+PLACE_FIXES = (("台北港", "新北港"), ("臺北港", "新北港"))  # 台北港 is in 新北市
+
+
 def detect_jurisdictions(titles):
     counts = Counter()
     for t in titles:
+        for wrong, right in PLACE_FIXES:
+            t = t.replace(wrong, right)
         for jid, _, _, terms in JURS:
             if any(term in t for term in terms):
                 counts[jid] += 1
