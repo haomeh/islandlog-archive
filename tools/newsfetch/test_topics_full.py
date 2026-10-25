@@ -389,7 +389,7 @@ class HysteresisTest(RunHelper, unittest.TestCase):
             self.assertEqual(stats["withdraw_pending"], 1)
             self.assertIn("status: published", text)
             self.assertEqual(self.records(root), [])
-            self.assertEqual(self.state(root)[self.EVENT_ID], {"fails": 1, "gate": "rejected_news_rule"})
+            self.assertEqual(self.state(root)[self.EVENT_ID], {"fails": 1, "gate": "rejected_news_rule", "day": "2026-10-25"})
 
     def test_two_fails_in_a_row_withdraw_with_a_record(self):
         import tempfile
@@ -443,6 +443,117 @@ class ElectionCampaignGateTest(unittest.TestCase):
         items = self.items(self.TITLES_7046975b)
         self.assertEqual(sum(1 for it in items if tf.ELECTION.search(it["title"])), 1)
         self.assertIsNone(tf.exclusion_reason(items))
+
+
+class NameQualityTest(unittest.TestCase):
+    """R112.2 and R112.4: a name that is only a place, a disease or a generic object fails. A noun phrase with a
+    government body or a policy noun passes. Cases come from the precision sample T18-AP."""
+
+    def good(self, key, titles):
+        return tf.name_quality_ok(key, titles, len(titles), len(titles))
+
+    def test_r112_2_a_disease_alone_is_not_a_name(self):
+        titles = ["內政部：國人平均壽命81.7歲 排除惡性腫瘤可增3.2歲", "惡性腫瘤連44年居國人十大死因之首 內政部公布", "內政部：排除惡性腫瘤 國人平均壽命可提升"]
+        self.assertFalse(self.good("惡性腫瘤", titles))
+
+    def test_r112_2_a_district_alone_is_not_a_name(self):
+        titles = ["臺南市安南區空地火警爆炸", "臺南市安南區爆炸 市府慰問", "臺南市安南區爆炸 消防局說明"]
+        self.assertFalse(self.good("臺南市安南區", titles))
+        self.assertFalse(self.good("安南區", titles))
+
+    def test_r112_2_a_place_with_a_generic_object_is_not_a_name(self):
+        titles = ["屏東縣恆春豎孤棚徵才？鎮公所澄清是詐騙", "恆春中元豎孤棚網傳假徵才 鎮公所澄清", "恆春豎孤棚目前不改期"]
+        self.assertTrue(tf.generic_name("屏東縣豎孤棚"))
+        self.assertFalse(self.good("豎孤棚", titles))
+
+    def test_r112_2_a_generic_object_alone_is_not_a_name(self):
+        titles = ["日本巡視船台海避風 海巡署籲中國勿製造假象", "日本巡視船來台避風遭海警尾隨", "日巡視船航行台海避颱風 海巡署回應"]
+        self.assertFalse(self.good("巡視船", titles))
+
+    def test_r112_2_a_named_facility_is_still_a_name(self):
+        for key in ("淡江大橋", "金華國中", "大園親子館"):
+            self.assertFalse(tf.generic_name(key), key)
+            self.assertTrue(self.good(key, [f"{key}爭議 市府回應", f"{key}再爆議題", f"{key}完工"]), key)
+
+    def test_r112_4_a_policy_noun_phrase_in_quotes_passes(self):
+        titles = ["北市綠黨團要求建「議員索資公開平台」 蔣萬安回應了", "《北市》綠促設議員索資公開平台 藍也支持",
+                  "北市議員提案建置「索資公開平台」 市府允3個月研議", "北市建置索資公開平台須3個月 議員不滿效率差"]
+        self.assertTrue(self.good("索資公開平台", titles))
+
+    def test_r112_4_a_quoted_remark_about_a_government_body_passes(self):
+        titles = ["蔣萬安的局長脫口「廚餘給弱勢吃」被罵爆  律師轟：把人當豬？", "局長拋「廚餘給弱勢吃」？北市教育局澄清：沒有規劃",
+                  "北市把營養午餐廚餘給弱勢團體？ 沈伯洋：發言很不恰當", "午餐廚餘給弱勢？ 北市教育局︰沒有規劃"]
+        self.assertTrue(self.good("廚餘給弱勢", titles))
+
+    def test_r112_4_a_policy_noun_with_two_titles_passes(self):
+        titles = ["對抗民航重金挖角！空勤總隊留人才 每月獎助金最高10萬", "留住億元國家級飛航人才！ 空勤總隊飛航獎助金，最高調升至每月10萬元"]
+        self.assertTrue(self.good("獎助金", titles))
+
+    def test_r112_4_a_warning_of_a_ministry_passes(self):
+        titles = ["不只高德地圖！數發部揭4款中製App共同風險：資料全傳回中國伺服器", "數發部示警 不只高德地圖 中國B站、愛奇藝等4款APP 恐偷個資",
+                  "不只高德地圖！數發部示警4款中製App   B站、愛奇藝都上榜！"]
+        self.assertTrue(self.good("不只高德地圖", titles))
+
+    def test_a_fragment_without_a_policy_noun_or_body_still_fails(self):
+        titles = ["他說不只這樣而已", "網友說不只這樣而已吧", "不只這樣而已 網友嘆"]
+        self.assertFalse(self.good("不只這樣而已", titles))
+        self.assertFalse(self.good("要的了在", titles))
+
+
+class CentralActorTest(unittest.TestCase):
+    def test_r112_4_the_national_security_bureau_is_an_actor(self):
+        self.assertIn("ac-national-security-bureau", tf.detect_gov_actors(["國安局︰評估台日3大安全合作"], ["jur-tw"]))
+        self.assertIn("ac-central-bank", tf.detect_gov_actors(["央行理監事會議維持利率不變"], ["jur-tw"]))
+
+
+class ExclusionExceptionsTest(unittest.TestCase):
+    def items(self, titles, **extra):
+        return [item(f"u{i}", t, "2026-10-21", **extra) for i, t in enumerate(titles)]
+
+    def test_r112_4_a_court_ruling_on_a_candidacy_is_not_campaign_content(self):
+        titles = ["聲請暫准參選竹北市長遭北高行駁回　李貞秀：尊重司法", "李貞秀求暫准參選竹北市長　北高行駁回", "李貞秀遞狀聲請保「參選資格」 北高行駁回"]
+        self.assertIsNone(tf.exclusion_reason(self.items(titles)))
+        self.assertEqual(tf.exclusion_reason(self.items(["某某登記參選市長", "某某參選市長拜票", "某某參選造勢"])), "election_campaign")
+
+    def test_r112_4_a_law_passed_by_the_legislature_is_not_sensitive_by_its_subject(self):
+        titles = ["立院三讀毒駕或拒測一律吊銷駕照 致重傷死亡終身禁考照", "立院三讀道交條例》毒駕、拒毒測吊照 致重傷死亡終身禁考照"]
+        self.assertIsNone(tf.exclusion_reason(self.items(titles, sensitive=True)))
+        self.assertEqual(tf.exclusion_reason(self.items(["男子墜樓死亡", "少女輕生身亡"], sensitive=True)), "sensitive")
+
+    def test_r112_5_a_cinema_discount_is_not_entertainment_news(self):
+        self.assertIsNone(tf.exclusion_reason(self.items(["時代的眼淚！彰化人曬出「這張神卡」看電影現省百元"])))
+        self.assertEqual(tf.exclusion_reason(self.items(["新電影首映 影帝出席", "電影票房破億"])), "entertainment")
+
+    def test_r112_5_a_domestic_fraud_is_not_foreign(self):
+        self.assertFalse(tf.taiwan_relevant(["清潔公司掛羊頭賣狗肉2-2》假洗冷氣真推銷 律師：恐涉加重詐欺未遂"]))
+        self.assertFalse(tf.names_foreign(["清潔公司掛羊頭賣狗肉2-2》假洗冷氣真推銷 律師：恐涉加重詐欺未遂", "999洗冷氣進門不洗強推銷  民眾怒批受騙"]))
+        self.assertTrue(tf.names_foreign(["美國宣布新關稅", "川普談關稅", "日本首相訪美"]))
+
+
+class FailCountPerDayTest(RunHelper, unittest.TestCase):
+    """R116: a topic gets at most one fail count per calendar day (Asia/Taipei)."""
+
+    def state(self, root):
+        import json
+        return json.loads((root / "tools/newsfetch/topic_state.json").read_text(encoding="utf-8"))
+
+    def test_two_runs_on_the_same_day_add_one_count(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=False, today="2026-10-25")
+            stats, text = self.run_in(root, second_news_publisher=False, today="2026-10-25")
+            self.assertEqual(self.state(root)[self.EVENT_ID]["fails"], 1)
+            self.assertEqual(stats["withdrawn"], 0)
+            self.assertIn("status: published", text)
+            stats, text = self.run_in(root, second_news_publisher=False, today="2026-10-26")
+            self.assertEqual(stats["withdrawn"], 1)
+
+    def test_the_default_day_is_the_taipei_day(self):
+        from datetime import datetime, timezone
+        self.assertEqual(tf.taipei_day(datetime(2026, 10, 25, 17, 0, tzinfo=timezone.utc)), "2026-10-26")
+        self.assertEqual(tf.taipei_day(datetime(2026, 10, 25, 15, 59, tzinfo=timezone.utc)), "2026-10-25")
 
 
 class TopicConfigTest(unittest.TestCase):

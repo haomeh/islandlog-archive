@@ -21,19 +21,22 @@ import json
 import re
 import sys
 from collections import Counter, defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from tools.newsfetch import topics as tp
 from tools.newsfetch.topic_config import (
     BOUNDARY_SHARE, CLASSIFY_SHARE, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
-    CONTINUATION_MIN_USES, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
+    CONTINUATION_MIN_USES, DISEASE_NAME_MAX_LEN, FOREIGN_NAMED_SHARE, GENERIC_NAME_MAX_LEN, GOV_NAME_SHARE, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
     RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SUBTOPIC_SHARE, WITHDRAW_AFTER_FAILS)
 
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票|對手陣營|競辦|競總")  # R106: the last 3 name a campaign without an election word
 CRIME = re.compile(r"起訴|判刑|聲押|收押|交保|嫌犯|涉嫌|偵辦|逮捕|送辦|殺人|命案|毒品|詐團|車手|性侵|猥褻|竊盜|酒駕")
 ENTERTAINMENT = re.compile(r"演唱會|歌手|藝人|女星|男星|偶像|專輯|戲劇|影集|綜藝|中職|球隊|選手|奪冠|賽事|電影")
+ELECTION_LEGAL = re.compile(r"駁回|裁定|判決|高行|行政法院|法院|當選無效|選舉訴訟")  # R112.4: a court ruling on a candidacy is not campaign content
+LAW_PASSED = re.compile(r"三讀|條例》|修正草案|修法")  # R112.4: a law passed by the legislature is not sensitive by its subject alone
+CONSUMER = re.compile(r"優惠|折扣|現省|省[\d百千萬]|半價|折抵|票價|抵用|買一送一")  # R112.5: a discount is a consumer title, not entertainment news
 FOREIGN_ONLY = re.compile(r"美國|川普|中國|大陸|日本|南韓|北韓|俄羅斯|烏克蘭|伊朗|以色列|歐盟|英國|德國|法國|印度|菲律賓|越南|泰國|馬來西亞")
 
 JURS = [  # id, government actor id, actor name, place terms
@@ -160,6 +163,53 @@ def is_person_or_party(key, titles):
     return bool(PARTIES.search(key)) or tp._is_person_or_speaker(key, titles) or bool(re.search(r"議長|議員|市長|縣長|立委|部長", key))
 
 
+POLICY_NOUN = re.compile(r"平台|補助|獎助|津貼|警示|示警|預算|條例|辦法|方案|計畫|政策|草案|新制|制度|專案|給付|基金")  # R112.4
+PLACE_PREFIX = re.compile(r"^(?:" + tp.PLACE.pattern + r")[市縣]?")
+PLACE_ONLY = re.compile(PLACE_PREFIX.pattern + r"(?:[\u4e00-\u9fff]{1,3}[區鄉鎮里村市])?")
+DISEASE_END = re.compile(r"(癌|腫瘤|症|病|炎|瘟|流感|感染)$")
+OBJECT_HEAD = re.compile(r"(船|艦|車|機|棚|袋|箱)$")  # a bare object type: 巡視船, 豎孤棚
+
+
+def generic_name(name):
+    """R112.2: a name that is only a place, only a disease or only a generic object. A named facility (淡江大橋,
+    金華國中) has a proper name before its head and is not generic. The schema has no place event kind, so the
+    named facility is the exception for a place."""
+    if PLACE_ONLY.fullmatch(name):
+        return True
+    rest = PLACE_PREFIX.sub("", name, count=1)
+    if rest != name and len(rest) <= GENERIC_NAME_MAX_LEN:
+        return True  # a jurisdiction and a few characters (屏東縣豎孤棚)
+    if DISEASE_END.search(name) and len(name) <= DISEASE_NAME_MAX_LEN and not POLICY_NOUN.search(name):
+        return True
+    return len(name) <= GENERIC_NAME_MAX_LEN and bool(OBJECT_HEAD.search(name))
+
+
+def names_government(title):
+    return bool(LOCAL_GOV.search(title) or any(re.search(p, title) for p, _, _, _ in CENTRAL))
+
+
+def names_foreign(titles):
+    """R112.5: a topic is foreign when FOREIGN_NAMED_SHARE of its titles names a foreign country or leader."""
+    return sum(1 for t in titles if FOREIGN_ONLY.search(t)) >= FOREIGN_NAMED_SHARE * max(1, len(titles))
+
+
+def name_quality_ok(key, titles, total_df, window_df, df=None):
+    """The name gates of the full run. R112.2: only a place, a disease or a generic object fails. R112.4: a key with
+    a policy noun, or a key whose titles name a government body in GOV_NAME_SHARE, skips the quote and word-start tests;
+    a key with a policy noun skips the word-boundary test too."""
+    if not noun_phrase_name(key) or generic_name(key) or is_person_or_party(key, titles) or is_place_name(key):
+        return False
+    policy_key = bool(POLICY_NOUN.search(key))
+    policy_titles = sum(1 for t in titles if names_government(t)) >= GOV_NAME_SHARE * max(1, len(titles))
+    if not name_ok(key, total_df, window_df, loose=policy_key or policy_titles):
+        return False
+    if policy_key:
+        return True
+    if not has_word_boundary(key, titles, df):
+        return False
+    return policy_titles or not is_quoted_slogan(key, titles)
+
+
 NATIONAL_SYSTEMS = re.compile(r"健保|勞保|勞退|國民年金|國保|公保|軍保|長照|衛福部|衛生福利部|健保署|勞保局|勞動部|國人")  # R84
 SPEECH_END = re.compile(r"(表示|指出|在場|回應|強調|認為|透露|坦言|[說稱])$")  # R85
 ROLE_FRAGMENT = re.compile(r"(高層|高官|幕僚|官員|人士|發言人)$")
@@ -191,8 +241,9 @@ def taiwan_relevant(titles):
     return hits >= RELEVANCE_SHARE * n
 
 
-def name_ok(key, total_df, window_df):
-    if len(key) < MIN_KEY_LEN or key[0] in BAD_START or key[-1] in BAD_END or BAD_WORDS.search(key):
+def name_ok(key, total_df, window_df, loose=False):
+    """`loose` (R112.4) skips the word-start and word-end tests for a policy name."""
+    if len(key) < MIN_KEY_LEN or BAD_WORDS.search(key) or (not loose and (key[0] in BAD_START or key[-1] in BAD_END)):
         return False
     return total_df <= CONCENTRATION * max(1, window_df)
 
@@ -318,10 +369,10 @@ def detect_gov_actors(titles, jurisdiction_ids):
 def exclusion_reason(items):
     n = max(1, len(items))
     shares = {
-        "sensitive": sum(1 for it in items if it.get("sensitive")) / n,
-        "election_campaign": sum(1 for it in items if ELECTION.search(it["title"])) / n,
+        "sensitive": sum(1 for it in items if it.get("sensitive") and not LAW_PASSED.search(it["title"])) / n,
+        "election_campaign": sum(1 for it in items if ELECTION.search(it["title"]) and not ELECTION_LEGAL.search(it["title"])) / n,
         "criminal_case": sum(1 for it in items if CRIME.search(it["title"])) / n,
-        "entertainment": sum(1 for it in items if ENTERTAINMENT.search(it["title"])) / n,
+        "entertainment": sum(1 for it in items if ENTERTAINMENT.search(it["title"]) and not CONSUMER.search(it["title"])) / n,
     }
     has_official = any(it.get("source_class") in ("official_statement", "official_record") for it in items)
     for reason in ("sensitive", "criminal_case", "election_campaign", "entertainment"):
@@ -490,7 +541,7 @@ STATE_FILE = Path("tools") / "newsfetch" / "topic_state.json"
 
 
 def read_topic_state(root):
-    """R107b: {event id: {"fails": consecutive failing runs, "gate": the last failed gate}}. Empty when no file exists."""
+    """R107b, R116: {event id: {"fails": consecutive failing days, "gate": the last failed gate, "day": the last counted day}}. Empty when no file exists."""
     path = Path(root) / STATE_FILE
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -504,16 +555,26 @@ def write_topic_state(root, state):
     path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def apply_hysteresis(state, failed):
-    """R107b: adds 1 to the fail count of each failed topic and clears the count of every other topic.
+TAIPEI = timezone(timedelta(hours=8))  # Taiwan has no daylight saving time
+
+
+def taipei_day(now=None):
+    """R116: the calendar day in Asia/Taipei, as YYYY-MM-DD."""
+    return (now or datetime.now(timezone.utc)).astimezone(TAIPEI).date().isoformat()
+
+
+def apply_hysteresis(state, failed, day):
+    """R107b, R116: adds 1 to the fail count of each failed topic and clears the count of every other topic. A topic
+    gets at most one count per calendar day (`day`), so a second run on the same day adds none.
     Returns (new state, {id: gate} to withdraw now, ids still pending)."""
     new, due, pending = {}, {}, []
     for pid, gate in sorted(failed.items()):
-        fails = state.get(pid, {}).get("fails", 0) + 1
+        prior = state.get(pid, {})
+        fails = prior.get("fails", 0) + (0 if prior.get("day") == day else 1)
         if fails >= WITHDRAW_AFTER_FAILS:
             due[pid] = gate
         else:
-            new[pid] = {"fails": fails, "gate": gate}
+            new[pid] = {"fails": fails, "gate": gate, "day": day}
             pending.append(pid)
     return new, due, pending
 
@@ -685,13 +746,11 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
             members = [m for m in members if full in m["title"]]
             titles = [m["title"] for m in members]
             key = full
-        if not noun_phrase_name(key) or not name_ok(key, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members)) \
-                or not has_word_boundary(key, titles, df) or is_person_or_party(key, titles) \
-                or is_quoted_slogan(key, titles) or is_place_name(key):
+        if not name_quality_ok(key, titles, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members), df):
             stats["rejected_name_quality"] += 1
             fail("rejected_name_quality", [m["url"] for m in members])
             continue
-        if not taiwan_relevant(titles):
+        if not taiwan_relevant(titles) and names_foreign(titles):  # R112.5: no foreign name, no foreign label
             stats["rejected_foreign"] += 1
             fail("rejected_foreign", [m["url"] for m in members])
             continue
@@ -719,7 +778,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
         local = [j for j in jids if j != "jur-tw"]
         names = [next(n for jid, _, n, _ in JURS if jid == j)[:-2] for j in local]
         name = tp.display_name(key, [s["title"] for s in seeds])
-        if not noun_phrase_name(name):
+        if not noun_phrase_name(name) or generic_name(name):
             stats["rejected_name_quality"] += 1
             fail("rejected_name_quality", [m["url"] for m in members])
             continue
@@ -762,7 +821,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     covered.update(p["id"] for p in published)
     failing = {pid: gate for pid, gate in failed.items() if pid not in covered}
     kept_withdrawn = {pid: gate for pid, gate in failing.items() if prior_event(root, pid)[0] == "withdrawn"}
-    state, withdrawn, pending = apply_hysteresis(read_topic_state(root), {p: g for p, g in failing.items() if p not in kept_withdrawn})
+    state, withdrawn, pending = apply_hysteresis(read_topic_state(root), {p: g for p, g in failing.items() if p not in kept_withdrawn},
+                                                  today or taipei_day())
     for pid, gate in sorted({**kept_withdrawn, **withdrawn}.items()):
         withdraw_topic(root, pid, gate, today=today)  # a withdrawn topic gets its file back and no new record
     write_topic_state(root, state)

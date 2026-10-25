@@ -73,5 +73,11 @@ SHORT_KEY_LEN = 2  # A key of this length or less takes a longer display form fr
 DISPLAY_FORM_MIN_COUNT = 2  # A common 4-character form needs this many titles (薔琵 -> 薔琵颱風). Case (R69).
 CONTROVERSY_MIN_ACTORS = 2  # PRD 4.4 item 3, R73: a controversy needs real stances from this many actors. Start (R73).
 
+# --- Name and gate fixes of the precision sample (T22, R112) ---
+GENERIC_NAME_MAX_LEN = 3  # A name of this length or less that is a generic object (巡視船, 豎孤棚), or that is a few characters after a jurisdiction, is not a topic name. Sample T18-AP: 巡視船, 屏東縣豎孤棚 (R112.2).
+DISEASE_NAME_MAX_LEN = 6  # A name of this length or less that ends with a disease word and has no policy noun is only a disease (惡性腫瘤). Sample T18-AP: 惡性腫瘤 (R112.2).
+GOV_NAME_SHARE = 0.5  # A noun phrase is a policy name when this share of its titles names a government body: the quote and word-start tests are skipped. Sample T18-AP: 廚餘給弱勢 (教育局, 3 of 4), 不只高德地圖 (數發部, 3 of 3) (R112.4).
+FOREIGN_NAMED_SHARE = 0.3  # A topic outside Taiwan is foreign only when this share of its titles names a foreign country or leader. Sample T18-AP: 清潔公司掛羊頭賣狗肉 was labeled foreign with none (R112.5).
+
 # --- Hysteresis (R107b) ---
 WITHDRAW_AFTER_FAILS = 2  # A published topic is withdrawn after this many failing runs in a row. Ruling R107.
