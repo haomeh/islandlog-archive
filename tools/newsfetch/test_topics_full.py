@@ -399,5 +399,34 @@ class HysteresisTest(RunHelper, unittest.TestCase):
             self.assertEqual(self.records(root), [])
 
 
+class ElectionCampaignGateTest(unittest.TestCase):
+    """R106: campaign phrases that name no election word (對手陣營, 競辦) still count as campaign talk."""
+    TITLES_7046975b = ["藍議員問長者健保費中央買單？周春米：立法院要「精傱」一點啦",
+                       "長者健保費補助爭議　台灣前進陣線全台串連宣講",
+                       "《少康戰情室專訪》蘇巧慧：長者健保費補助 全國應一致",
+                       "蘇巧慧支持中央補助長者健保費且全國一致  對手陣營質疑「哪個才是蘇巧慧？」"]
+
+    def items(self, titles):
+        return [item(f"u{i}", t, "2026-10-21") for i, t in enumerate(titles)]
+
+    def test_campaign_phrases_match_the_gate(self):
+        for t in ("蘇巧慧支持中央補助 對手陣營質疑", "競辦：長者健保費補助是政見", "競總成立 開票所會議", "參選人談長照政見"):
+            self.assertTrue(tf.ELECTION.search(t), t)
+
+    def test_a_topic_of_campaign_titles_is_excluded(self):
+        titles = ["蘇巧慧支持長照新制 對手陣營質疑", "競辦回應長照政見", "長照政策爭議 競總說明", "長照補助新制上路"]
+        self.assertEqual(tf.exclusion_reason(self.items(titles)), "election_campaign")
+
+    def test_policy_titles_are_not_campaign_talk(self):
+        for t in ("健保署說明長者健保費補助", "捷運站台門故障 政策陣營之爭？衛福部澄清", "行政院核定長照預算"):
+            self.assertFalse(tf.ELECTION.search(t), t)
+
+    def test_the_longer_health_fee_topic_stays_below_the_campaign_share(self):
+        """1 of 4 titles is clear campaign talk (25%), under EXCLUDE_SHARE 0.3. The topic is not a campaign topic."""
+        items = self.items(self.TITLES_7046975b)
+        self.assertEqual(sum(1 for it in items if tf.ELECTION.search(it["title"])), 1)
+        self.assertIsNone(tf.exclusion_reason(items))
+
+
 if __name__ == "__main__":
     unittest.main()
