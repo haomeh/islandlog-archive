@@ -428,5 +428,36 @@ class ElectionCampaignGateTest(unittest.TestCase):
         self.assertIsNone(tf.exclusion_reason(items))
 
 
+class TopicConfigTest(unittest.TestCase):
+    """R107a: the thresholds live in topic_config.py, each with a comment."""
+
+    def test_every_value_has_a_comment(self):
+        import re
+        src = (REPO / "tools/newsfetch/topic_config.py").read_text(encoding="utf-8").splitlines()
+        i = 0
+        while i < len(src):
+            if re.match(r"^[A-Z_, ]+ = ", src[i]):
+                block = [src[i]]
+                while block[-1].count("{") > block[-1].count("}") or (len(block) > 1 and block[-1].count("{") == 0 and "}" not in "".join(block)):
+                    i += 1
+                    block.append(src[i])
+                self.assertIn("#", "".join(block), src[i])
+            i += 1
+
+    def test_the_modules_use_the_config_values(self):
+        from tools.newsfetch import topic_config as tc, topics as tp
+        for name in ("ANCHOR_MAX_DF", "COMPANION_SHARE", "ONE_ISSUE_MIN_CORE", "RARE_KEY_SHARE"):
+            self.assertEqual(getattr(tp, name), getattr(tc, name))
+        for name in ("SAME_EVENT_SHARE", "EXCLUDE_SHARE", "MERGE_OVERLAP", "RELEVANCE_SHARE", "WITHDRAW_AFTER_FAILS"):
+            self.assertEqual(getattr(tf, name), getattr(tc, name))
+
+    def test_the_modules_define_no_threshold_of_their_own(self):
+        import re
+        for name in ("topics.py", "topics_full.py"):
+            text = (REPO / "tools/newsfetch" / name).read_text(encoding="utf-8")
+            for const in ("ANCHOR_MAX_DF", "SPECIFIC_KEY_MIN", "COMPANION_SHARE", "ONE_ISSUE_SHARE", "SAME_EVENT_SHARE", "RELEVANCE_SHARE", "BAND"):
+                self.assertIsNone(re.search(rf"^{const} *=", text, re.M), f"{name} defines {const}")
+
+
 if __name__ == "__main__":
     unittest.main()
