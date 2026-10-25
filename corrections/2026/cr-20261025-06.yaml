@@ -1,0 +1,9 @@
+schema_version: 1
+id: cr-20261025-06
+target_ids:
+- ev-20261021-topic-7046975b
+date: '2026-10-25'
+type: republication
+summary: 系統重新發布事件：已通過所有檢查（R105）。
+made_by: tool
+rule_id: R105

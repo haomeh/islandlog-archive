@@ -407,6 +407,7 @@ def matching_published(published, src_ids):
 
 
 WITHDRAW_RULE = "R82"
+REPUBLISH_RULE = "R105"
 
 
 def _correction_records(root):
@@ -414,40 +415,104 @@ def _correction_records(root):
     return [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted((Path(root) / "corrections").glob("*/cr-*.yaml"))]
 
 
-def write_withdrawal_record(root, event_id, gate, today):
-    """R86, R95: a withdrawal writes a correction record made by the tool: the event, the date, the failed gate
-    and the rule. A second run finds the record of the same event and gate and writes nothing. Returns the id."""
+def write_status_record(root, event_id, rtype, summary, rule_id, today, gate=None):
+    """R86, R105: a status change of a published id writes a correction record made by the tool: the event, the
+    date, the type (withdrawal or republication) and the rule. Every change writes a new record. Returns the id."""
     import yaml
     root = Path(root)
     records = _correction_records(root)
-    for r in records:
-        if r.get("made_by") == "tool" and r.get("target_ids") == [event_id] and r.get("gate") == gate:
-            return r["id"]
     stamp = today.replace("-", "")
     used = [int(r["id"][-2:]) for r in records if r["id"].startswith(f"cr-{stamp}-")]
     cid = f"cr-{stamp}-{max(used, default=0) + 1:02d}"
-    doc = {"schema_version": 1, "id": cid, "target_ids": [event_id], "date": today, "type": "factual",
-           "summary": f"系統撤回事件：未通過 {gate}（{WITHDRAW_RULE}）。", "made_by": "tool", "gate": gate, "rule_id": WITHDRAW_RULE}
+    doc = {"schema_version": 1, "id": cid, "target_ids": [event_id], "date": today, "type": rtype,
+           "summary": summary, "made_by": "tool"}
+    if gate:
+        doc["gate"] = gate
+    doc["rule_id"] = rule_id
     path = root / "corrections" / today[:4] / f"{cid}.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000), encoding="utf-8")
     return cid
 
 
-def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
-    """R82: a published system topic that fails a gate keeps its file and id. It gets status withdrawn, the
-    failed gate in review.reason and a link to its correction record (R86). A missing file is restored from the
-    git ref first. Returns the file path."""
+def write_withdrawal_record(root, event_id, gate, today):
+    return write_status_record(root, event_id, "withdrawal", f"系統撤回事件：未通過 {gate}（{WITHDRAW_RULE}）。",
+                               WITHDRAW_RULE, today, gate=gate)
+
+
+def write_republication_record(root, event_id, today):
+    return write_status_record(root, event_id, "republication", f"系統重新發布事件：已通過所有檢查（{REPUBLISH_RULE}）。",
+                               REPUBLISH_RULE, today)
+
+
+def _event_text(root, event_id, ref):
+    """The event file text from the working tree, or from the git ref when the file is missing. None if neither exists."""
     import subprocess
     root = Path(root)
     year = event_id.split("-")[1][:4]
     path = root / "events" / year / f"{event_id}.md"
-    if not path.exists():
-        text = subprocess.run(["git", "-C", str(root), "show", f"{ref}:events/{year}/{event_id}.md"],
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    try:
+        return subprocess.run(["git", "-C", str(root), "show", f"{ref}:events/{year}/{event_id}.md"],
                               capture_output=True, text=True, check=True).stdout
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def prior_event(root, event_id, ref="HEAD"):
+    """R105: the status and correction ids of an event before a run rewrites it. (None, []) for a new event."""
+    import yaml
+    text = _event_text(root, event_id, ref)
+    if text is None:
+        return None, []
+    front = yaml.safe_load(text.split("---\n", 2)[1])
+    return front.get("status"), list(front.get("correction_ids", []))
+
+
+def republish_topic(root, event_id, prior, today):
+    """R105: after a full run rewrites an event, restore its correction ids. A topic that was withdrawn and is
+    published again gets a republication record and a link to it. Returns the new record id or None."""
+    root = Path(root)
+    status, ids = prior
+    path = root / "events" / event_id.split("-")[1][:4] / f"{event_id}.md"
     doc, body = _read_event(path)
+    cid = None
+    if status == "withdrawn":
+        cid = write_republication_record(root, event_id, today)
+        ids = ids + [cid]
+    if ids:
+        doc = _with_correction_ids(doc, ids)
+        _write_event(path, doc, body)
+    return cid
+
+
+def _with_correction_ids(doc, ids):
+    """The doc with correction_ids before `review` (the key order of the event files)."""
+    new = {}
+    for k, v in doc.items():
+        if k == "review":
+            new["correction_ids"] = ids
+        if k != "correction_ids":
+            new[k] = v
+    new.setdefault("correction_ids", ids)
+    return new
+
+
+def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
+    """R82: a published system topic that fails a gate keeps its file and id. It gets status withdrawn, the
+    failed gate in review.reason and a link to its correction record (R86). A missing file is restored from the
+    git ref first. A topic that is withdrawn already stays as it is and writes no new record (R105).
+    Returns the file path."""
+    root = Path(root)
+    year = event_id.split("-")[1][:4]
+    path = root / "events" / year / f"{event_id}.md"
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_event_text(root, event_id, ref), encoding="utf-8")
+    doc, body = _read_event(path)
+    if doc.get("status") == "withdrawn":
+        return path
     doc["status"] = "withdrawn"
     doc["review"]["reason"] = f"withdrawn: {gate}"
     cid = write_withdrawal_record(root, event_id, gate, today or date.today().isoformat())
@@ -455,6 +520,39 @@ def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
         doc["correction_ids"] = doc.get("correction_ids", []) + [cid]
     _write_event(path, doc, body)
     return path
+
+
+STATE_FILE = Path("tools") / "newsfetch" / "topic_state.json"
+WITHDRAW_AFTER_FAILS = 2  # R107b
+
+
+def read_topic_state(root):
+    """R107b: {event id: {"fails": consecutive failing runs, "gate": the last failed gate}}. Empty when no file exists."""
+    path = Path(root) / STATE_FILE
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except OSError:
+        return {}
+
+
+def write_topic_state(root, state):
+    path = Path(root) / STATE_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def apply_hysteresis(state, failed):
+    """R107b: adds 1 to the fail count of each failed topic and clears the count of every other topic.
+    Returns (new state, {id: gate} to withdraw now, ids still pending)."""
+    new, due, pending = {}, {}, []
+    for pid, gate in sorted(failed.items()):
+        fails = state.get(pid, {}).get("fails", 0) + 1
+        if fails >= WITHDRAW_AFTER_FAILS:
+            due[pid] = gate
+        else:
+            new[pid] = {"fails": fails, "gate": gate}
+            pending.append(pid)
+    return new, due, pending
 
 
 def stable_id(published, title, first_day, last_day, new_id):
@@ -689,16 +787,23 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
         ev["review"]["sensitive"] = "misconduct" in seed["controversy_types"] or has_sensitive_term(
             [it["title"] for it in used])
         ensure_actor_files(root, [a for a, _ in ev["actors"]])
+        prior = prior_event(root, ev["id"])
         tp.write_event(ev, seed, root, {}, actors_by_host=tp.HOSTS, overwrite_sources=False)
+        republished = republish_topic(root, ev["id"], prior, today or date.today().isoformat())
+        if republished:
+            stats["republished"] += 1
         published.append({"id": ev["id"], "title": ev["title"], "sources": len(used), "key": key})
         published_sets.append(urls)
         out_seeds.append({k: v for k, v in seed.items() if not k.startswith("_")})
     stats["published"] = len(published)
     covered.update(p["id"] for p in published)
-    withdrawn = {pid: gate for pid, gate in failed.items() if pid not in covered}
+    failing = {pid: gate for pid, gate in failed.items() if pid not in covered and prior_event(root, pid)[0] != "withdrawn"}
+    state, withdrawn, pending = apply_hysteresis(read_topic_state(root), failing)
     for pid, gate in sorted(withdrawn.items()):
         withdraw_topic(root, pid, gate, today=today)
+    write_topic_state(root, state)
     stats["withdrawn"] = len(withdrawn)
+    stats["withdraw_pending"] = len(pending)
     keys = {k[0]: k[1] for k in existing_key_by_id}
     keys.update({p["id"]: p["key"] for p in published})
     links = apply_subtopic_links(root, keys)

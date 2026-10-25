@@ -186,9 +186,7 @@ class NationalSystemActorTest(unittest.TestCase):
         self.assertIn("ac-ministry-of-health-and-welfare", self.actors("爸媽搬去子女家，健保費會取消嗎？"))
 
 
-@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
-class WithdrawTest(unittest.TestCase):
-    """R82: a published system topic that fails a gate is withdrawn. Its file and id stay."""
+class RunHelper:
     EVENT_ID = "ev-20261023-topic-c8f31c28"
 
     def corpus(self, second_news_publisher):
@@ -208,24 +206,42 @@ class WithdrawTest(unittest.TestCase):
             event.parent.mkdir(parents=True)
             (root / "sources/2026").mkdir(parents=True)
             (root / "actors").mkdir()
-            event.write_text(f"---\nid: {self.EVENT_ID}\nstatus: published\ntitle: 南崁溪\ntimeline:\n- date: '2026-10-23'\n"
+            event.write_text(f"---\nid: {self.EVENT_ID}\nstatus: published\ntitle: 桃園市南崁溪\ntimeline:\n- date: '2026-10-23'\n"
                              f"  source_ids: [{ids[0]}]\n- date: '2026-10-24'\n  source_ids: [{ids[1]}, {ids[2]}]\n"
                              "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
                              "  status: draft-review\n---\n\n報導。\n", encoding="utf-8")
         stats, _, _ = tf.run(corpus, clusters, [], root, root / "report.json", today=today)
         return stats, event.read_text(encoding="utf-8")
 
+    def records(self, root):
+        import yaml
+        return [yaml.safe_load(f.read_text(encoding="utf-8")) for f in sorted((root / "corrections").glob("*/cr-*.yaml"))]
+
+    def event_doc(self, root):
+        import yaml
+        return yaml.safe_load((root / "events/2026" / f"{self.EVENT_ID}.md").read_text(encoding="utf-8").split("---\n")[1])
+
+    def fail_twice(self, root, first="2026-10-25", second="2026-10-26"):
+        """R107b: a published topic needs 2 failing runs in a row to be withdrawn."""
+        self.run_in(root, second_news_publisher=False, today=first)
+        return self.run_in(root, second_news_publisher=False, today=second)
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class WithdrawTest(RunHelper, unittest.TestCase):
+    """R82: a published system topic that fails a gate in 2 runs in a row is withdrawn. Its file and id stay."""
+
     def test_a_topic_that_fails_a_gate_is_withdrawn_not_deleted(self):
         import tempfile
         from pathlib import Path
         with tempfile.TemporaryDirectory() as tmp:
-            stats, text = self.run_in(Path(tmp), second_news_publisher=False)
+            stats, text = self.fail_twice(Path(tmp))
             self.assertEqual(stats["rejected_news_rule"], 1)
             self.assertEqual(stats["withdrawn"], 1)
             self.assertIn("status: withdrawn", text)
             self.assertIn("reason: 'withdrawn: rejected_news_rule'", text.replace('"', "'"))
             self.assertIn(f"id: {self.EVENT_ID}", text)
-            stats, again = self.run_in(Path(tmp), second_news_publisher=False)  # a second run changes nothing
+            stats, again = self.run_in(Path(tmp), second_news_publisher=False, today="2026-10-27")  # a withdrawn topic stays as it is
             self.assertEqual(again, text)
 
     def test_a_withdrawal_writes_one_correction_record(self):
@@ -234,11 +250,11 @@ class WithdrawTest(unittest.TestCase):
         from pathlib import Path
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            self.run_in(root, second_news_publisher=False, today="2026-10-25")
+            self.fail_twice(root, "2026-10-24", "2026-10-25")
             files = sorted((root / "corrections").glob("*/cr-*.yaml"))
             self.assertEqual([f.name for f in files], ["cr-20261025-01.yaml"])
             rec = yaml.safe_load(files[0].read_text(encoding="utf-8"))
-            self.assertEqual((rec["made_by"], rec["gate"], rec["rule_id"]), ("tool", "rejected_news_rule", "R82"))
+            self.assertEqual((rec["made_by"], rec["gate"], rec["rule_id"], rec["type"]), ("tool", "rejected_news_rule", "R82", "withdrawal"))
             self.assertEqual((rec["target_ids"], rec["date"], "mr_url" in rec), ([self.EVENT_ID], "2026-10-25", False))
             doc = yaml.safe_load((root / "events/2026" / f"{self.EVENT_ID}.md").read_text(encoding="utf-8").split("---\n")[1])
             self.assertEqual(doc["correction_ids"], ["cr-20261025-01"])
@@ -259,6 +275,128 @@ class WithdrawTest(unittest.TestCase):
         published = [{"id": "ev-1", "src_ids": {"s1", "s2", "s3", "s4"}}, {"id": "ev-2", "src_ids": set()}]
         self.assertEqual(tf.matching_published(published, {"s1", "s2", "x"}), ["ev-1"])
         self.assertEqual(tf.matching_published(published, {"s1", "x"}), [])
+
+
+REPO = __import__("pathlib").Path(__file__).resolve().parents[2]
+
+
+class CorrectionTypeTest(unittest.TestCase):
+    """R104: a tool withdrawal and a republication have their own correction types."""
+
+    def test_schema_has_withdrawal_and_republication(self):
+        import json
+        enum = json.load(open(REPO / "schemas/correction.schema.json", encoding="utf-8"))["properties"]["type"]["enum"]
+        self.assertIn("withdrawal", enum)
+        self.assertIn("republication", enum)
+
+    def test_tool_records_use_a_status_type(self):
+        import yaml
+        files = sorted((REPO / "corrections").glob("*/cr-*.yaml"))
+        self.assertTrue(files)
+        for f in files:
+            rec = yaml.safe_load(f.read_text(encoding="utf-8"))
+            if rec["made_by"] == "tool":
+                self.assertIn(rec["type"], ("withdrawal", "republication"), f.name)
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class StatusRecordsTest(RunHelper, unittest.TestCase):
+    """R105: every status change of a published id writes a record, in both directions."""
+
+    def test_republication_writes_a_record_and_keeps_the_withdrawal_link(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fail_twice(root, "2026-10-24", "2026-10-25")  # published -> withdrawn
+            self.assertEqual(self.event_doc(root)["status"], "withdrawn")
+            self.run_in(root, second_news_publisher=True, today="2026-10-26")  # withdrawn -> published
+            doc = self.event_doc(root)
+            self.assertEqual(doc["status"], "published")
+            recs = self.records(root)
+            self.assertEqual([(r["type"], r["date"], r["made_by"]) for r in recs],
+                             [("withdrawal", "2026-10-25", "tool"), ("republication", "2026-10-26", "tool")])
+            self.assertEqual(doc["correction_ids"], [r["id"] for r in recs])
+            self.assertEqual(recs[1]["target_ids"], [self.EVENT_ID])
+            self.run_in(root, second_news_publisher=True, today="2026-10-27")  # no change: no record
+            self.assertEqual(len(self.records(root)), 2)
+
+    def test_a_second_withdrawal_after_republication_writes_a_new_record(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fail_twice(root, "2026-10-23", "2026-10-24")
+            self.run_in(root, second_news_publisher=True, today="2026-10-26")
+            self.fail_twice(root, "2026-10-27", "2026-10-28")  # R107b: the second fail withdraws
+            self.assertEqual([r["type"] for r in self.records(root)], ["withdrawal", "republication", "withdrawal"])
+            self.assertEqual(len(self.event_doc(root)["correction_ids"]), 3)
+
+    def test_a_rebuilt_published_topic_keeps_its_correction_ids(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=True, today="2026-10-25")
+            path = root / "events/2026" / f"{self.EVENT_ID}.md"
+            path.write_text(path.read_text(encoding="utf-8").replace("review:\n", "correction_ids:\n- cr-20260101-01\nreview:\n", 1), encoding="utf-8")
+            self.run_in(root, second_news_publisher=True, today="2026-10-26")
+            self.assertEqual(self.event_doc(root)["correction_ids"], ["cr-20260101-01"])
+
+    def test_the_back_filled_records_of_the_typhoon_holiday_topic(self):
+        import yaml
+        text = (REPO / "events/2026/ev-20261023-topic-82b85c15.md").read_text(encoding="utf-8")
+        ids = yaml.safe_load(text.split("---\n")[1])["correction_ids"]
+        recs = [yaml.safe_load((REPO / "corrections/2026" / f"{i}.yaml").read_text(encoding="utf-8")) for i in ids]
+        self.assertEqual([r["type"] for r in recs], ["withdrawal", "republication"])
+        self.assertEqual(recs[0]["gate"], "rejected_source_rule")
+        self.assertTrue(all(r["target_ids"] == ["ev-20261023-topic-82b85c15"] for r in recs))
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class HysteresisTest(RunHelper, unittest.TestCase):
+    """R107b: a published topic is withdrawn only when it fails the gates in 2 runs in a row."""
+
+    def state(self, root):
+        import json
+        p = root / "tools/newsfetch/topic_state.json"
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+    def test_one_fail_keeps_the_topic_published(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            stats, text = self.run_in(root, second_news_publisher=False)
+            self.assertEqual(stats["withdrawn"], 0)
+            self.assertEqual(stats["withdraw_pending"], 1)
+            self.assertIn("status: published", text)
+            self.assertEqual(self.records(root), [])
+            self.assertEqual(self.state(root)[self.EVENT_ID], {"fails": 1, "gate": "rejected_news_rule"})
+
+    def test_two_fails_in_a_row_withdraw_with_a_record(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            stats, text = self.fail_twice(root)
+            self.assertEqual(stats["withdrawn"], 1)
+            self.assertIn("status: withdrawn", text)
+            self.assertEqual([r["type"] for r in self.records(root)], ["withdrawal"])
+            self.assertEqual(self.records(root)[0]["date"], "2026-10-26")
+
+    def test_fail_pass_fail_does_not_withdraw(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=False, today="2026-10-25")
+            self.run_in(root, second_news_publisher=True, today="2026-10-26")
+            self.assertEqual(self.state(root).get(self.EVENT_ID, {}).get("fails", 0), 0)
+            stats, text = self.run_in(root, second_news_publisher=False, today="2026-10-27")
+            self.assertEqual(stats["withdrawn"], 0)
+            self.assertIn("status: published", text)
+            self.assertEqual(self.records(root), [])
 
 
 if __name__ == "__main__":

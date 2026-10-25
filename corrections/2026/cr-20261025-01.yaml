@@ -3,7 +3,7 @@ id: cr-20261025-01
 target_ids:
 - ev-20261023-topic-c8f31c28
 date: '2026-10-25'
-type: factual
+type: withdrawal
 summary: 系統撤回事件：未通過 rejected_name_quality（R82）。
 made_by: tool
 gate: rejected_name_quality
