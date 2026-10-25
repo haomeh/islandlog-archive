@@ -274,8 +274,57 @@ class TopicTest(unittest.TestCase):
         self.assertTrue({"mol", "fc1", "fc2"} <= urls)
         self.assertFalse({"crime1", "crime2"} & urls)
 
+    def _anchored_urls(self, seeds, others, key, filler=60):
+        corpus = [item(u, t, d) for u, t, d in seeds + others]
+        corpus += [item(f"f{i}", f"第{i}號無關新聞 氣象消息", "2026-03-01") for i in range(filler)]
+        df = topics.document_frequency(corpus)
+        cands = [c for c in corpus if key in c["title"]]
+        return {c["url"] for c in topics.anchored(cands, [t for _, t, _ in seeds], [key], df, len(corpus))}
+
+    def test_r112_1_a_specific_key_still_needs_a_second_anchor(self):
+        """焚化爐: 18 titles are about one site, so the key is specific. The zoo killing and the Taichung smell
+        have the key and no place, actor or second key word of the seeds."""
+        seeds = [(f"s{i}", t, "2026-04-28") for i, t in enumerate(
+            ["南投名間焚化爐環評會 鄉民射紙飛機抗議", "名間焚化爐環評再爆衝突 鄉長衝主席台遭架離", "名間焚化爐自救會 遙請濁水媽祖庇佑",
+             "南投焚化爐環評會爆衝突 警否認強制力致傷", "南投焚化爐預定地拍到石虎 農業部重申原則", "反名間焚化爐演行動劇 要求南投縣府撤案"])]
+        near = [(f"n{i}", f"南投名間焚化爐第{i}場說明會 縣府回應", "2026-05-02") for i in range(12)]
+        off = [("zoo", "驚悚！日本旭山動物園員工殺妻後丟進園內焚化爐 隔天還冷靜上班", "2026-04-24"),
+               ("smell", "台中文山焚化爐周遭飄「酸臭噴」味 疑垃圾平台異味待查", "2026-05-05")]
+        urls = self._anchored_urls(seeds, near + off, "焚化爐")
+        self.assertTrue({"s0", "n0", "n11"} <= urls)
+        self.assertFalse({"zoo", "smell"} & urls)
+
+    def test_r112_1_an_actor_or_a_place_of_the_seeds_is_an_anchor(self):
+        """統促黨: the ministry and the court are in the seed titles. A knife case at a night market has the key only."""
+        seeds = [(f"s{i}", t, "2026-07-30") for i, t in enumerate(
+            ["內政部聲請解散統促黨 憲法法庭恐遇兩大關卡", "內政部聲請解散統促黨 國台辦氣炸嗆「綠色恐怖」", "挺內政部聲請解散統促黨 綠委盼憲法法庭切除毒瘤",
+             "機關解散政黨首例！內政部赴憲法法庭 正式遞狀聲請解散統促黨"])]
+        on = [("on1", "統促黨案 憲法法庭排定準備程序", "2026-09-01"), ("on2", "內政部：統促黨解散案補充理由書", "2026-09-03")]
+        on += [(f"o{i}", f"統促黨解散案第{i}次說明 內政部補件", "2026-09-05") for i in range(12)]
+        off = [("knife", "持刀闖花蓮東大門夜市！統促黨男殺人未遂收押", "2026-10-09"),
+               ("bodyguard", "只因按喇叭未讓路竟爆打少年 統促黨白狼前隨扈遭收押", "2026-10-12")]
+        urls = self._anchored_urls(seeds, on + off, "統促黨")
+        self.assertTrue({"on1", "on2"} <= urls)
+        self.assertFalse({"knife", "bodyguard"} & urls)
+
+    def test_r112_1_a_rare_word_of_two_core_titles_does_not_open_another_case(self):
+        """移工: 失聯移工 is in two core titles by chance, but no seed shares it. Police arrests of 失聯移工 stay out."""
+        seeds = [("s1", "遭控「移工懷孕雇主養他全家」 勞動部駁斥：嚴重錯誤資訊", "2026-10-13"),
+                 ("s2", "移工懷孕爭議 勞動部提出5點回應", "2026-10-15"),
+                 ("s3", "移工懷孕由雇主負擔？勞動部說明", "2026-10-15"),
+                 ("s4", "移工懷孕雇主養全家說法流傳 勞動部澄清", "2026-10-15")]
+        core = [("c1", "移工政策惹民怨！雇主協會調查不滿意 反對失聯移工就地合法 勞動部回應", "2026-10-15"),
+                ("c2", "移工雇主批勞動部 失聯移工就地合法太寬鬆", "2026-10-16")]
+        off = [("a1", "失聯移工見警駕車逃竄 高雄警強力追捕2人送辦", "2026-10-17"),
+               ("a2", "碧潭大橋驚魂記！疑失聯移工躲查緝 跳2樓半高慘摔空地", "2026-10-19"),
+               ("a3", "仲介招攬失聯移工大賺黑心錢 移民署查抄逮14人", "2026-10-20")]
+        urls = self._anchored_urls(seeds, core + off, "移工")
+        self.assertTrue({"s1", "c1", "c2"} <= urls)
+        self.assertFalse({"a1", "a2", "a3"} & urls)
+
     def test_a_long_rare_key_is_its_own_anchor(self):
-        """續放颱風假 is one phrase for one event. The Taipei titles with it join the Taichung seeds."""
+        """續放颱風假 is one phrase for one event in many cities. R112.1 and R112.3: the Taichung seeds take the Taichung
+        titles, and the Taipei titles with the same key stay out (they are another jurisdiction)."""
         seeds = [("s1", "台中人續放颱風假 百貨公司人潮「恢復假日水準」", "2026-10-24"),
                  ("s2", "續放颱風假！台中人開逛百貨\u3000鹿港老街人潮少3成", "2026-10-24")]
         others = [("s3", "台中續放颱風假 各大百貨宣布今正常營業", "2026-10-24"),
@@ -288,7 +337,8 @@ class TopicTest(unittest.TestCase):
         df = topics.document_frequency(corpus)
         cands = [c for c in corpus if "續放颱風假" in c["title"]]
         urls = {c["url"] for c in topics.anchored(cands, [t for _, t, _ in seeds], ["續放颱風假"], df, len(corpus))}
-        self.assertTrue({"cna", "storm", "storm2"} <= urls)
+        self.assertTrue({"s3", "s4"} <= urls)
+        self.assertFalse({"cna", "storm"} & urls)
 
     def test_a_long_key_used_in_other_counties_is_not_its_own_anchor(self):
         """全民運動館 is a facility type: 20 uses in the corpus, 7 in the Miaoli window. Tainan and Taitung titles stay out."""

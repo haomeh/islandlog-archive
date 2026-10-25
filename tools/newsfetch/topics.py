@@ -39,7 +39,9 @@ from tools.newsfetch.topic_config import (
     GENERIC_BURST, GENERIC_DF_MIN, GENERIC_DF_SHARE, KEY2_MIN_COVER, KEY2_MIN_COVER_SHARE, KEY2_SHARE, LOCAL_ANCHOR_MIN,
     CONTROVERSY_MIN_ACTORS, DISPLAY_FORM_MIN_COUNT, LOCAL_ANCHOR_SHARE, ONE_ISSUE_MIN_CORE, ONE_ISSUE_SHARE, PLACE_FILTER_DF,
     POOL_COVER_SHARE, RARE_KEY_MIN_LEN, SHORT_KEY_LEN,
-    PAPER_DAYS, PAPER_OVERLAP, RARE_KEY_SHARE, SPECIFIC_KEY_MIN, SPECIFIC_KEY_SHARE, TOP_COVER_SHARE, WINDOW_AFTER, WINDOW_BEFORE)
+    PAPER_DAYS, PAPER_OVERLAP, RARE_KEY_SHARE, SECOND_ANCHOR_MAX_DF, SECOND_ANCHOR_MAX_LEN, SECOND_ANCHOR_MIN, SECOND_ANCHOR_MIN_LEN,
+    SECOND_ANCHOR_MIN_SEEDS,
+    SECOND_ANCHOR_SHARE, SPECIFIC_KEY_MIN, SPECIFIC_KEY_SHARE, TOP_COVER_SHARE, WINDOW_AFTER, WINDOW_BEFORE)
 
 CAPTION = re.compile(r"圖擷自|擷取自|（圖|\(圖|圖／|翻攝|資料照|提供）|攝）|攝影）")
 
@@ -48,6 +50,47 @@ CLAR = re.compile(r"澄清|駁斥|更正|嚴正|假訊息|不實|闢謠|否認|�
 POST = re.compile(r"臉書|PO文|PO出|發文|貼文|FB|IG|Threads|社群平台|直播|YouTube|曬出|曬")
 PLACE = re.compile(r"[臺台]北|新北|桃園|[臺台]中|[臺台]南|高雄|基隆|新竹|苗栗|彰化|南投|雲林|嘉義|屏東|宜蘭|花蓮|[臺台]東|澎湖|金門|馬祖|連江|北市|中市|南市|高市|竹市|竹縣")
 CJK_RUN = re.compile(r"[一-鿿]+")
+# Government actors named in a title: local offices (LOCAL_GOV) and central bodies (CENTRAL: regex, actor id, name, type).
+LOCAL_GOV = re.compile(r"市府|縣府|市政府|縣政府|市長|縣長|議會|議員|局長|衛生局|教育局|環保局|消防局|交通局|社會局|工務局|公園處|鄉公所|鎮公所|區公所")
+CENTRAL = [  # regex, actor id, name, actor type
+    (r"行政院|政院|卓揆", "ac-executive-yuan", "行政院", "gov_agency"),
+    (r"立法院|立院|立委", "ac-legislative-yuan", "立法院", "legislature"),
+    (r"總統府", "ac-office-of-the-president", "總統府", "gov_agency"),
+    (r"監察院|監委", "ac-control-yuan", "監察院", "control_body"),
+    (r"司法院", "ac-judicial-yuan", "司法院", "court"),
+    (r"憲法法庭", "ac-constitutional-court", "憲法法庭", "court"),
+    (r"內政部|國土署", "ac-ministry-of-the-interior", "內政部", "gov_agency"),
+    (r"警政署", "ac-national-police-agency", "內政部警政署", "gov_agency"),
+    (r"消防署", "ac-national-fire-agency", "內政部消防署", "gov_agency"),
+    (r"外交部", "ac-ministry-of-foreign-affairs", "外交部", "gov_agency"),
+    (r"國防部|國軍", "ac-ministry-of-national-defense", "國防部", "gov_agency"),
+    (r"財政部|國稅局", "ac-ministry-of-finance", "財政部", "gov_agency"),
+    (r"教育部", "ac-ministry-of-education", "教育部", "gov_agency"),
+    (r"法務部", "ac-ministry-of-justice", "法務部", "gov_agency"),
+    (r"經濟部|能源署", "ac-ministry-of-economic-affairs", "經濟部", "gov_agency"),
+    (r"交通部|公路局|觀光署|氣象署", "ac-ministry-of-transportation", "交通部", "gov_agency"),
+    (r"勞動部|勞保|勞退", "ac-ministry-of-labor", "勞動部", "gov_agency"),
+    (r"農業部|林保署|防檢署", "ac-ministry-of-agriculture", "農業部", "gov_agency"),
+    (r"衛福部|衛生福利部|健保|國民年金|疾管署", "ac-ministry-of-health-and-welfare", "衛生福利部", "gov_agency"),
+    (r"食藥署", "ac-taiwan-fda", "衛生福利部食品藥物管理署", "gov_agency"),
+    (r"環境部", "ac-ministry-of-environment", "環境部", "gov_agency"),
+    (r"文化部", "ac-ministry-of-culture", "文化部", "gov_agency"),
+    (r"數發部|數位發展部", "ac-ministry-of-digital-affairs", "數位發展部", "gov_agency"),
+    (r"陸委會", "ac-mainland-affairs-council", "大陸委員會", "gov_agency"),
+    (r"海巡署|海委會", "ac-ocean-affairs-council", "海洋委員會", "gov_agency"),
+    (r"中選會", "ac-central-election-commission", "中央選舉委員會", "gov_agency"),
+    (r"金管會", "ac-financial-supervisory-commission", "金融監督管理委員會", "gov_agency"),
+    (r"通傳會|NCC", "ac-national-communications-commission", "國家通訊傳播委員會", "gov_agency"),
+    (r"國安局|國安會", "ac-national-security-bureau", "國家安全局", "gov_agency"),  # R112.4: 國安局 case
+    (r"央行|中央銀行", "ac-central-bank", "中央銀行", "gov_agency"),
+    (r"國科會", "ac-national-science-and-technology-council", "國家科學及技術委員會", "gov_agency"),
+    (r"國發會", "ac-national-development-council", "國家發展委員會", "gov_agency"),
+    (r"原民會", "ac-council-of-indigenous-peoples", "原住民族委員會", "gov_agency"),
+    (r"客委會", "ac-hakka-affairs-council", "客家委員會", "gov_agency"),
+    (r"公平會", "ac-fair-trade-commission", "公平交易委員會", "gov_agency"),
+    (r"主計總處", "ac-dgbas", "行政院主計總處", "gov_agency"),
+    (r"人事行政總處|人事總處", "ac-dgpa", "行政院人事行政總處", "gov_agency"),
+]
 REVIEW_REASON = "draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。"
 PUB_SLUG = {"自由時報": "ltn", "中央通訊社": "cna", "公視新聞網": "pts", "TVBS": "tvbs", "Newtalk": "newtalk",
             "風傳媒": "storm", "聯合新聞網": "udn", "MyGoPen": "mygopen", "台灣事實查核中心": "tfc"}
@@ -312,23 +355,51 @@ def has_anchor(title, anchors):
     return any(a in title for a in anchors)
 
 
+def second_anchors(seed_titles, keys, df, total=0):
+    """R112.1: the words, places and government actors that the seed titles share besides the key. A member of the
+    topic has a key and one of these. A word is in SECOND_ANCHOR_SHARE of the seed titles and is not generic; a
+    place or an actor is in SECOND_ANCHOR_MIN seed titles. Empty when the seeds share nothing (then the key rules alone)."""
+    stripped = [_stripped(t, keys) for t in seed_titles]
+    shared = len(stripped) >= SECOND_ANCHOR_MIN_SEEDS  # a few seed titles show no shared word
+    need = max(SECOND_ANCHOR_MIN, SECOND_ANCHOR_SHARE * len(stripped)) if shared else 1
+    need_entity = SECOND_ANCHOR_MIN if shared else 1
+    words, entities = Counter(), Counter()
+    for t in stripped:
+        words.update(g for g in _grams(t) if SECOND_ANCHOR_MIN_LEN <= len(g) <= SECOND_ANCHOR_MAX_LEN
+                     and 0 < df.get(g, 0) <= SECOND_ANCHOR_MAX_DF)
+        found = set(PLACE.findall(t)) | {m.group(0) for m in LOCAL_GOV.finditer(t)}
+        found |= {m.group(0) for pattern, _, _, _ in CENTRAL for m in re.finditer(pattern, t)}
+        entities.update(found)
+    return {g for g, c in words.items() if c >= need} | {e for e, c in entities.items() if c >= need_entity}
+
+
 def anchored(cands, seed_titles, keys, df, total=0):
     """The candidates (items with a key) that belong to the issue of the seeds.
-    A key that is specific to one issue needs no anchor. A long key that is as rare as an anchor is specific too.
+    A key that is specific to one issue needs no rare anchor. A long key that is as rare as an anchor is specific too.
     Round 1: a candidate with a seed anchor is core. Round 2: a rare word in 2 or more core titles is a new
     anchor (A肝莓果 is in no seed title, but in two core titles). Round 3: a companion word of the core (see
     companion_terms) is an anchor too, and an official or fact-check response with the key answers the same issue.
-    A seed title always stays."""
+    A seed title always stays. R112.1: every other member also has a second anchor of the seeds (second_anchors),
+    a core word of round 2 or a companion word. The key alone never makes a member."""
     seeds = set(seed_titles)
+    second = second_anchors(seed_titles, keys, df, total)
+
+    def on_issue(found, extra=()):
+        out = []
+        for c in found:
+            if c["title"] in seeds or is_response(c) or not second or has_anchor(c["title"], second) or has_anchor(c["title"], extra):
+                out.append(c)
+        return out
+
     if keys and df.get(keys[0], 0) and len(cands) >= SPECIFIC_KEY_MIN and len(cands) >= SPECIFIC_KEY_SHARE * df.get(keys[0], 0):
-        return list(cands)  # the key is not shared with other issues, so it needs no anchor
+        return on_issue(cands, companion_terms(cands, keys, df, total))  # the key is not shared with other issues
     if keys and len(keys[0]) >= RARE_KEY_MIN_LEN and 0 < df.get(keys[0], 0) <= ANCHOR_MAX_DF \
             and len(cands) >= RARE_KEY_SHARE * df[keys[0]]:
-        return list(cands)
+        return on_issue(cands, companion_terms(cands, keys, df, total))
     first = anchor_terms(seed_titles, keys, df, total)
     if not first:
         return list(cands)
-    core = [c for c in cands if c["title"] in seeds or has_anchor(c["title"], first)]
+    core = [c for c in on_issue(cands) if c["title"] in seeds or has_anchor(c["title"], first)]
     cover = Counter()
     for c in core:
         cover.update(_rare_grams(c["title"], keys, df))
@@ -336,9 +407,9 @@ def anchored(cands, seed_titles, keys, df, total=0):
     kept = [c for c in cands if c["title"] in seeds or has_anchor(c["title"], anchors)]
     companions = companion_terms(kept, keys, df, total)
     if len(kept) >= ONE_ISSUE_MIN_CORE and companions and max(companions.values()) >= ONE_ISSUE_SHARE and not is_place_key(keys[0]):
-        return list(cands)  # the key names one story: every title with it is on topic (淡江大橋 + 通車)
-    return [c for c in cands if c["title"] in seeds
-            or is_response(c) or has_anchor(c["title"], anchors) or has_anchor(c["title"], companions)]
+        return list(cands)  # the key names one story: every title with it is on topic (淡江大橋 + 通車). R112.1 does not apply: the companion word is the second anchor of the whole core
+    return on_issue([c for c in cands if c["title"] in seeds
+                     or is_response(c) or has_anchor(c["title"], anchors) or has_anchor(c["title"], companions)], companions)
 
 
 def kind_of(it):

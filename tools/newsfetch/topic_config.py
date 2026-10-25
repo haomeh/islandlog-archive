@@ -39,6 +39,13 @@ COMPANION_LIFT = 5  # ... and its share in the corpus is at most 1/COMPANION_LIF
 ONE_ISSUE_MIN_CORE = 20  # A key with at least this many core titles ... Case: 淡江大橋 (T15).
 ONE_ISSUE_SHARE = 0.6  # ... and a companion in this share of them names one story. Case: 通車 in 23 of 33 (T15).
 
+# --- Second anchor (R112.1: a member has a key and one more anchor of the seed titles) ---
+SECOND_ANCHOR_SHARE = 0.3  # A word is a second key word when this share of the seed titles has it ... Sample T18-AP (R112.1): 焚化爐 titles about a zoo or Taichung had none.
+SECOND_ANCHOR_MIN_SEEDS = 4  # With fewer seed titles than this no word can be shared, so a word of any one seed title counts. Start (R112.1).
+SECOND_ANCHOR_MIN = 2  # ... and in at least this many of them. A place or a government actor in this many seed titles is an anchor too. Sample T18-AP (R112.1).
+SECOND_ANCHOR_MAX_DF = 400  # A second key word is in at most this many items of the corpus. 回應 (1117) and 民眾 (858) are generic; 內政部 (288) and 縣府 (308) are not. Sample T18-AP (R112.1).
+SECOND_ANCHOR_MIN_LEN, SECOND_ANCHOR_MAX_LEN = 2, 4  # A second key word has 2 to 4 characters (環評, 憲法法庭). Sample T18-AP (R112.1).
+
 # --- Gates of the full run (topics_full.run) ---
 SAME_EVENT_SHARE = 0.3  # A topic that shares this share of its members with a published event is skipped. Start (R68).
 EXCLUDE_SHARE = {  # PRD 4.5: a topic is excluded when this share of its titles has the exclusion pattern. Start (R68).

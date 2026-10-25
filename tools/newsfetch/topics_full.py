@@ -60,37 +60,8 @@ JURS = [  # id, government actor id, actor name, place terms
     ("jur-09020000", "ac-kinmen-county-government", "金門縣政府", ["金門"]),
     ("jur-09007000", "ac-lienchiang-county-government", "連江縣政府", ["連江", "馬祖"]),
 ]
-LOCAL_GOV = re.compile(r"市府|縣府|市政府|縣政府|市長|縣長|議會|議員|局長|衛生局|教育局|環保局|消防局|交通局|社會局|工務局|公園處|鄉公所|鎮公所|區公所")
-CENTRAL = [  # regex, actor id, name, actor type
-    (r"行政院|政院|卓揆", "ac-executive-yuan", "行政院", "gov_agency"),
-    (r"立法院|立院|立委", "ac-legislative-yuan", "立法院", "legislature"),
-    (r"總統府", "ac-office-of-the-president", "總統府", "gov_agency"),
-    (r"監察院|監委", "ac-control-yuan", "監察院", "control_body"),
-    (r"司法院", "ac-judicial-yuan", "司法院", "court"),
-    (r"憲法法庭", "ac-constitutional-court", "憲法法庭", "court"),
-    (r"內政部|國土署", "ac-ministry-of-the-interior", "內政部", "gov_agency"),
-    (r"警政署", "ac-national-police-agency", "內政部警政署", "gov_agency"),
-    (r"消防署", "ac-national-fire-agency", "內政部消防署", "gov_agency"),
-    (r"外交部", "ac-ministry-of-foreign-affairs", "外交部", "gov_agency"),
-    (r"國防部|國軍", "ac-ministry-of-national-defense", "國防部", "gov_agency"),
-    (r"財政部|國稅局", "ac-ministry-of-finance", "財政部", "gov_agency"),
-    (r"教育部", "ac-ministry-of-education", "教育部", "gov_agency"),
-    (r"法務部", "ac-ministry-of-justice", "法務部", "gov_agency"),
-    (r"經濟部|能源署", "ac-ministry-of-economic-affairs", "經濟部", "gov_agency"),
-    (r"交通部|公路局|觀光署|氣象署", "ac-ministry-of-transportation", "交通部", "gov_agency"),
-    (r"勞動部|勞保|勞退", "ac-ministry-of-labor", "勞動部", "gov_agency"),
-    (r"農業部|林保署|防檢署", "ac-ministry-of-agriculture", "農業部", "gov_agency"),
-    (r"衛福部|衛生福利部|健保|國民年金|疾管署", "ac-ministry-of-health-and-welfare", "衛生福利部", "gov_agency"),
-    (r"食藥署", "ac-taiwan-fda", "衛生福利部食品藥物管理署", "gov_agency"),
-    (r"環境部", "ac-ministry-of-environment", "環境部", "gov_agency"),
-    (r"文化部", "ac-ministry-of-culture", "文化部", "gov_agency"),
-    (r"數發部|數位發展部", "ac-ministry-of-digital-affairs", "數位發展部", "gov_agency"),
-    (r"陸委會", "ac-mainland-affairs-council", "大陸委員會", "gov_agency"),
-    (r"海巡署|海委會", "ac-ocean-affairs-council", "海洋委員會", "gov_agency"),
-    (r"中選會", "ac-central-election-commission", "中央選舉委員會", "gov_agency"),
-    (r"金管會", "ac-financial-supervisory-commission", "金融監督管理委員會", "gov_agency"),
-    (r"通傳會|NCC", "ac-national-communications-commission", "國家通訊傳播委員會", "gov_agency"),
-]
+LOCAL_GOV = tp.LOCAL_GOV  # R112.1: the actor lists live in topics.py, where the topic members use them
+CENTRAL = tp.CENTRAL
 CTYPES = [
     (r"預算|補助|統籌|刪減|凍結", "budget"), (r"修法|三讀|草案|條例|立法", "legislation"),
     (r"環評|污染|汙染|焚化|廢棄物|空污|排放|砍樹|路樹|行道樹", "environment"),
