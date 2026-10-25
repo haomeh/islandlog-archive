@@ -185,22 +185,24 @@ def fetch_dated_list(route: Dict, crawler: PoliteCrawler, publisher: str, since:
 
 
 def fetch_paged_list(route: Dict, crawler: PoliteCrawler, publisher: str, since: str, today: str) -> List[Dict]:
-    """Pages of a newest-first list. Stops when a page is older than since, empty or repeated."""
+    """Pages of newest-first lists (route url, or each of route urls). A list stops when a page is
+    older than since, empty or repeated."""
     found: List[Dict] = []
     seen = set()
-    for page in range(route.get("first_page", 1), route.get("max_pages", 200) + 1):
-        url = route["url"].format(page=page)
-        content = crawler.fetch_raw(url)
-        if not content:
-            break
-        page_items = parse_anchor_list(content.decode("utf-8", errors="ignore"), route, url, today, publisher)
-        new_items = [i for i in page_items if i["url"] not in seen]
-        if not new_items:
-            break
-        seen.update(i["url"] for i in new_items)
-        found.extend(new_items)
-        if all(i["published_on"] < since for i in new_items):
-            break
+    for template in route.get("urls", [route["url"]]):
+        for page in range(route.get("first_page", 1), route.get("max_pages", 200) + 1):
+            url = template.format(page=page)
+            content = crawler.fetch_raw(url)
+            if not content:
+                break
+            page_items = parse_anchor_list(content.decode("utf-8", errors="ignore"), route, url, today, publisher)
+            new_items = [i for i in page_items if i["url"] not in seen]
+            if not new_items:
+                break
+            seen.update(i["url"] for i in new_items)
+            found.extend(new_items)
+            if all(i["published_on"] < since for i in page_items):
+                break
     return found
 
 

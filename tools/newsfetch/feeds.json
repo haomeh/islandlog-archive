@@ -12,7 +12,6 @@
       "公視新聞網"
     ],
     "status": "partial",
-    "route_note": "dailynews?page=N, 100 pages at most (page 101 redirects)",
     "route": {
       "url": "https://news.pts.org.tw/dailynews?page={page}",
       "max_pages": 100,
@@ -21,7 +20,8 @@
       "date_regex": "(?P<y>20\\d\\d)/(?P<m>\\d{1,2})/(?P<d>\\d{1,2}) \\d\\d:\\d\\d",
       "anchor_before": "<h[12][^>]*>\\s*$"
     },
-    "latest_sitemap": "https://news.pts.org.tw/xml/sitemap.xml"
+    "latest_sitemap": "https://news.pts.org.tw/xml/sitemap.xml",
+    "route_note": "dailynews?page=N stops at page 100 (about 2026-09-18). Category pages carry no date in the markup and are not used."
   },
   {
     "id": "cna",
