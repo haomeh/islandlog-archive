@@ -34,12 +34,14 @@ from pathlib import Path
 
 from tools.newsfetch.article import LTN_SECTIONS
 from tools.newsfetch.cluster import bigrams, normalize_title, same_content
+from tools.newsfetch.topic_config import (
+    ANCHOR_CORE_MIN, ANCHOR_MAX_DF, BAND, COMPANION_LIFT, COMPANION_MIN, COMPANION_SHARE, DOMINANT_SHARE, EXTEND_DF_SHARE,
+    GENERIC_BURST, GENERIC_DF_MIN, GENERIC_DF_SHARE, KEY2_MIN_COVER, KEY2_MIN_COVER_SHARE, KEY2_SHARE, LOCAL_ANCHOR_MIN,
+    LOCAL_ANCHOR_SHARE, ONE_ISSUE_MIN_CORE, ONE_ISSUE_SHARE, PLACE_FILTER_DF, POOL_COVER_SHARE, RARE_KEY_MIN_LEN,
+    RARE_KEY_SHARE, SPECIFIC_KEY_MIN, SPECIFIC_KEY_SHARE, TOP_COVER_SHARE, WINDOW_AFTER, WINDOW_BEFORE)
 
 CAPTION = re.compile(r"圖擷自|擷取自|（圖|\(圖|圖／|翻攝|資料照|提供）|攝）|攝影）")
 
-GENERIC_DF_SHARE = 0.02
-KEY2_SHARE = 0.3
-WINDOW_BEFORE, WINDOW_AFTER = 7, 30
 PAPER_DAYS, PAPER_OVERLAP = 2, 0.5
 MAX_STATIONS, MAX_REPORT_MEMBERS, MAX_GROUPS, MAX_OFFICIAL = 10, 8, 40, 15
 CLAR = re.compile(r"澄清|駁斥|更正|嚴正|假訊息|不實|闢謠|否認|回應|說明|【錯誤】|【誤導】|【詐騙】")
@@ -91,10 +93,6 @@ def document_frequency(corpus):
     return df
 
 
-BAND = 25          # a key may appear in at most BAND x (seed titles it covers) items
-PLACE_FILTER_DF = 20  # a key in more items than this, and used mostly outside the window, is generic
-GENERIC_BURST = 0.35
-EXTEND_DF_SHARE = 0.7
 ALIASES = {"臺北市": ["北市"], "新北市": [], "桃園市": ["桃市"], "臺中市": ["中市"], "臺南市": ["南市"], "高雄市": ["高市"],
            "新竹市": ["竹市"], "新竹縣": ["竹縣"]}
 
@@ -137,13 +135,13 @@ def pick_key(titles, df, total, exclude=(), min_cover=1, dfw=None):
     cover = Counter()
     for t in titles:
         cover.update(_grams(t))
-    generic = max(50, GENERIC_DF_SHARE * total)
+    generic = max(GENERIC_DF_MIN, GENERIC_DF_SHARE * total)
     cands = [(g, c) for g, c in cover.items()
              if c >= min_cover and df.get(g, 0) <= generic and not any(g in e or e in g for e in exclude)
              and not _is_place(g) and not VERB_END.search(g) and not VERB_START.search(g)
              and not _is_person_or_speaker(g, titles)]
     n_titles = max(1, len(titles))
-    pool = [(g, c) for g, c in cands if df.get(g, 0) <= BAND * c or c >= 0.8 * n_titles]
+    pool = [(g, c) for g, c in cands if df.get(g, 0) <= BAND * c or c >= POOL_COVER_SHARE * n_titles]
     if not pool and not exclude:
         pool = cands
     if not pool:
@@ -154,7 +152,7 @@ def pick_key(titles, df, total, exclude=(), min_cover=1, dfw=None):
         g, c = gc
         burst = dfw.get(g, 0) / max(1, df.get(g, 0))  # share of all uses that fall in the topic window
         noun = 2.0 if NOUN_END.search(g) else 1.0
-        return (c >= 0.9 * n_titles, round(c * burst * noun, 6), dfw.get(g, 0), len(g))
+        return (c >= TOP_COVER_SHARE * n_titles, round(c * burst * noun, 6), dfw.get(g, 0), len(g))
 
     best = max(pool, key=score)[0]
     # A longer phrase that covers the same seeds and has a similar frequency is the real name.
@@ -162,8 +160,6 @@ def pick_key(titles, df, total, exclude=(), min_cover=1, dfw=None):
               and df.get(g, 0) >= EXTEND_DF_SHARE * df.get(best, 0)]
     return max(longer, key=len) if longer else best
 
-
-DOMINANT_SHARE = 0.6
 
 
 def display_name(key, titles):
@@ -198,7 +194,7 @@ def topic_keys(seed_titles, df, total, dfw=None):
     keys = [k1] if k1 else []
     rest = [t for t in seed_titles if k1 and k1 not in t]
     if rest and len(rest) >= KEY2_SHARE * len(seed_titles):
-        k2 = pick_key(rest, df, total, exclude=keys, min_cover=max(3, int(0.4 * len(rest))), dfw=dfw)
+        k2 = pick_key(rest, df, total, exclude=keys, min_cover=max(KEY2_MIN_COVER, int(KEY2_MIN_COVER_SHARE * len(rest))), dfw=dfw)
         if k2:
             keys.append(k2)
     return keys
@@ -241,7 +237,7 @@ def members(seed, corpus, df):
         cover = Counter()
         for t in titles:
             cover.update(g for g in _grams2(t))
-        places += [g for g, c in cover.items() if c >= max(2, 0.3 * len(titles)) and df.get(g, 0) <= PLACE_FILTER_DF
+        places += [g for g, c in cover.items() if c >= max(LOCAL_ANCHOR_MIN, LOCAL_ANCHOR_SHARE * len(titles)) and df.get(g, 0) <= PLACE_FILTER_DF
                    and not any(g in k for k in keys)]
     out, seen = [], set()
     for it in sorted(corpus, key=lambda j: (j["published_on"], j["url"])):
@@ -264,11 +260,6 @@ def _grams2(title):
     return {run[i:i + 2] for run in CJK_RUN.findall(text) for i in range(len(run) - 1)}
 
 
-ANCHOR_MAX_DF = 50  # an anchor is rare: in at most this many items of the corpus
-SPECIFIC_KEY_MIN = 15    # a key is specific to one issue when it has this many candidates ...
-SPECIFIC_KEY_SHARE = 0.7  # ... and they are this share of all its uses in the corpus (統促黨, 薔琵)
-RARE_KEY_MIN_LEN = 5      # a key phrase of this length that is rare in the corpus is its own anchor (續放颱風假) ...
-RARE_KEY_SHARE = 0.5      # ... when the candidates are this share of its uses (全民運動館 is also in other counties)
 
 
 def _stripped(title, keys):
@@ -291,11 +282,6 @@ def anchor_terms(seed_titles, keys, df, total=0):
     return out
 
 
-COMPANION_MIN = 3     # a companion word is in at least this many core titles ...
-COMPANION_SHARE = 0.6  # ... and in this share of them (通車 is in 26 of 33 core titles of 淡江大橋)
-COMPANION_LIFT = 5     # ... and its share in the corpus is at most 1/COMPANION_LIFT of its share in the core
-ONE_ISSUE_MIN_CORE = 20  # a key with at least this many core titles ...
-ONE_ISSUE_SHARE = 0.6    # ... and a companion in this share of them names one story (淡江大橋: 通車 in 23 of 33)
 RESPONSE_CLASSES = ("official_statement", "official_record", "fact_check")
 
 
@@ -346,7 +332,7 @@ def anchored(cands, seed_titles, keys, df, total=0):
     cover = Counter()
     for c in core:
         cover.update(_rare_grams(c["title"], keys, df))
-    anchors = first | {g for g, n in cover.items() if n >= 2}
+    anchors = first | {g for g, n in cover.items() if n >= ANCHOR_CORE_MIN}
     kept = [c for c in cands if c["title"] in seeds or has_anchor(c["title"], anchors)]
     companions = companion_terms(kept, keys, df, total)
     if len(kept) >= ONE_ISSUE_MIN_CORE and companions and max(companions.values()) >= ONE_ISSUE_SHARE and not is_place_key(keys[0]):
