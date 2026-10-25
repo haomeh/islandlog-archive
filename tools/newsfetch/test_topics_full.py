@@ -793,6 +793,41 @@ class WithdrawLimitTest(unittest.TestCase):
             self.assertEqual(sorted(state), sorted(due))
 
 
+class KnownTopicGateTest(unittest.TestCase):
+    """R134, R135: the re-gate of an old topic checks its recorded name with the structural name tests and accepts its recorded
+    jurisdictions, actors and sensitive flag. The key statistics (word start, slogan, concentration) are for a new key only."""
+
+    FRAGMENT = ["名間焚化爐環評 南投縣府回應", "名間焚化爐抗議 南投縣府說明", "名間焚化爐自救會 南投縣議員質疑", "名間焚化爐預定地 南投縣府答覆"]
+
+    def gate(self, key, titles, known=None, **extra):
+        members = [item(f"u{i}", t, "2026-10-21", f"出版社{i % 2}", **extra) for i, t in enumerate(titles)]
+        corpus = members + [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        from tools.newsfetch import topics as tp
+        return tf.gate_topic(key, members, members[:1], tp.document_frequency(corpus), corpus, known=known)[0]
+
+    def test_r134_a_key_that_is_a_fragment_fails_for_a_new_topic_and_passes_with_a_recorded_name(self):
+        self.assertEqual(self.gate("焚化爐", self.FRAGMENT), "rejected_name_quality")
+        known = {"name": "焚化爐", "jids": ["jur-10008000"], "actors": [], "sensitive": False}
+        self.assertEqual(self.gate("焚化爐", self.FRAGMENT, known), "ok")
+
+    def test_r134_a_recorded_name_that_is_only_a_place_a_disease_or_a_generic_object_still_fails(self):
+        for name in ("安南區", "惡性腫瘤", "巡視船", "豎孤棚"):
+            known = {"name": name, "jids": ["jur-10008000"], "actors": [], "sensitive": False}
+            self.assertEqual(self.gate("焚化爐", self.FRAGMENT, known), "rejected_name_quality", name)
+
+    def test_r135_a_recorded_actor_and_jurisdiction_count_when_the_titles_name_none(self):
+        titles = ["仁愛圓環6年對比綠樹消失 議員質疑", "仁愛圓環綠樹消失 議員揭6年對比", "仁愛圓環樹木減少 議員要求說明"]
+        self.assertEqual(self.gate("仁愛圓環", titles), "rejected_no_gov_actor")
+        known = {"name": "仁愛圓環", "jids": ["jur-63000000"], "actors": ["ac-taipei-city-government"], "sensitive": False}
+        self.assertEqual(self.gate("仁愛圓環", titles, known), "ok")
+
+    def test_r135_a_recorded_sensitive_flag_lets_the_sensitive_share_pass(self):
+        titles = ["台北密室逃脫員工死亡 北市府回應", "密室逃脫命案 北市府檢討", "批：密室逃脫公安稽查 北市府說明", "員工死於密室逃脫 北市府道歉"]
+        self.assertEqual(self.gate("密室逃脫", titles, sensitive=True), "rejected_sensitive")
+        known = {"name": "密室逃脫", "jids": ["jur-63000000"], "actors": [], "sensitive": True}
+        self.assertEqual(self.gate("密室逃脫", titles, known, sensitive=True), "ok")
+
+
 @unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
 class RegateTest(unittest.TestCase):
     """R126: each run checks every published system topic with review.status draft-review again."""

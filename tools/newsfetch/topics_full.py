@@ -445,7 +445,7 @@ def election_dispute_without_grade_a(items):
     return sum(1 for it in items if it.get("source_class") == "official_record") < ELECTION_DISPUTE_MIN_GRADE_A
 
 
-def exclusion_reason(items):
+def exclusion_reason(items, skip=()):
     n = max(1, len(items))
     shares = {
         "sensitive": sum(1 for it in items if it.get("sensitive") and not LAW_PASSED.search(it["title"])) / n,
@@ -455,6 +455,8 @@ def exclusion_reason(items):
     }
     has_official = any(it.get("source_class") in ("official_statement", "official_record") for it in items)
     for reason in ("sensitive", "criminal_case", "election_campaign", "entertainment"):
+        if reason in skip:
+            continue
         if reason == "criminal_case" and has_official:
             continue
         if reason == "election_campaign" and election_dispute_without_grade_a(items):
@@ -744,25 +746,37 @@ def published_source_urls(root):
     return cited
 
 
-def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None):
+def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, known=None):
     """The gates of one member list, in order: name quality, foreign, existing event, exclusion, government actor, Taiwan,
     name. Returns (outcome, found). The outcome is "ok", "skipped_existing_event" or a rejected_* label. `found` holds the
-    jurisdictions, the actors and the name of a topic that passes. `existing_keys` and `window` (lo, hi) are for a new candidate only."""
+    jurisdictions, the actors and the name of a topic that passes. `existing_keys` and `window` (lo, hi) are for a new candidate only.
+    `known` (R134, R135) is an old topic: its recorded name, jurisdictions, actors and sensitive flag. Its name gets the structural
+    name tests only, because the key statistics test a key that was just picked. Its recorded jurisdictions, actors and flag count
+    when the titles name none."""
     titles = [m["title"] for m in members]
-    if not name_quality_ok(key, titles, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members), df):
+    if known:
+        if not (noun_phrase_name(known["name"]) and not generic_name(known["name"]) and not is_person_or_party(known["name"], titles)
+                and not is_place_name(known["name"])):
+            return "rejected_name_quality", None
+    elif not name_quality_ok(key, titles, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members), df):
         return "rejected_name_quality", None
-    irrelevant = not taiwan_relevant(titles)
+    local_known = [j for j in (known or {}).get("jids", []) if j != "jur-tw"]
+    irrelevant = not taiwan_relevant(titles) and not local_known
     if irrelevant and names_foreign(titles):  # R112.5: only a title that names a foreign country gets the foreign label
         return "rejected_foreign", None
     if window and (any((k in key or key in k) and s_lo <= window[1] and window[0] <= s_hi for k, s_lo, s_hi in existing_keys) or any(
             s_lo <= window[1] and window[0] <= s_hi and sum(1 for t in titles if k in t) >= SAME_EVENT_SHARE * len(titles)
             for k, s_lo, s_hi in existing_keys)):
         return "skipped_existing_event", None
-    reason = exclusion_reason(members)
+    reason = exclusion_reason(members, skip=("sensitive",) if known and known.get("sensitive") else ())
     if reason:
         return "rejected_" + reason, None
     jids = detect_jurisdictions(titles)
+    if jids == ["jur-tw"] and local_known:
+        jids = local_known
     actors = detect_gov_actors(titles, jids)
+    if not actors and known:
+        actors = list(known.get("actors", []))
     for m in members:
         host = (m["url"].split("/")[2] if "//" in m["url"] else "")
         if m.get("source_class") == "official_statement" and host in tp.HOSTS and tp.HOSTS[host][1] not in actors:
@@ -771,7 +785,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None):
         return "rejected_no_gov_actor", None
     if irrelevant:  # the gate still rejects a topic with no Taiwan term; a later gate above gave the label first
         return "rejected_not_taiwan", None
-    name = tp.display_name(key, [s["title"] for s in seeds])
+    name = known["name"] if known else tp.display_name(key, [s["title"] for s in seeds])
     if not noun_phrase_name(name) or generic_name(name):
         return "rejected_name_quality", None
     return "ok", {"jids": jids, "actors": actors, "name": name}
@@ -870,7 +884,9 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
     seed_urls = set(seed["seed_urls"])
     members = max(split_cases(members), key=lambda g: (sum(1 for m in g if m["url"] in seed_urls), len(g)))  # R112.3
     seeds = [by_url[u] for u in sorted(seed_urls, key=lambda u: (by_url[u]["published_on"], u))]
-    outcome, found = gate_topic(key, members, seeds, df, corpus)
+    known = {"name": PLACE_PREFIX.sub("", doc["title"], count=1), "jids": doc.get("jurisdiction_ids", []),
+             "actors": [a["actor_id"] for a in doc.get("actors", [])], "sensitive": bool((doc.get("review") or {}).get("sensitive"))}
+    outcome, found = gate_topic(key, members, seeds, df, corpus, known=known)  # R134: the name of an old topic changes only by rule (R69)
     if outcome != "ok":
         record["gate"] = outcome
         return record
@@ -879,6 +895,7 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
     if gate:
         record["gate"] = gate
         return record
+    ev["title"] = doc["title"]  # the recorded name stays, so the title stays
     relations = doc.get("relations")
     write_topic(root, ev, seed, today)
     if relations:
