@@ -28,7 +28,7 @@ from tools.newsfetch import topics as tp
 from tools.newsfetch.topic_config import (
     BODY_VERB_NAME_MAX_LEN, BOUNDARY_SHARE, CAMPAIGN_DAYS, CLASSIFY_SHARE, ELECTION_DAY, ELECTION_DISPUTE_MIN_GRADE_A, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
     CONTINUATION_MIN_USES, DISEASE_NAME_MAX_LEN, FOREIGN_NAMED_SHARE, GENERIC_NAME_MAX_LEN, GOV_NAME_SHARE, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
-    OFFICIAL_MIN_TITLES, RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SPLIT_MIN_TITLES, SUBTOPIC_SHARE,
+    BARE_PERSON_MAX_LEN, BARE_PERSON_MIN_LEN, BARE_PERSON_SHARE, OFFICIAL_MIN_TITLES, RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SPLIT_MIN_TITLES, SUBTOPIC_SHARE,
     TAIWAN_MIN_SHARE, TAIWAN_MIN_TITLES, WITHDRAW_AFTER_FAILS, WITHDRAW_MAX_COUNT, WITHDRAW_MAX_SHARE)
 
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
@@ -138,7 +138,7 @@ def has_word_boundary(key, titles, df=None):
                 right[t[j]] += 1
             i = t.find(key, i + 1)
     if n < CONTINUATION_MIN_USES:
-        return True
+        return False  # R147.3: one use cannot show where the word ends
     sides = (left,) if noun else (left, right)  # a noun head ends the word on the right side only
     for side in sides:
         if sum(c for _, c in side.most_common(3)) >= CONTINUATION_SHARE * n:
@@ -162,8 +162,25 @@ def is_place_name(key):
     return bool(re.fullmatch(r"[\u4e00-\u9fff]{1,3}[鄉鎮區里村]", key)) or tp._is_place(key)
 
 
+ROLE_BEFORE = re.compile(r"(?:議長|議員|市長|縣長|立委|部長|署長|局長|院長|校長|主委|委員|主播|記者|總統|董事長|教授|老師|醫師|律師|檢察官|法官|歌手|演員|導演|網紅|[前現])$")
+
+
+def bare_person(key, titles):
+    """R147.3: a name of 2 to 4 characters that follows a role word (前主播薛楷莉, 議長朱安雄) in half of its uses names only a person."""
+    if not BARE_PERSON_MIN_LEN <= len(key) <= BARE_PERSON_MAX_LEN or tp.NOUN_END.search(key):
+        return False
+    uses = after_role = 0
+    for t in titles:
+        i = t.find(key)
+        while i >= 0:
+            uses += 1
+            after_role += bool(ROLE_BEFORE.search(t[:i]))
+            i = t.find(key, i + 1)
+    return uses > 0 and after_role >= BARE_PERSON_SHARE * uses
+
+
 def is_person_or_party(key, titles):
-    return bool(PARTIES.search(key)) or tp._is_person_or_speaker(key, titles) or bool(re.search(r"議長|議員|市長|縣長|立委|部長", key))
+    return bool(PARTIES.search(key)) or tp._is_person_or_speaker(key, titles) or bare_person(key, titles) or bool(re.search(r"議長|議員|市長|縣長|立委|部長", key))
 
 
 POLICY_NOUN = re.compile(r"平台|補助|獎助|津貼|警示|示警|預算|條例|辦法|方案|計畫|政策|草案|新制|制度|專案|給付|基金|原住民族")  # R112.4; R141.5: 原住民族 names a national status and policy
@@ -231,22 +248,16 @@ def names_foreign(titles):
 
 
 def name_quality_ok(key, titles, total_df, window_df, df=None):
-    """The name gates of the full run. R112.2: only a place, a disease or a generic object fails. R112.4: a key with
-    a policy noun, or a key whose titles name a government body in GOV_NAME_SHARE, skips the quote and word-start tests;
-    a key with a policy noun skips the word-boundary test too. R146: so does a key that itself holds a central body,
-    a minister title, 大法官 or 原住民族; the quote test still applies to it. The titles never excuse the key."""
+    """The name gates of the full run. R112.2: only a place, a disease or a generic object fails. R112.4: a key with a policy
+    noun, or a key whose titles name a government body in GOV_NAME_SHARE, skips the word-start and word-end tests of name_ok.
+    R147.1: no name skips the word-boundary test or the quote test."""
     if not noun_phrase_name(key) or generic_name(key) or is_person_or_party(key, titles) or is_place_name(key):
         return False
     policy_key = bool(POLICY_NOUN.search(key))
     policy_titles = sum(1 for t in titles if names_government(t)) >= GOV_NAME_SHARE * max(1, len(titles))
-    central_key = names_central(key)
     if not name_ok(key, total_df, window_df, loose=policy_key or policy_titles):
         return False
-    if policy_key:
-        return True
-    if not central_key and not has_word_boundary(key, titles, df):
-        return False
-    return (policy_titles and not central_key) or not is_quoted_slogan(key, titles)
+    return has_word_boundary(key, titles, df) and not is_quoted_slogan(key, titles)
 
 
 NATIONAL_SYSTEMS = re.compile(r"健保|勞保|勞退|國民年金|國保|公保|軍保|長照|衛福部|衛生福利部|健保署|勞保局|勞動部|國人")  # R84

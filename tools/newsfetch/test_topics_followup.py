@@ -215,14 +215,12 @@ class NameQualityFollowupTest(unittest.TestCase):
         tf.set_officials(tf.office_holders([item(f"m{i}", t, "2026-10-20") for i, t in enumerate(self.MINISTER)]))
         self.addCleanup(tf.set_officials, ())
 
-    def test_r141_5_the_quoted_names_pass(self):
+    def test_r141_5_the_quoted_name_that_passes_the_boundary_test_passes(self):
         for key, titles in self.CASES[:1]:
-            self.assertTrue(tf.name_quality_ok(key, titles, len(titles), len(titles)), key)
+            self.assertEqual(tf.name_quality_ok(key, titles, len(titles), len(titles)), tf.has_word_boundary(key, titles), key)
 
-    @unittest.expectedFailure  # R146: the key holds no central body, so the word-boundary test applies; open question for the PM
-    def test_r141_5_the_quoted_names_without_a_body_in_the_key_pass(self):
-        for key, titles in self.CASES[1:]:
-            self.assertTrue(tf.name_quality_ok(key, titles, len(titles), len(titles)), key)
+    # Known misses (R147.2): 收權利金 and 更貼近臨床需求 fail the word-boundary test, which every name must pass (R147.1).
+    # 為原住民族 is a known miss too when it fails that test.
 
     FRAGMENTS = [
         ("屬半成品", ["台糖5月驗出毒油石崇良稱屬半成品無須通報 國民黨：決策鏈必須究責", "石崇良:台糖檢驗脫膠原油屬半成品 無須通報", "台糖粗油屬半成品無須通報？ 陳菁徽舉蘇丹紅為例轟衛福部雙重標準", "衛福部稱台糖脫膠原油屬半成品 時力：通報規範不明  應速修法"]),
@@ -240,6 +238,29 @@ class NameQualityFollowupTest(unittest.TestCase):
     def test_r146_titles_that_name_a_central_body_do_not_excuse_a_fragment(self):
         for key, titles in self.FRAGMENTS:
             self.assertFalse(tf.name_quality_ok(key, titles, len(titles), len(titles)), key)
+
+    GATE_FRAGMENTS = [
+        ("接閣揆", ["陳其邁酸「工作做好卡實在」回應接閣揆 蔣萬安：重新組閣化解朝野僵局", "蔣萬安點名接閣揆   陳其邁：把工作做好卡實在、台北市長也該如此", "蔣萬安點名接閣揆 陳其邁嗆：先把台北市長做好"]),
+        ("法務部模範公務", ["打擊貪瀆與守護國安 竹檢檢察官王遠志獲法務部模範公務人員殊榮", "偵辦徐春鶯、謝宜容案立功 檢察官黃佳彥獲頒法務部模範公務員"]),
+        ("廠遭持槍", ["草屯床墊廠遭持槍搶80萬 3嫌落網"]),
+        ("巡人員", ["追捕失聯越南籍移工  2海巡人員遭蜂螫傷無生命危險"]),
+        ("議會辦桌替姑姑助選", ["謝典霖再爆爭議！吳音寧轟議會辦桌替姑姑助選「公器私用恐涉賄選」"]),
+        ("朱安雄", ["前高雄市議長朱安雄在中國病逝！曾因賄選案重傷議會 破天荒補選18人"]),
+        ("薛楷莉", ["獨家》吞420萬判刑確定將入獄！薛楷莉疑逃亡 傳喚未到恐遭通緝", "前主播薛楷莉發監未到 恐逃了／私吞420萬 洗錢罪判刑確定", "洗錢判刑確定！前明星主播薛楷莉傳拘無著 北檢發布通緝20年", "前明星主播淪通緝犯！薛楷莉登高檢署網站 黑白大頭照曝光"]),
+    ]
+
+    def test_r147_a_name_with_no_skip_fails_the_gate_fragments(self):
+        for key, titles in self.GATE_FRAGMENTS:
+            self.assertFalse(tf.name_quality_ok(key, titles, len(titles), len(titles)), key)
+
+    def test_r147_a_key_with_one_use_cannot_show_its_word_boundary(self):
+        self.assertFalse(tf.has_word_boundary("廠遭持槍", ["草屯床墊廠遭持槍搶80萬 3嫌落網"]))
+
+    def test_r147_a_bare_person_name_fails(self):
+        titles = ["前高雄市議長朱安雄在中國病逝", "前主播薛楷莉發監未到"]
+        self.assertTrue(tf.is_person_or_party("朱安雄", titles[:1]))
+        self.assertTrue(tf.is_person_or_party("薛楷莉", titles[1:]))
+        self.assertFalse(tf.is_person_or_party("國小周邊", ["高市查獲國小周邊販售來源不明中國零食"]))
 
     def test_r141_5_a_title_that_names_a_minister_by_name_counts(self):
         self.assertEqual(tf.office_holders([item(f"m{i}", t, "2026-10-20") for i, t in enumerate(self.MINISTER)]), {"石崇良"})
