@@ -1,0 +1,10 @@
+schema_version: 1
+id: cr-20261025-02
+target_ids:
+- ev-20261024-topic-df592ab3
+date: '2026-10-25'
+type: factual
+summary: 系統撤回事件：未通過 rejected_name_quality（R82）。
+made_by: tool
+gate: rejected_name_quality
+rule_id: R82

@@ -256,12 +256,103 @@ def members(seed, corpus, df):
             continue
         seen.add(norm)
         out.append(it)
-    return out
+    return anchored(out, titles, keys, df, len(corpus))  # same key, other issue (好市多 opening vs fine appeal)
 
 
 def _grams2(title):
     text = unicodedata.normalize("NFKC", title or "")
     return {run[i:i + 2] for run in CJK_RUN.findall(text) for i in range(len(run) - 1)}
+
+
+ANCHOR_MAX_DF = 50  # an anchor is rare: in at most this many items of the corpus
+SPECIFIC_KEY_MIN = 15    # a key is specific to one issue when it has this many candidates ...
+SPECIFIC_KEY_SHARE = 0.7  # ... and they are this share of all its uses in the corpus (統促黨, 薔琵)
+RARE_KEY_MIN_LEN = 5      # a key phrase of this length that is rare in the corpus is its own anchor (續放颱風假) ...
+RARE_KEY_SHARE = 0.5      # ... when the candidates are this share of its uses (全民運動館 is also in other counties)
+
+
+def _stripped(title, keys):
+    for k in keys:
+        title = title.replace(k, " ")
+    return title
+
+
+def _rare_grams(title, keys, df):
+    return {g for g in _grams(_stripped(title, keys)) if len(g) >= 2 and df.get(g, 0) <= ANCHOR_MAX_DF}
+
+
+def anchor_terms(seed_titles, keys, df, total=0):
+    """Words of the seed titles that tell the issue apart from other news with the same key (R63).
+    An anchor has 2 or more characters, is not part of a key, and is rare in the corpus (at most
+    ANCHOR_MAX_DF items). A common word such as 衛生局 or 出包 joins two issues; a rare word does not."""
+    out = set()
+    for t in seed_titles:
+        out |= _rare_grams(t, keys, df)
+    return out
+
+
+COMPANION_MIN = 3     # a companion word is in at least this many core titles ...
+COMPANION_SHARE = 0.6  # ... and in this share of them (通車 is in 26 of 33 core titles of 淡江大橋)
+COMPANION_LIFT = 5     # ... and its share in the corpus is at most 1/COMPANION_LIFT of its share in the core
+ONE_ISSUE_MIN_CORE = 20  # a key with at least this many core titles ...
+ONE_ISSUE_SHARE = 0.6    # ... and a companion in this share of them names one story (淡江大橋: 通車 in 23 of 33)
+RESPONSE_CLASSES = ("official_statement", "official_record", "fact_check")
+
+
+def companion_terms(core, keys, df, total):
+    """Round 3: {word: share of the core titles} for the words that the core titles share as a group. A common
+    word such as 出包 is in a few core titles; a companion such as 通車 is in most of them and is rare in the
+    corpus as a whole. A title with the key and a companion is on topic, even when it shares no rare word with a
+    seed (淡江大橋5/12通車 卓揆：...)."""
+    if not total or len(core) < COMPANION_MIN:
+        return {}
+    cover = Counter()
+    for c in core:
+        cover.update(g for g in _grams(_stripped(c["title"], keys)) if len(g) <= 4)
+    need = max(COMPANION_MIN, COMPANION_SHARE * len(core))
+    return {g: n / len(core) for g, n in cover.items() if n >= need and df.get(g, 0) / total * COMPANION_LIFT <= n / len(core)}
+
+
+def is_response(item):
+    """An official or fact-check title with a clarification word answers an issue (勞動部回應, 【錯誤】). It is not a new issue."""
+    return item.get("source_class") in RESPONSE_CLASSES and bool(CLAR.search(item["title"]))
+
+
+def is_place_key(key):
+    return bool(re.fullmatch(r"[一-鿿]{1,3}[鄉鎮區里村]", key)) or _is_place(key)
+
+
+def has_anchor(title, anchors):
+    return any(a in title for a in anchors)
+
+
+def anchored(cands, seed_titles, keys, df, total=0):
+    """The candidates (items with a key) that belong to the issue of the seeds.
+    A key that is specific to one issue needs no anchor. A long key that is as rare as an anchor is specific too.
+    Round 1: a candidate with a seed anchor is core. Round 2: a rare word in 2 or more core titles is a new
+    anchor (A肝莓果 is in no seed title, but in two core titles). Round 3: a companion word of the core (see
+    companion_terms) is an anchor too, and an official or fact-check response with the key answers the same issue.
+    A seed title always stays."""
+    seeds = set(seed_titles)
+    if keys and df.get(keys[0], 0) and len(cands) >= SPECIFIC_KEY_MIN and len(cands) >= SPECIFIC_KEY_SHARE * df.get(keys[0], 0):
+        return list(cands)  # the key is not shared with other issues, so it needs no anchor
+    if keys and len(keys[0]) >= RARE_KEY_MIN_LEN and 0 < df.get(keys[0], 0) <= ANCHOR_MAX_DF \
+            and len(cands) >= RARE_KEY_SHARE * df[keys[0]]:
+        return list(cands)
+    first = anchor_terms(seed_titles, keys, df, total)
+    if not first:
+        return list(cands)
+    core = [c for c in cands if c["title"] in seeds or has_anchor(c["title"], first)]
+    cover = Counter()
+    for c in core:
+        cover.update(_rare_grams(c["title"], keys, df))
+    anchors = first | {g for g, n in cover.items() if n >= 2}
+    kept = [c for c in cands if c["title"] in seeds or has_anchor(c["title"], anchors)]
+    companions = companion_terms(kept, keys, df, total)
+    if len(kept) >= ONE_ISSUE_MIN_CORE and companions and max(companions.values()) >= ONE_ISSUE_SHARE and not is_place_key(keys[0]):
+        return list(cands)  # the key names one story: every title with it is on topic (淡江大橋 + 通車)
+    return [c for c in cands if c["title"] in seeds
+            or is_response(c) or has_anchor(c["title"], anchors) or has_anchor(c["title"], companions)]
 
 
 def kind_of(it):

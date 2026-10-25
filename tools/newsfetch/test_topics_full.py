@@ -9,6 +9,19 @@ def item(url, title, day, publisher="自由時報", cls="news", **extra):
     return d
 
 
+class StableIdTest(unittest.TestCase):
+    published = [{"id": "ev-20261023-topic-365f0f47", "title": "臺中市續放颱風假", "first": "2026-10-23", "last": "2026-10-24"}]
+
+    def test_rebuilt_topic_keeps_the_published_id(self):
+        got = tf.stable_id(self.published, "臺中市續放颱風假", "2026-10-22", "2026-10-24", "ev-20261022-topic-51b325e0")
+        self.assertEqual(got, "ev-20261023-topic-365f0f47")
+
+    def test_other_title_or_window_gets_the_new_id(self):
+        new = "ev-20261022-topic-51b325e0"
+        self.assertEqual(tf.stable_id(self.published, "高雄颱風假", "2026-10-23", "2026-10-24", new), new)
+        self.assertEqual(tf.stable_id(self.published, "臺中市續放颱風假", "2026-12-01", "2026-12-03", new), new)
+
+
 class RulesTest(unittest.TestCase):
     def test_source_rule_needs_two_c_publishers_or_an_a_source(self):
         one = [item("a", "x", "2026-10-22"), item("b", "y", "2026-10-22")]
@@ -78,6 +91,29 @@ class RulesTest(unittest.TestCase):
         self.assertFalse(tf.taiwan_relevant(["西藏那曲地震", "那曲震災死傷", "外交部慰問"]))
         self.assertTrue(tf.taiwan_relevant(["新北敬老卡改制", "新北市府說明", "長者不滿"]))
 
+    def test_national_systems_count_as_taiwan(self):  # R84
+        titles = ["長者健保費補助爭議　台灣前進陣線全台串連宣講", "藍議員問長者健保費中央買單？周春米：立法院要「精傱」一點啦",
+                  "蘇巧慧支持中央補助長者健保費且全國一致", "《少康戰情室專訪》蘇巧慧：長者健保費補助 全國應一致"]
+        self.assertTrue(tf.taiwan_relevant(titles))
+        self.assertTrue(tf.taiwan_relevant(["勞保年金改革", "國民年金保費調漲", "衛福部說明"]))
+        self.assertFalse(tf.taiwan_relevant(["美國醫保改革", "川普簽署醫保法案", "日本年金制度"]))
+
+    def test_name_must_be_a_noun_phrase(self):  # R85
+        for bad in ("總統府高層也在場", "總統府高層", "官員表示", "部長指出", "局長回應", "專家強調", "委員認為", "他透露", "名嘴坦言", "市府稱", "北市府說"):
+            self.assertFalse(tf.noun_phrase_name(bad), bad)
+        for good in ("長者健保費", "敬老卡", "薔琵颱風", "南崁溪淤積", "豎孤棚"):
+            self.assertTrue(tf.noun_phrase_name(good), good)
+
+    def test_next_candidate_is_tried_and_none_fails(self):  # R85
+        from tools.newsfetch import topics as tp
+        titles = ["颱風天燒千萬公帑「幫徐佳青辦慶生趴」？他再曝：總統府高層也在場",
+                  "僑委會颱風天燒1492萬幫徐佳青慶生 凌濤再爆：多名總統府高層也在場"]
+        corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)] + \
+                 [item(str(i), t, "2026-10-24") for i, t in enumerate(titles)]
+        df = tp.document_frequency(corpus)
+        key = tf.pick_noun_key(titles, df, len(corpus))
+        self.assertTrue(key == "" or tf.noun_phrase_name(key), key)
+
     def test_sensitive_terms_from_taxonomy(self):
         self.assertTrue(tf.has_sensitive_term(["確保國人出入平安及就醫權益"]))
         self.assertFalse(tf.has_sensitive_term(["餵豬罰鍰提高"]))
@@ -132,6 +168,97 @@ class RulesTest(unittest.TestCase):
         dfw = mf.window(tf._day("2026-10-15"), tf._day("2026-11-10"))
         self.assertEqual(dfw["薔琵颱風"], 2)
         self.assertEqual(dfw["薔琵"], 2)
+
+
+class NationalSystemActorTest(unittest.TestCase):
+    """R94: a national system in a title maps to its agency."""
+
+    def actors(self, title):
+        return tf.detect_gov_actors([title], ["jur-tw"])
+
+    def test_each_system_maps_to_its_agency(self):
+        cases = {"健保": "ac-ministry-of-health-and-welfare", "國民年金": "ac-ministry-of-health-and-welfare",
+                 "勞保": "ac-ministry-of-labor", "勞退": "ac-ministry-of-labor"}
+        for term, agency in cases.items():
+            self.assertEqual(self.actors(f"長者{term}費 新制上路"), [agency], term)
+
+    def test_a_real_title(self):
+        self.assertIn("ac-ministry-of-health-and-welfare", self.actors("爸媽搬去子女家，健保費會取消嗎？"))
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class WithdrawTest(unittest.TestCase):
+    """R82: a published system topic that fails a gate is withdrawn. Its file and id stay."""
+    EVENT_ID = "ev-20261023-topic-c8f31c28"
+
+    def corpus(self, second_news_publisher):
+        filler = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        topic = [item("a", "桃園市府會勘南崁溪淤積問題", "2026-10-23"),
+                 item("b", "南崁溪石礫堆積 桃園市府將會勘", "2026-10-24", "聯合新聞網" if second_news_publisher else "自由時報"),
+                 item("c", "【錯誤】南崁溪淤積謠言", "2026-10-24", "MyGoPen", "fact_check")]
+        return filler + topic, topic
+
+    def run_in(self, root, second_news_publisher, today="2026-10-25"):
+        from tools.newsfetch import topics as tp
+        corpus, topic = self.corpus(second_news_publisher)
+        clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
+        ids = [tp.src_id(t, tp.HOSTS) for t in topic]
+        event = root / "events/2026" / f"{self.EVENT_ID}.md"
+        if not event.exists():
+            event.parent.mkdir(parents=True)
+            (root / "sources/2026").mkdir(parents=True)
+            (root / "actors").mkdir()
+            event.write_text(f"---\nid: {self.EVENT_ID}\nstatus: published\ntitle: 南崁溪\ntimeline:\n- date: '2026-10-23'\n"
+                             f"  source_ids: [{ids[0]}]\n- date: '2026-10-24'\n  source_ids: [{ids[1]}, {ids[2]}]\n"
+                             "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
+                             "  status: draft-review\n---\n\n報導。\n", encoding="utf-8")
+        stats, _, _ = tf.run(corpus, clusters, [], root, root / "report.json", today=today)
+        return stats, event.read_text(encoding="utf-8")
+
+    def test_a_topic_that_fails_a_gate_is_withdrawn_not_deleted(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            stats, text = self.run_in(Path(tmp), second_news_publisher=False)
+            self.assertEqual(stats["rejected_news_rule"], 1)
+            self.assertEqual(stats["withdrawn"], 1)
+            self.assertIn("status: withdrawn", text)
+            self.assertIn("reason: 'withdrawn: rejected_news_rule'", text.replace('"', "'"))
+            self.assertIn(f"id: {self.EVENT_ID}", text)
+            stats, again = self.run_in(Path(tmp), second_news_publisher=False)  # a second run changes nothing
+            self.assertEqual(again, text)
+
+    def test_a_withdrawal_writes_one_correction_record(self):
+        import tempfile
+        import yaml
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=False, today="2026-10-25")
+            files = sorted((root / "corrections").glob("*/cr-*.yaml"))
+            self.assertEqual([f.name for f in files], ["cr-20261025-01.yaml"])
+            rec = yaml.safe_load(files[0].read_text(encoding="utf-8"))
+            self.assertEqual((rec["made_by"], rec["gate"], rec["rule_id"]), ("tool", "rejected_news_rule", "R82"))
+            self.assertEqual((rec["target_ids"], rec["date"], "mr_url" in rec), ([self.EVENT_ID], "2026-10-25", False))
+            doc = yaml.safe_load((root / "events/2026" / f"{self.EVENT_ID}.md").read_text(encoding="utf-8").split("---\n")[1])
+            self.assertEqual(doc["correction_ids"], ["cr-20261025-01"])
+            self.run_in(root, second_news_publisher=False, today="2026-10-26")  # a later run adds nothing
+            self.assertEqual(len(list((root / "corrections").glob("*/cr-*.yaml"))), 1)
+
+    def test_a_topic_that_passes_the_gates_is_not_withdrawn(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            stats, text = self.run_in(Path(tmp), second_news_publisher=True)
+            self.assertEqual(stats["withdrawn"], 0)
+            self.assertEqual(stats["published"], 1)
+            self.assertIn("status: published", text)
+            self.assertIn(self.EVENT_ID, text)
+
+    def test_matching_published_needs_half_of_the_sources(self):
+        published = [{"id": "ev-1", "src_ids": {"s1", "s2", "s3", "s4"}}, {"id": "ev-2", "src_ids": set()}]
+        self.assertEqual(tf.matching_published(published, {"s1", "s2", "x"}), ["ev-1"])
+        self.assertEqual(tf.matching_published(published, {"s1", "x"}), [])
 
 
 if __name__ == "__main__":

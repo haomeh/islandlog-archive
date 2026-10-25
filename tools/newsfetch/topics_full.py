@@ -27,6 +27,7 @@ from pathlib import Path
 from tools.newsfetch import topics as tp
 
 SAME_EVENT_SHARE = 0.3
+TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 EXCLUDE_SHARE = {"sensitive": 0.3, "election_campaign": 0.3, "criminal_case": 0.5, "entertainment": 0.3}
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票")
 CRIME = re.compile(r"起訴|判刑|聲押|收押|交保|嫌犯|涉嫌|偵辦|逮捕|送辦|殺人|命案|毒品|詐團|車手|性侵|猥褻|竊盜|酒駕")
@@ -75,9 +76,9 @@ CENTRAL = [  # regex, actor id, name, actor type
     (r"法務部", "ac-ministry-of-justice", "法務部", "gov_agency"),
     (r"經濟部|能源署", "ac-ministry-of-economic-affairs", "經濟部", "gov_agency"),
     (r"交通部|公路局|觀光署|氣象署", "ac-ministry-of-transportation", "交通部", "gov_agency"),
-    (r"勞動部", "ac-ministry-of-labor", "勞動部", "gov_agency"),
+    (r"勞動部|勞保|勞退", "ac-ministry-of-labor", "勞動部", "gov_agency"),
     (r"農業部|林保署|防檢署", "ac-ministry-of-agriculture", "農業部", "gov_agency"),
-    (r"衛福部|衛生福利部|健保署|疾管署", "ac-ministry-of-health-and-welfare", "衛生福利部", "gov_agency"),
+    (r"衛福部|衛生福利部|健保|國民年金|疾管署", "ac-ministry-of-health-and-welfare", "衛生福利部", "gov_agency"),
     (r"食藥署", "ac-taiwan-fda", "衛生福利部食品藥物管理署", "gov_agency"),
     (r"環境部", "ac-ministry-of-environment", "環境部", "gov_agency"),
     (r"文化部", "ac-ministry-of-culture", "文化部", "gov_agency"),
@@ -193,12 +194,33 @@ def is_person_or_party(key, titles):
     return bool(PARTIES.search(key)) or tp._is_person_or_speaker(key, titles) or bool(re.search(r"議長|議員|市長|縣長|立委|部長", key))
 
 
+NATIONAL_SYSTEMS = re.compile(r"健保|勞保|勞退|國民年金|國保|公保|軍保|長照|衛福部|衛生福利部|健保署|勞保局|勞動部|國人")  # R84
+SPEECH_END = re.compile(r"(表示|指出|在場|回應|強調|認為|透露|坦言|[說稱])$")  # R85
+ROLE_FRAGMENT = re.compile(r"(高層|高官|幕僚|官員|人士|發言人)$")
+
+
+def noun_phrase_name(name):
+    """R85: a topic name is a noun phrase. A speech or sentence predicate at the end, or a person-role fragment, fails."""
+    return not (SPEECH_END.search(name) or ROLE_FRAGMENT.search(name))
+
+
+def pick_noun_key(titles, df, total, dfw=None):
+    """The best key whose name is a noun phrase (R85). A rejected candidate and its overlaps are left out and the next
+    candidate is tried. Returns an empty string when no candidate passes."""
+    tried = []
+    while True:
+        key = tp.pick_key(titles, df, total, exclude=tuple(tried), dfw=dfw)
+        if not key or noun_phrase_name(key):
+            return key
+        tried.append(key)
+
+
 def taiwan_relevant(titles):
     n = max(1, len(titles))
     hits = 0
     for t in titles:
         if any(term in t for _, _, _, terms in JURS for term in terms) or LOCAL_GOV.search(t) \
-                or any(re.search(p, t) for p, _, _, _ in CENTRAL) or re.search(r"台灣|臺灣|全台|國人", t):
+                or any(re.search(p, t) for p, _, _, _ in CENTRAL) or NATIONAL_SYSTEMS.search(t) or re.search(r"台灣|臺灣|全台|國人", t):
             hits += 1
     return hits >= RELEVANCE_SHARE * n
 
@@ -351,6 +373,98 @@ def topic_id(key, first_day, first_url):
     return f"ev-{first_day.replace('-', '')}-topic-{h}"
 
 
+def published_topics(root, ref="HEAD"):
+    """System topics that a commit already publishes: id, title, the first and last date and the cited source ids.
+    The ids come from the git ref, so a rebuild can reuse them after the files are removed.
+    Without git, the files in events/ are read."""
+    import subprocess
+    root = Path(root)
+    texts = []
+    try:
+        names = subprocess.run(["git", "-C", str(root), "ls-tree", "-r", "--name-only", ref, "events/"],
+                               capture_output=True, text=True, check=True).stdout.split()
+        for n in names:
+            if re.search(r"/ev-\d{8}-topic-[0-9a-f]{8}\.md$", n):
+                texts.append(subprocess.run(["git", "-C", str(root), "show", f"{ref}:{n}"],
+                                            capture_output=True, text=True, check=True).stdout)
+    except (OSError, subprocess.CalledProcessError):
+        texts = [p.read_text(encoding="utf-8") for p in sorted((root / "events").glob("*/ev-*-topic-*.md"))]
+    out = []
+    for t in texts:
+        i = re.search(r"^id: (\S+)$", t, re.M)
+        title = re.search(r"^title: (.+)$", t, re.M)
+        days = re.findall(r"^\s*(?:-\s+)?(?:date|start_date): '?(\d{4}-\d{2}-\d{2})", t, re.M)
+        if i and title and days:
+            out.append({"id": i.group(1), "title": title.group(1).strip("'\""), "first": min(days), "last": max(days),
+                        "src_ids": set(re.findall(r"src-[0-9a-z-]+", t))})
+    return out
+
+
+def matching_published(published, src_ids):
+    """Ids of the published system topics that keep at least MERGE_OVERLAP of their sources in src_ids."""
+    return [p["id"] for p in published
+            if p.get("src_ids") and len(src_ids & p["src_ids"]) >= MERGE_OVERLAP * len(p["src_ids"])]
+
+
+WITHDRAW_RULE = "R82"
+
+
+def _correction_records(root):
+    import yaml
+    return [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted((Path(root) / "corrections").glob("*/cr-*.yaml"))]
+
+
+def write_withdrawal_record(root, event_id, gate, today):
+    """R86, R95: a withdrawal writes a correction record made by the tool: the event, the date, the failed gate
+    and the rule. A second run finds the record of the same event and gate and writes nothing. Returns the id."""
+    import yaml
+    root = Path(root)
+    records = _correction_records(root)
+    for r in records:
+        if r.get("made_by") == "tool" and r.get("target_ids") == [event_id] and r.get("gate") == gate:
+            return r["id"]
+    stamp = today.replace("-", "")
+    used = [int(r["id"][-2:]) for r in records if r["id"].startswith(f"cr-{stamp}-")]
+    cid = f"cr-{stamp}-{max(used, default=0) + 1:02d}"
+    doc = {"schema_version": 1, "id": cid, "target_ids": [event_id], "date": today, "type": "factual",
+           "summary": f"系統撤回事件：未通過 {gate}（{WITHDRAW_RULE}）。", "made_by": "tool", "gate": gate, "rule_id": WITHDRAW_RULE}
+    path = root / "corrections" / today[:4] / f"{cid}.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000), encoding="utf-8")
+    return cid
+
+
+def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
+    """R82: a published system topic that fails a gate keeps its file and id. It gets status withdrawn, the
+    failed gate in review.reason and a link to its correction record (R86). A missing file is restored from the
+    git ref first. Returns the file path."""
+    import subprocess
+    root = Path(root)
+    year = event_id.split("-")[1][:4]
+    path = root / "events" / year / f"{event_id}.md"
+    if not path.exists():
+        text = subprocess.run(["git", "-C", str(root), "show", f"{ref}:events/{year}/{event_id}.md"],
+                              capture_output=True, text=True, check=True).stdout
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    doc, body = _read_event(path)
+    doc["status"] = "withdrawn"
+    doc["review"]["reason"] = f"withdrawn: {gate}"
+    cid = write_withdrawal_record(root, event_id, gate, today or date.today().isoformat())
+    if cid not in doc.get("correction_ids", []):
+        doc["correction_ids"] = doc.get("correction_ids", []) + [cid]
+    _write_event(path, doc, body)
+    return path
+
+
+def stable_id(published, title, first_day, last_day, new_id):
+    """A rebuilt topic keeps the id of a published topic with the same title and an overlapping window."""
+    for p in sorted(published, key=lambda p: p["first"]):
+        if p["title"] == title and p["first"] <= last_day and first_day <= p["last"]:
+            return p["id"]
+    return new_id
+
+
 class MonthFrequency:
     """Window document frequency from month buckets. A window counts every month it touches."""
 
@@ -403,7 +517,8 @@ def _levels(jids):
 
 
 def published_source_urls(root):
-    """URLs of every source that an event in events/ cites (the published membership)."""
+    """URLs of every source that an event in events/ cites (the published membership).
+    System topics do not count: the full run builds them again and each run decides their members."""
     root = Path(root)
     urls = {}
     for p in (root / "sources").glob("*/*.yaml"):
@@ -412,15 +527,30 @@ def published_source_urls(root):
             urls[p.stem] = m.group(1)
     cited = set()
     for p in (root / "events").glob("*/*.md"):
+        if TOPIC_FILE.search(p.name):
+            continue
         cited.update(urls[s] for s in re.findall(r"src-[0-9a-z-]+", p.read_text(encoding="utf-8")) if s in urls)
     return cited
 
 
-def run(corpus, clusters, existing_seeds, root, report_path):
+def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     df = tp.document_frequency(corpus)
     mf = MonthFrequency(corpus)
     by_url = {it["url"]: it for it in corpus}
     stats = Counter()
+    published_ids = published_topics(root)
+    failed, covered = {}, set()  # R82: published topic id -> first failed gate; ids that another candidate keeps
+
+    def src_ids_of(urls):
+        return {tp.src_id(by_url[u], tp.HOSTS) for u in urls if u in by_url}
+
+    def fail(gate, urls):
+        for pid in matching_published(published_ids, src_ids_of(urls)):
+            failed.setdefault(pid, gate)
+
+    def keep(urls):
+        covered.update(matching_published(published_ids, src_ids_of(urls)))
+
     # 1. seeds
     raw = []
     for c in clusters:
@@ -437,9 +567,10 @@ def run(corpus, clusters, existing_seeds, root, report_path):
         its = sorted((by_url[u] for u in urls), key=lambda j: (j["published_on"], j["url"]))
         lo = _day(its[0]["published_on"]) - timedelta(days=tp.WINDOW_BEFORE)
         hi = _day(its[-1]["published_on"]) + timedelta(days=tp.WINDOW_AFTER)
-        key = tp.pick_key([i["title"] for i in its], df, len(corpus), dfw=mf.window(lo, hi)) if len(its) > 1 else ""
+        key = pick_noun_key([i["title"] for i in its], df, len(corpus), dfw=mf.window(lo, hi)) if len(its) > 1 else ""
         if not key:
             stats["rejected_no_key"] += 1
+            fail("rejected_no_key", urls)
             continue
         slot = None
         for (k, a, b), v in merged.items():
@@ -478,11 +609,14 @@ def run(corpus, clusters, existing_seeds, root, report_path):
                 if norm not in seen_titles:
                     seen_titles.add(norm)
                     members.append(it)
+        members = tp.anchored(members, [s["title"] for s in seeds], [key], df, len(corpus))
         if not any(m.get("source_class") in ("news", "fact_check") for m in members):
             stats["rejected_no_news"] += 1
+            fail("rejected_no_news", [m["url"] for m in members])
             continue
         if sum(1 for m in members if m["url"] in taken) >= SAME_EVENT_SHARE * len(members):
             stats["skipped_existing_event"] += 1
+            keep([m["url"] for m in members])
             continue
         titles = [m["title"] for m in members]
         full = extend_to_boundary(key, titles)
@@ -490,22 +624,26 @@ def run(corpus, clusters, existing_seeds, root, report_path):
             members = [m for m in members if full in m["title"]]
             titles = [m["title"] for m in members]
             key = full
-        if not name_ok(key, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members)) \
+        if not noun_phrase_name(key) or not name_ok(key, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members)) \
                 or not has_word_boundary(key, titles, df) or is_person_or_party(key, titles) \
                 or is_quoted_slogan(key, titles) or is_place_name(key):
             stats["rejected_name_quality"] += 1
+            fail("rejected_name_quality", [m["url"] for m in members])
             continue
         if not taiwan_relevant(titles):
             stats["rejected_foreign"] += 1
+            fail("rejected_foreign", [m["url"] for m in members])
             continue
         if any((k in key or key in k) and s_lo <= hi and lo <= s_hi for k, s_lo, s_hi in existing_keys) or any(
                 s_lo <= hi and lo <= s_hi and sum(1 for t in titles if k in t) >= SAME_EVENT_SHARE * len(titles)
                 for k, s_lo, s_hi in existing_keys):
             stats["skipped_existing_event"] += 1
+            keep([m["url"] for m in members])
             continue
         reason = exclusion_reason(members)
         if reason:
             stats["rejected_" + reason] += 1
+            fail("rejected_" + reason, [m["url"] for m in members])
             continue
         jids = detect_jurisdictions(titles)
         actors = detect_gov_actors(titles, jids)
@@ -515,26 +653,38 @@ def run(corpus, clusters, existing_seeds, root, report_path):
                 actors.append(tp.HOSTS[host][1])
         if not actors:
             stats["rejected_no_gov_actor"] += 1
+            fail("rejected_no_gov_actor", [m["url"] for m in members])
             continue
         local = [j for j in jids if j != "jur-tw"]
         names = [next(n for jid, _, n, _ in JURS if jid == j)[:-2] for j in local]
-        seed = {"event_id": topic_id(key, members[0]["published_on"], members[0]["url"]),
+        name = tp.display_name(key, [s["title"] for s in seeds])
+        if not noun_phrase_name(name):
+            stats["rejected_name_quality"] += 1
+            fail("rejected_name_quality", [m["url"] for m in members])
+            continue
+        title = tp.topic_title(name, names, national="jur-tw" in jids)
+        event_id = stable_id(published_ids, title, members[0]["published_on"], members[-1]["published_on"],
+                             topic_id(key, members[0]["published_on"], members[0]["url"]))
+        seed = {"event_id": event_id,
                 "seed_urls": [s["url"] for s in seeds], "jurisdiction_ids": jids, "jurisdiction_names": names,
                 "gov_levels": _levels(jids), "controversy_types": _classify(titles, CTYPES, "governance_procedure"),
                 "policy_domains": _classify(titles, DOMAINS, "interior"), "actors": [(a, "other") for a in actors[:6]],
                 "sensitive": False, "_keys": [key],
-                "_name": tp.display_name(key, [s["title"] for s in seeds]), "_generic": False}
+                "_name": name, "_generic": False}
         urls = {m["url"] for m in members}
         if any(len(urls & other) >= MERGE_OVERLAP * min(len(urls), len(other)) for other in published_sets):
             stats["skipped_duplicate_topic"] += 1
+            keep(urls)
             continue
         ev = tp.build_event(seed, corpus, df, items=members)
         used = list(ev["used"].values())
         if not meets_source_rule(used):
             stats["rejected_source_rule"] += 1
+            fail("rejected_source_rule", urls)
             continue
         if not meets_news_rule(used):
             stats["rejected_news_rule"] += 1
+            fail("rejected_news_rule", urls)
             continue
         ev["review"]["sensitive"] = "misconduct" in seed["controversy_types"] or has_sensitive_term(
             [it["title"] for it in used])
@@ -544,12 +694,17 @@ def run(corpus, clusters, existing_seeds, root, report_path):
         published_sets.append(urls)
         out_seeds.append({k: v for k, v in seed.items() if not k.startswith("_")})
     stats["published"] = len(published)
+    covered.update(p["id"] for p in published)
+    withdrawn = {pid: gate for pid, gate in failed.items() if pid not in covered}
+    for pid, gate in sorted(withdrawn.items()):
+        withdraw_topic(root, pid, gate, today=today)
+    stats["withdrawn"] = len(withdrawn)
     keys = {k[0]: k[1] for k in existing_key_by_id}
     keys.update({p["id"]: p["key"] for p in published})
     links = apply_subtopic_links(root, keys)
     stats["part_of_links"] = len(links)
     stats["sensitive_from_sources"] = len(refresh_sensitive(root))
-    Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links}, ensure_ascii=False, indent=1),
+    Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links, "withdrawn": withdrawn}, ensure_ascii=False, indent=1),
                                  encoding="utf-8")
     return stats, published, out_seeds
 
