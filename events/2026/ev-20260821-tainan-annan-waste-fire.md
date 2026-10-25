@@ -171,7 +171,7 @@ privacy:
   contains_private_persons: false
   basis_source_ids: []
 review:
-  sensitive: false
+  sensitive: true
   reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'
   status: draft-review
 ---

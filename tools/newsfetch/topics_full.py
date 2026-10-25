@@ -209,16 +209,7 @@ def name_ok(key, total_df, window_df):
     return total_df <= CONCENTRATION * max(1, window_df)
 
 
-_TERMS_PATH = Path(__file__).resolve().parents[2] / "taxonomy" / "sensitive_terms.yaml"
-try:
-    SENSITIVE_TERMS = tuple(re.findall(r"term: ([^,}]+)", _TERMS_PATH.read_text(encoding="utf-8")))
-except OSError:
-    SENSITIVE_TERMS = ()
-
-
-def has_sensitive_term(titles):
-    """CI-15: a sensitive term in the content makes the event sensitive."""
-    return any(term.strip() in t for t in titles for term in SENSITIVE_TERMS)
+has_sensitive_term = tp.has_sensitive_term
 
 
 def _day(d):
@@ -557,6 +548,7 @@ def run(corpus, clusters, existing_seeds, root, report_path):
     keys.update({p["id"]: p["key"] for p in published})
     links = apply_subtopic_links(root, keys)
     stats["part_of_links"] = len(links)
+    stats["sensitive_from_sources"] = len(refresh_sensitive(root))
     Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links}, ensure_ascii=False, indent=1),
                                  encoding="utf-8")
     return stats, published, out_seeds
@@ -579,6 +571,31 @@ def ensure_actor_files(root, ids):
         p.write_text("---\n" + yaml.safe_dump(doc, allow_unicode=True, sort_keys=False) + "---\n", encoding="utf-8")
         made.append(aid)
     return made
+
+
+SYSTEM_REASON = "draft-review: 系統"
+
+
+def refresh_sensitive(root):
+    """R76 after the fact: read the source files that each system topic cites (title and quote) and set
+    review.sensitive: true on a hit. Returns the ids that changed."""
+    root = Path(root)
+    texts = {}
+    for p in (root / "sources").glob("*/*.yaml"):
+        raw = p.read_text(encoding="utf-8")
+        texts[p.stem] = [m.group(1) for m in re.finditer(r'^(?:title|quote): "?(.+?)"?$', raw, re.M)]
+    changed = []
+    for p in (root / "events" / "2026").glob("*.md"):
+        doc, body = _read_event(p)
+        review = doc.get("review", {})
+        if not str(review.get("reason", "")).startswith(SYSTEM_REASON) or review.get("sensitive"):
+            continue
+        cited = set(re.findall(r"src-[0-9a-z-]+", p.read_text(encoding="utf-8")))
+        if tp.has_sensitive_term([t for s in cited for t in texts.get(s, [])]):
+            review["sensitive"] = True
+            _write_event(p, doc, body)
+            changed.append(doc["id"])
+    return changed
 
 
 def enrich_sources(root, corpus, enrich_path):
