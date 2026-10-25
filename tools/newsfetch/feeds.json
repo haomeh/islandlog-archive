@@ -209,7 +209,7 @@
     ],
     "type": "browser_list",
     "url": "https://www.setn.com/viewall",
-    "status": "ok",
+    "status": "latest_only",
     "route": {
       "url": "https://www.setn.com/viewall",
       "link": "setn\\.com/news/\\d+",
@@ -219,7 +219,8 @@
       "max_steps": 2500,
       "delay_ms": 1200
     },
-    "latest_sitemap": "https://www.setn.com/sitemapGoogleNews.xml"
+    "latest_sitemap": "https://www.setn.com/sitemapGoogleNews.xml",
+    "blocked_reason": "The viewall list stops at about 600 items (2 days) however far the browser scrolls, and shows relative times only. The route reads the latest 2 days for the daily run."
   },
   {
     "id": "ftv",

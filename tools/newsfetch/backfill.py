@@ -108,6 +108,7 @@ def main(argv=None) -> int:
     ap.add_argument("--source", action="append", help="outlet id; repeat for several")
     ap.add_argument("--feeds", type=Path, default=DEFAULT_FEEDS_PATH)
     ap.add_argument("--cache-dir", type=Path, default=None)
+    ap.add_argument("--no-resume", action="store_true", help="ignore the done list (daily timer runs)")
     args = ap.parse_args(argv)
 
     feeds = load_feeds(args.feeds)
@@ -126,7 +127,7 @@ def main(argv=None) -> int:
             continue
         crawler = PoliteCrawler(cache_dir=args.cache_dir or args.out_dir / "cache" / feed["id"])
         state_file = args.out_dir / "state" / f"{feed['id']}.done"
-        finished = done_units(state_file)
+        finished = set() if args.no_resume else done_units(state_file)
         for unit in units_for(feed, args.since, args.until):
             if unit["name"] in finished:
                 logger.info("%s %s already done", feed["id"], unit["name"])

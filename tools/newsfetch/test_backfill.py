@@ -31,6 +31,9 @@ class TestBackfill(unittest.TestCase):
                 self.assertEqual(fetch.call_count, 2)
                 backfill.main([str(a) for a in argv])
                 self.assertEqual(fetch.call_count, 2)
+            with mock.patch("tools.newsfetch.backfill.fetch_source_items", return_value=[item]) as fetch:
+                backfill.main([str(a) for a in argv] + ["--no-resume"])
+                self.assertEqual(fetch.call_count, 2)
             merged = (tmp / "out" / "news-t.jsonl").read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(merged), 1)
             self.assertEqual(json.loads(merged[0])["published_on"], "2026-04-25")

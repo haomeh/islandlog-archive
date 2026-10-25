@@ -1,0 +1,15 @@
+# Daily news metadata fetch (R90). Written as a file only: do not install without the user's approval.
+# Install (after approval): copy both files to ~/.config/systemd/user/, then
+#   systemctl --user daemon-reload && systemctl --user enable --now islandlog-newsfetch.timer
+# Change WorkingDirectory and the out and log paths to the real folders first.
+[Unit]
+Description=islandlog newsfetch daily run (metadata only, 1 request per second per host)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/islandlog/archive
+Environment=PYTHONUNBUFFERED=1
+# The window is the last 3 days. --no-resume makes every run read the lists again.
+ExecStart=/bin/sh -c 'python3 -m tools.newsfetch.backfill --no-resume --since "$(date -d "3 days ago" +%%F)" --until "$(date +%%F)" --out-dir %h/islandlog-news/out --log-dir %h/islandlog-news/logs'
+Nice=10
+TimeoutStartSec=4h
