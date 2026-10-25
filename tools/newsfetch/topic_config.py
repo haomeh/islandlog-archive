@@ -93,3 +93,8 @@ WITHDRAW_AFTER_FAILS = 2  # A published topic is withdrawn after this many faili
 # --- Safety stop for withdrawals (R133) ---
 WITHDRAW_MAX_COUNT = 3  # A run that would withdraw more topics than this withdraws none and writes withdraw_blocked. Ruling R133.
 WITHDRAW_MAX_SHARE = 0.1  # ... also when it would withdraw more than this share of the published system topics (at least 1 topic is always allowed). Ruling R133.
+
+# --- Follow-up gate fixes after T22 (T24, R141) ---
+TAIWAN_MIN_TITLES = 2  # A topic is about Taiwan also when this many of its titles name Taiwan (a place, a body, a figure, a national road) and they are TAIWAN_MIN_SHARE of the titles. A typhoon forecast needs this many titles that name Taiwan. Sample T22-P2: 事後避孕藥 (4 of 9 titles), 米克拉 typhoon (4 of 8 name Taiwan) were rejected as not_taiwan (R141.4).
+TAIWAN_MIN_SHARE = 0.25  # ... and they are at least this share of the titles; below it a foreign story that names Taiwan once or twice still fails. Sample T22-P2: the lowest of the 9 not_taiwan rejects is 事後避孕藥 with 44% (R141.4). Start for the margin below 44%.
+OFFICIAL_MIN_TITLES = 3  # A name that follows an office word (部長, 署長, 主委, 次長) in this many titles of the corpus is the name of an office holder (石崇良), so a title that names the holder names a minister. Sample T22-P2: 5 of the 17 name_quality rejects were 石崇良 stories (R141.5).
