@@ -216,11 +216,16 @@ def _day(d):
     return date.fromisoformat(str(d))
 
 
+def owner(item):
+    """R88: one media group counts as one publisher. Items without a group count by publisher."""
+    return item.get("publisher_group") or item["publisher"]
+
+
 def meets_source_rule(items):
     """PRD 4.4 item 2: 1 grade A source, or grade C sources from 2 or more publishers."""
     if any(it.get("source_class") in ("official_record",) for it in items):
         return True
-    pubs = {it["publisher"] for it in items if it.get("source_class") in ("news", "fact_check")}
+    pubs = {owner(it) for it in items if it.get("source_class") in ("news", "fact_check")}
     return len(pubs) >= 2
 
 
@@ -230,7 +235,7 @@ PLACE_FIXES = (("台北港", "新北港"), ("臺北港", "新北港"))  # 台北
 def meets_news_rule(items):
     """R73: 2 or more news items from 2 or more news publishers (fact checks and official releases do not count)."""
     news = [it for it in items if it.get("source_class") == "news"]
-    return len(news) >= 2 and len({it["publisher"] for it in news}) >= 2
+    return len(news) >= 2 and len({owner(it) for it in news}) >= 2
 
 
 SUBTOPIC_SHARE = 0.1
