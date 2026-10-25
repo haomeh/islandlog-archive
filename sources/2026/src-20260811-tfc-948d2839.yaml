@@ -1,0 +1,12 @@
+schema_version: 1
+id: src-20260811-tfc-948d2839
+source_class: fact_check
+grade: C
+title: 中聯油品事件資訊專區
+publisher: 台灣事實查核中心
+url: https://tfc-taiwan.org.tw/central_union_oil_incident/
+published_on: '2026-08-11'
+accessed_on: '2026-10-24'
+has_archive_url: false
+quote: 中聯油品事件資訊專區
+license: unknown
