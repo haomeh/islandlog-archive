@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260721-hsinchu-rice-noodle-formaldehyde
-kind: controversy
+kind: historical_event
 status: published
 title: 新竹市甲醛炊粉
 summary: 2026-07-19至2026-08-05，自由時報共 44 則報導提及甲醛炊粉 [@src-20260719-ltn-f4381498]。

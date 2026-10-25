@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260511-escape-room-safety
-kind: controversy
+kind: historical_event
 status: published
 title: 密室逃脫
 summary: 2026-05-11至2026-05-25，自由時報共 43 則報導提及密室逃脫 [@src-20260511-ltn-a603173a]。內政部等機關發布 1 則相關說明 [@src-20260519-moi-e4e9fa3e]。

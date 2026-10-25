@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260505-changhua-fangyuan-crematorium
-kind: controversy
+kind: historical_event
 status: published
 title: 彰化縣火葬場
 summary: 2026-05-05至2026-07-28，自由時報共 11 則報導提及火葬場 [@src-20260505-ltn-4b82feca]。內政部等機關發布 1 則相關說明 [@src-20260723-moi-f439485d]。

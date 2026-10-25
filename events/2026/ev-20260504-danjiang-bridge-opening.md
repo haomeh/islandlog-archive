@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260504-danjiang-bridge-opening
-kind: controversy
+kind: historical_event
 status: published
 title: 新北市淡江大橋
 summary: 2026-04-29至2026-05-20，自由時報共 36 則報導提及淡江大橋 [@src-20260429-ltn-9c8fdf2b]。行政院等機關發布 2 則相關說明 [@src-20260507-ey-e498d6a6]。

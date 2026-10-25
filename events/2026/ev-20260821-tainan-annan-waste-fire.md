@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260821-tainan-annan-waste-fire
-kind: controversy
+kind: historical_event
 status: published
 title: 臺南市安南區
 summary: 2026-08-21至2026-09-16，自由時報共 10 則報導提及安南區 [@src-20260821-tainan-944e33e5]。臺南市政府等機關發布 8 則相關說明 [@src-20260821-tainan-944e33e5]。

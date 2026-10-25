@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260816-dayuan-parent-child-center-flag
-kind: controversy
+kind: historical_event
 status: published
 title: 桃園市大園親子館
 summary: 2026-08-16至2026-08-17，自由時報共 3 則報導提及大園親子館 [@src-20260816-ltn-a8b02dc0]。

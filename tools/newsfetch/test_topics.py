@@ -116,6 +116,11 @@ class TopicTest(unittest.TestCase):
             self.assertRegex(t["title"], r"^\d+ 則")
             self.assertNotIn("「", t["title"])
 
+    def test_kind_needs_two_stances(self):
+        self.assertEqual(topics.event_kind([{"actor_id": "a", "stance": "not_found"}]), "historical_event")
+        self.assertEqual(topics.event_kind([{"actor_id": "a", "stance": "support"}, {"actor_id": "b", "stance": "oppose"}]), "controversy")
+        self.assertEqual(topics.event_kind([{"actor_id": "a", "stance": "support"}, {"actor_id": "a", "stance": "oppose"}]), "historical_event")
+
     def test_review_status_is_draft(self):
         event = topics.build_event(SEED, CORPUS, self.df, actors_by_host={})
         self.assertEqual(event["review"]["status"], "draft-review")

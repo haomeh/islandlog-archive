@@ -236,6 +236,83 @@ def meets_source_rule(items):
 PLACE_FIXES = (("台北港", "新北港"), ("臺北港", "新北港"))  # 台北港 is in 新北市
 
 
+def meets_news_rule(items):
+    """R73: 2 or more news items from 2 or more news publishers (fact checks and official releases do not count)."""
+    news = [it for it in items if it.get("source_class") == "news"]
+    return len(news) >= 2 and len({it["publisher"] for it in news}) >= 2
+
+
+SUBTOPIC_SHARE = 0.1
+
+
+def link_subtopics(entries):
+    """R72: {child id: parent id}. The child window lies inside an older topic window, the child is in the same
+    jurisdiction or a child of it (every county is a child of jur-tw), and SUBTOPIC_SHARE of its titles have the
+    older topic key."""
+    links = {}
+    for c in entries:
+        best = None
+        for p in entries:
+            if p["id"] == c["id"] or not (p["start"] <= c["start"] and c["end"] <= p["end"]):
+                continue
+            if (p["start"], p["end"]) == (c["start"], c["end"]):
+                continue
+            if not (set(c["jurisdictions"]) <= set(p["jurisdictions"]) or "jur-tw" in p["jurisdictions"]):
+                continue
+            share = sum(1 for t in c["titles"] if p["key"] in t) / max(1, len(c["titles"]))
+            if share >= SUBTOPIC_SHARE and (best is None or share > best[0]):
+                best = (share, p["id"])
+        if best:
+            links[c["id"]] = best[1]
+    return links
+
+
+def _read_event(path):
+    import yaml
+    text = path.read_text(encoding="utf-8")
+    _, front, body = text.split("---\n", 2)
+    return yaml.safe_load(front), body
+
+
+def _write_event(path, doc, body):
+    import yaml
+    path.write_text("---\n" + yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000) + "---\n" + body,
+                    encoding="utf-8")
+
+
+def apply_subtopic_links(root, keys):
+    """Builds the entries from the event files and writes relations: part_of into each child file."""
+    root = Path(root)
+    titles_by_src = {}
+    for p in (root / "sources").glob("2026/*.yaml"):
+        m = re.search(r'^title: "?(.+?)"?$', p.read_text(encoding="utf-8"), re.M)
+        if m:
+            titles_by_src[p.stem] = m.group(1)
+    entries, files = [], {}
+    for p in (root / "events" / "2026").glob("*.md"):
+        doc, body = _read_event(p)
+        if doc["id"] not in keys:
+            continue
+        dates = sorted(t["date"] for t in doc["timeline"])
+        srcs = {s for g in doc.get("news_groups", []) for s in g["source_ids"]}
+        entries.append({"id": doc["id"], "start": str(dates[0]), "end": str(dates[-1]), "jurisdictions": doc["jurisdiction_ids"],
+                        "key": keys[doc["id"]], "titles": [titles_by_src[s] for s in srcs if s in titles_by_src]})
+        files[doc["id"]] = (p, doc, body)
+    links = link_subtopics(entries)
+    for child, parent in links.items():
+        p, doc, body = files[child]
+        rels = [r for r in doc.get("relations", []) if r.get("type") != "part_of"]
+        rels.append({"type": "part_of", "target_id": parent})
+        new = {}
+        for k, v in doc.items():
+            if k == "privacy":
+                new["relations"] = rels
+            if k != "relations":
+                new[k] = v
+        _write_event(p, new, body)
+    return links
+
+
 def detect_jurisdictions(titles):
     counts = Counter()
     for t in titles:
@@ -386,12 +463,16 @@ def run(corpus, clusters, existing_seeds, root, report_path):
     stats["merged_topics"] = len(merged)
     # 3. existing events
     taken = published_source_urls(root)
-    existing_keys = []
+    existing_keys, existing_key_by_id = [], []
     for s in existing_seeds:
         taken.update(s["seed_urls"])
         seed_items = [by_url[u] for u in s["seed_urls"] if u in by_url]
         if seed_items:
-            ks = tp.topic_keys([i["title"] for i in seed_items], df, len(corpus))
+            probe = dict(s)
+            tp.members(probe, corpus, df)  # the same key that the event was built with
+            ks = probe["_keys"]
+            if ks:
+                existing_key_by_id.append((s["event_id"], ks[0]))
             days = sorted(_day(i["published_on"]) for i in seed_items)
             existing_keys += [(k, days[0] - timedelta(days=tp.WINDOW_BEFORE), days[-1] + timedelta(days=tp.WINDOW_AFTER)) for k in ks]
     # Bigger topics first, so a duplicate keeps the larger one.
@@ -461,15 +542,23 @@ def run(corpus, clusters, existing_seeds, root, report_path):
         if not meets_source_rule(used):
             stats["rejected_source_rule"] += 1
             continue
+        if not meets_news_rule(used):
+            stats["rejected_news_rule"] += 1
+            continue
         ev["review"]["sensitive"] = "misconduct" in seed["controversy_types"] or has_sensitive_term(
             [it["title"] for it in used])
         ensure_actor_files(root, [a for a, _ in ev["actors"]])
         tp.write_event(ev, seed, root, {}, actors_by_host=tp.HOSTS, overwrite_sources=False)
-        published.append({"id": ev["id"], "title": ev["title"], "sources": len(used)})
+        published.append({"id": ev["id"], "title": ev["title"], "sources": len(used), "key": key})
         published_sets.append(urls)
         out_seeds.append({k: v for k, v in seed.items() if not k.startswith("_")})
     stats["published"] = len(published)
-    Path(report_path).write_text(json.dumps({"stats": stats, "published": published}, ensure_ascii=False, indent=1), encoding="utf-8")
+    keys = {k[0]: k[1] for k in existing_key_by_id}
+    keys.update({p["id"]: p["key"] for p in published})
+    links = apply_subtopic_links(root, keys)
+    stats["part_of_links"] = len(links)
+    Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links}, ensure_ascii=False, indent=1),
+                                 encoding="utf-8")
     return stats, published, out_seeds
 
 
@@ -490,6 +579,23 @@ def ensure_actor_files(root, ids):
         p.write_text("---\n" + yaml.safe_dump(doc, allow_unicode=True, sort_keys=False) + "---\n", encoding="utf-8")
         made.append(aid)
     return made
+
+
+def enrich_sources(root, corpus, enrich_path):
+    """R75: add byline, section and the body quote from an article step output to existing source files."""
+    enrich = {e["url"]: e for e in tp.read_jsonl(enrich_path) if e.get("status") == "ok"}
+    by_url = {it["url"]: it for it in corpus}
+    done = 0
+    for p in (Path(root) / "sources" / "2026").glob("*.yaml"):
+        m = re.search(r'^url: "?([^"\n]+)"?$', p.read_text(encoding="utf-8"), re.M)
+        if not m or m.group(1) not in enrich or m.group(1) not in by_url:
+            continue
+        doc = tp._source_doc(by_url[m.group(1)], enrich, tp.HOSTS)
+        if doc["id"] != p.stem:
+            continue
+        p.write_text(tp._dump(doc), encoding="utf-8")
+        done += 1
+    return done
 
 
 def main(argv):

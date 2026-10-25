@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260826-miaoli-sports-center-outsourcing
-kind: controversy
+kind: historical_event
 status: published
 title: 苗栗縣全民運動館
 summary: 2026-08-26至2026-09-19，自由時報共 5 則報導提及全民運動館 [@src-20260826-ltn-6f32b90c]。臺南市政府等機關發布 2 則相關說明 [@src-20260911-tainan-049aa19b]。

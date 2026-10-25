@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260923-taipei-jinhua-school-lunch
-kind: controversy
+kind: historical_event
 status: published
 title: 臺北市金華國中
 summary: 2026-09-23至2026-10-07，自由時報共 33 則報導提及金華國中 [@src-20260923-ltn-2720eec5]。

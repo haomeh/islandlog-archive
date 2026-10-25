@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260513-taichung-social-housing-site-fire
-kind: controversy
+kind: historical_event
 status: published
 title: 臺中市社宅工地
 summary: 2026-05-13至2026-05-16，自由時報共 9 則報導提及社宅工地 [@src-20260513-ltn-aa193479]。

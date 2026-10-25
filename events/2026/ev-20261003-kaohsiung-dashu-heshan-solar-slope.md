@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20261003-kaohsiung-dashu-heshan-solar-slope
-kind: controversy
+kind: historical_event
 status: published
 title: 高雄市大樹和山
 summary: 2026-10-03至2026-10-05，自由時報共 3 則報導提及大樹和山 [@src-20261003-ltn-624dc821]。高雄市政府等機關發布 3 則相關說明 [@src-20261003-kcg-b16f8878]。

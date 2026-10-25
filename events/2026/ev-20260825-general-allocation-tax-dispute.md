@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260825-general-allocation-tax-dispute
-kind: controversy
+kind: historical_event
 status: published
 title: 統籌分配款
 summary: 2026-08-25至2026-08-26，自由時報共 4 則報導提及統籌分配款 [@src-20260825-ltn-33bf8ae7]。

@@ -431,6 +431,12 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
     }
 
 
+def event_kind(positions):
+    """R73: controversy needs real stances from 2 or more actors (PRD 4.4 item 3). Else historical_event."""
+    actors = {p["actor_id"] for p in positions if p.get("stance") not in (None, "not_found")}
+    return "controversy" if len(actors) >= 2 else "historical_event"
+
+
 def _dump(doc):
     import yaml  # the writer needs PyYAML; the topic rules above do not
     return yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000, default_flow_style=False)
@@ -474,7 +480,7 @@ def write_event(ev, seed, root, enrich, actors_by_host=HOSTS, overwrite_sources=
         if g.get("note"):
             out["note"] = g["note"]
         groups.append(out)
-    doc = {"schema_version": 1, "id": ev["id"], "kind": "controversy", "status": "published", "title": ev["title"],
+    doc = {"schema_version": 1, "id": ev["id"], "kind": event_kind(ev["positions"]), "status": "published", "title": ev["title"],
            "summary": ev["summary"], "start_date": ev["start_date"], "start_date_precision": "day",
            "gov_levels": seed["gov_levels"], "jurisdiction_ids": seed["jurisdiction_ids"],
            "controversy_types": seed["controversy_types"], "policy_domains": seed["policy_domains"],

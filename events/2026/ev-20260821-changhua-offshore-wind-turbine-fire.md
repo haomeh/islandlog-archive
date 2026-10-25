@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260821-changhua-offshore-wind-turbine-fire
-kind: controversy
+kind: historical_event
 status: published
 title: 風機火災
 summary: 2026-08-21至2026-08-27，自由時報共 2 則報導提及風機火災 [@src-20260821-ltn-5f8ad88a]。行政院等機關發布 1 則相關說明 [@src-20260827-moea-4b5b2d01]。
