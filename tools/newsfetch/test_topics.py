@@ -46,6 +46,22 @@ class TopicTest(unittest.TestCase):
         dfw = topics.window_frequency(corpus, topics._day("2026-07-05"), topics._day("2026-08-12"))
         self.assertEqual(topics.pick_key([corpus[0]["title"], corpus[1]["title"]], df, 60000, dfw=dfw), "豎孤棚")
 
+    def test_display_name_takes_a_dominant_noun_form(self):
+        titles = ["花蓮萬里溪上游驚現堰塞湖", "花蓮萬里溪堰塞湖蓄水量估達600萬", "萬里溪堰塞湖持續蓄積", "萬里溪堰塞湖黃色警戒"]
+        self.assertEqual(topics.display_name("萬里溪", titles), "萬里溪堰塞湖")
+
+    def test_display_name_never_cuts_a_place_on_the_left(self):
+        titles = ["南投名間焚化爐環評", "名間焚化爐自救會", "名間焚化爐抗爭", "焚化爐選址爭議"]
+        self.assertEqual(topics.display_name("焚化爐", titles), "焚化爐")
+
+    def test_display_name_of_a_short_key_comes_from_the_first_seed(self):
+        titles = ["遭控「移工懷孕雇主養他全家」 勞動部駁斥", "失聯移工就地合法引反對", "失聯移工見警駕車逃竄", "疑失聯移工躲查緝"]
+        self.assertEqual(topics.display_name("移工", titles), "移工懷孕")
+
+    def test_display_name_keeps_earlier_good_names(self):
+        self.assertEqual(topics.display_name("薔琵", ["強颱「薔琵」本週恐生成", "薔琵颱風逼近", "薔琵颱風來襲", "颱風薔琵發威"]), "薔琵颱風")
+        self.assertEqual(topics.display_name("和山", ["高雄大樹和山光電場邊坡滑落", "大樹和山案場遭AI造假", "和山光電限期改善"]), "大樹和山")
+
     def test_title_adds_the_jurisdiction(self):
         self.assertEqual(topics.topic_title("仁愛圓環", ["臺北市"]), "臺北市仁愛圓環")
         self.assertEqual(topics.topic_title("臺北市仁愛圓環", ["臺北市"]), "臺北市仁愛圓環")
