@@ -79,5 +79,7 @@ DISEASE_NAME_MAX_LEN = 6  # A name of this length or less that ends with a disea
 GOV_NAME_SHARE = 0.5  # A noun phrase is a policy name when this share of its titles names a government body: the quote and word-start tests are skipped. Sample T18-AP: 廚餘給弱勢 (教育局, 3 of 4), 不只高德地圖 (數發部, 3 of 3) (R112.4).
 FOREIGN_NAMED_SHARE = 0.3  # A topic outside Taiwan is foreign only when this share of its titles names a foreign country or leader. Sample T18-AP: 清潔公司掛羊頭賣狗肉 was labeled foreign with none (R112.5).
 
+SPLIT_MIN_TITLES = 2  # A jurisdiction splits a topic off when this many titles name it alone and another jurisdiction of the same level has as many. Sample T18-AP: 臺中市續放颱風假 holds 北市 (2 titles) and 台中 (4) (R112.3).
+
 # --- Hysteresis (R107b) ---
 WITHDRAW_AFTER_FAILS = 2  # A published topic is withdrawn after this many failing runs in a row. Ruling R107.

@@ -556,6 +556,40 @@ class FailCountPerDayTest(RunHelper, unittest.TestCase):
         self.assertEqual(tf.taipei_day(datetime(2026, 10, 25, 15, 59, tzinfo=timezone.utc)), "2026-10-25")
 
 
+class SplitCasesTest(unittest.TestCase):
+    """R112.3: a topic splits when its titles name two jurisdictions at the same level, or two different cases."""
+
+    def members(self, titles):
+        return [item(f"u{i}", t, "2026-10-23", publisher=f"p{i}") for i, t in enumerate(titles)]
+
+    def test_two_cities_of_the_same_level_split(self):
+        titles = ["北市10/24續放颱風假！網友灌爆蔣萬安臉書", "台北續放颱風假　部分醫院開設特別門診", "台中續放颱風假 各大百貨宣布今正常營業",
+                  "台中人續放颱風假 百貨公司人潮「恢復假日水準」", "續放颱風假！台中人開逛百貨　鹿港老街人潮少3成"]
+        groups = tf.split_cases(self.members(titles))
+        self.assertEqual(sorted(sorted(m["title"][:2] for m in g) for g in groups), [["北市", "台北"], ["台中", "台中", "續放"]])
+        self.assertEqual(tf.detect_jurisdictions([m["title"] for m in groups[0]]), ["jur-66000000"])
+
+    def test_a_city_and_a_county_stay_together(self):
+        titles = ["台中市府宣布停班", "南投縣府宣布停班", "台中停班停課", "南投停班停課"]
+        self.assertEqual(len(tf.split_cases(self.members(titles))), 1)
+
+    def test_one_city_does_not_split(self):
+        titles = ["台中續放颱風假", "台中人續放颱風假 百貨人潮", "續放颱風假 台中市府說明"]
+        self.assertEqual(len(tf.split_cases(self.members(titles))), 1)
+
+    def test_a_bribery_case_splits_from_a_dispute_topic(self):
+        titles = ["基隆東岸商場弊案！基市府約僱收賄195萬洩題 二審維持12年", "東岸商場強制接管案 最高行政法院認定「事實行為」  NET抗告駁回確定",
+                  "NET控基市府接管東岸商場違法　法院認非行政處分駁回確定", "NET東岸商場吞敗訴確定　最高行認「民事糾紛」：去告基隆市府民事"]
+        groups = tf.split_cases(self.members(titles))
+        self.assertEqual(len(groups), 2)
+        self.assertEqual([len(g) for g in groups], [3, 1])
+        self.assertEqual(tf.exclusion_reason(groups[1]), "criminal_case")
+
+    def test_a_topic_of_one_case_does_not_split(self):
+        titles = ["某案收賄起訴 檢方偵辦", "某案收賄 法院判刑", "某案行賄 被告交保"]
+        self.assertEqual(len(tf.split_cases(self.members(titles))), 1)
+
+
 class TopicConfigTest(unittest.TestCase):
     """R107a: the thresholds live in topic_config.py, each with a comment."""
 

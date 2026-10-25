@@ -28,11 +28,12 @@ from tools.newsfetch import topics as tp
 from tools.newsfetch.topic_config import (
     BOUNDARY_SHARE, CLASSIFY_SHARE, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
     CONTINUATION_MIN_USES, DISEASE_NAME_MAX_LEN, FOREIGN_NAMED_SHARE, GENERIC_NAME_MAX_LEN, GOV_NAME_SHARE, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
-    RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SUBTOPIC_SHARE, WITHDRAW_AFTER_FAILS)
+    RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SPLIT_MIN_TITLES, SUBTOPIC_SHARE,
+    WITHDRAW_AFTER_FAILS)
 
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票|對手陣營|競辦|競總")  # R106: the last 3 name a campaign without an election word
-CRIME = re.compile(r"起訴|判刑|聲押|收押|交保|嫌犯|涉嫌|偵辦|逮捕|送辦|殺人|命案|毒品|詐團|車手|性侵|猥褻|竊盜|酒駕")
+CRIME = re.compile(r"起訴|判刑|聲押|收押|交保|嫌犯|涉嫌|偵辦|逮捕|送辦|殺人|命案|毒品|詐團|車手|性侵|猥褻|竊盜|酒駕|弊案|收賄|貪污|貪瀆|行賄|賄賂|洩題")  # R112.3: the last 7 name a corruption case
 ENTERTAINMENT = re.compile(r"演唱會|歌手|藝人|女星|男星|偶像|專輯|戲劇|影集|綜藝|中職|球隊|選手|奪冠|賽事|電影")
 ELECTION_LEGAL = re.compile(r"駁回|裁定|判決|高行|行政法院|法院|當選無效|選舉訴訟")  # R112.4: a court ruling on a candidacy is not campaign content
 LAW_PASSED = re.compile(r"三讀|條例》|修正草案|修法")  # R112.4: a law passed by the legislature is not sensitive by its subject alone
@@ -339,6 +340,50 @@ def apply_subtopic_links(root, keys):
                 new[k] = v
         _write_event(p, new, body)
     return links
+
+
+def _title_jurisdictions(title):
+    """The ids of the jurisdictions that a title names. 新北 is taken out first, so 新北市 does not name 北市."""
+    for wrong, right in PLACE_FIXES:
+        title = title.replace(wrong, right)
+    plain = title.replace("新北", "\0")
+    found = {jid for jid, _, _, terms in JURS if any(term in (title if jid == "jur-65000000" else plain) for term in terms)}
+    return found
+
+
+def _same_level(jid):
+    return "special" if jid in SPECIAL_MUNICIPALITIES else "county_city"
+
+
+SPECIAL_MUNICIPALITIES = ("jur-63000000", "jur-64000000", "jur-65000000", "jur-66000000", "jur-67000000", "jur-68000000")
+
+
+def split_cases(members):
+    """R112.3: the member lists of the topics that one candidate holds. A criminal-case title is another case than the
+    other titles of the topic (PRD 4.5 excludes it); it leaves as its own list. Then titles that name two jurisdictions
+    of the same level, each alone in SPLIT_MIN_TITLES titles or more, split by jurisdiction. A title with no
+    jurisdiction stays with the biggest list. A topic of one case and one jurisdiction returns [members]."""
+    crime = [m for m in members if CRIME.search(m["title"])]
+    rest = [m for m in members if not CRIME.search(m["title"])]
+    lists = [rest, crime] if crime and rest else [members]
+    out = []
+    for lst in lists:
+        alone = {id(m): next(iter(j)) for m in lst for j in [_title_jurisdictions(m["title"])] if len(j) == 1}
+        counts = Counter(alone.values())
+        by_level = defaultdict(list)
+        for jid, n in counts.most_common():
+            if n >= SPLIT_MIN_TITLES:
+                by_level[_same_level(jid)].append(jid)
+        sides = next((js for js in by_level.values() if len(js) > 1), [])
+        if not sides:
+            out.append(lst)
+            continue
+        groups = {jid: [m for m in lst if alone.get(id(m)) == jid] for jid in sides}
+        biggest = sides[0]
+        groups[biggest] += [m for m in lst if alone.get(id(m)) not in sides]
+        order = {id(m): i for i, m in enumerate(lst)}
+        out += [sorted(g, key=lambda m: order[id(m)]) for g in groups.values()]
+    return out
 
 
 def detect_jurisdictions(titles):
@@ -746,77 +791,82 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
             members = [m for m in members if full in m["title"]]
             titles = [m["title"] for m in members]
             key = full
-        if not name_quality_ok(key, titles, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members), df):
-            stats["rejected_name_quality"] += 1
-            fail("rejected_name_quality", [m["url"] for m in members])
-            continue
-        if not taiwan_relevant(titles) and names_foreign(titles):  # R112.5: no foreign name, no foreign label
-            stats["rejected_foreign"] += 1
-            fail("rejected_foreign", [m["url"] for m in members])
-            continue
-        if any((k in key or key in k) and s_lo <= hi and lo <= s_hi for k, s_lo, s_hi in existing_keys) or any(
-                s_lo <= hi and lo <= s_hi and sum(1 for t in titles if k in t) >= SAME_EVENT_SHARE * len(titles)
-                for k, s_lo, s_hi in existing_keys):
-            stats["skipped_existing_event"] += 1
-            keep([m["url"] for m in members])
-            continue
-        reason = exclusion_reason(members)
-        if reason:
-            stats["rejected_" + reason] += 1
-            fail("rejected_" + reason, [m["url"] for m in members])
-            continue
-        jids = detect_jurisdictions(titles)
-        actors = detect_gov_actors(titles, jids)
-        for m in members:
-            host = (m["url"].split("/")[2] if "//" in m["url"] else "")
-            if m.get("source_class") == "official_statement" and host in tp.HOSTS and tp.HOSTS[host][1] not in actors:
-                actors.append(tp.HOSTS[host][1])
-        if not actors:
-            stats["rejected_no_gov_actor"] += 1
-            fail("rejected_no_gov_actor", [m["url"] for m in members])
-            continue
-        local = [j for j in jids if j != "jur-tw"]
-        names = [next(n for jid, _, n, _ in JURS if jid == j)[:-2] for j in local]
-        name = tp.display_name(key, [s["title"] for s in seeds])
-        if not noun_phrase_name(name) or generic_name(name):
-            stats["rejected_name_quality"] += 1
-            fail("rejected_name_quality", [m["url"] for m in members])
-            continue
-        title = tp.topic_title(name, names, national="jur-tw" in jids)
-        event_id = stable_id(published_ids, title, members[0]["published_on"], members[-1]["published_on"],
-                             topic_id(key, members[0]["published_on"], members[0]["url"]))
-        seed = {"event_id": event_id,
-                "seed_urls": [s["url"] for s in seeds], "jurisdiction_ids": jids, "jurisdiction_names": names,
-                "gov_levels": _levels(jids), "controversy_types": _classify(titles, CTYPES, "governance_procedure"),
-                "policy_domains": _classify(titles, DOMAINS, "interior"), "actors": [(a, "other") for a in actors[:6]],
-                "sensitive": False, "_keys": [key],
-                "_name": name, "_generic": False}
-        urls = {m["url"] for m in members}
-        if any(len(urls & other) >= MERGE_OVERLAP * min(len(urls), len(other)) for other in published_sets):
-            stats["skipped_duplicate_topic"] += 1
-            keep(urls)
-            continue
-        ev = tp.build_event(seed, corpus, df, items=members)
-        used = list(ev["used"].values())
-        if not meets_source_rule(used):
-            stats["rejected_source_rule"] += 1
-            fail("rejected_source_rule", urls)
-            continue
-        if not meets_news_rule(used):
-            stats["rejected_news_rule"] += 1
-            fail("rejected_news_rule", urls)
-            continue
-        ev["review"]["sensitive"] = "misconduct" in seed["controversy_types"] or has_sensitive_term(
-            [it["title"] for it in used])
-        ensure_actor_files(root, [a for a, _ in ev["actors"]])
-        prior = prior_event(root, ev["id"])
-        tp.write_event(ev, seed, root, {}, actors_by_host=tp.HOSTS, overwrite_sources=False)
-        republished = republish_topic(root, ev["id"], prior, today or date.today().isoformat())
-        if republished:
-            stats["republished"] += 1
-        published.append({"id": ev["id"], "title": ev["title"], "sources": len(used), "key": key})
-        published_sets.append(urls)
-        out_seeds.append({k: v for k, v in seed.items() if not k.startswith("_")})
+        groups = split_cases(members)  # R112.3
+        all_seeds = seeds
+        for members in groups:
+            titles = [m["title"] for m in members]
+            seeds = all_seeds if len(groups) == 1 else ([s for s in all_seeds if s["url"] in {m["url"] for m in members}] or members[:1])
+            if not name_quality_ok(key, titles, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members), df):
+                stats["rejected_name_quality"] += 1
+                fail("rejected_name_quality", [m["url"] for m in members])
+                continue
+            if not taiwan_relevant(titles) and names_foreign(titles):  # R112.5: no foreign name, no foreign label
+                stats["rejected_foreign"] += 1
+                fail("rejected_foreign", [m["url"] for m in members])
+                continue
+            if any((k in key or key in k) and s_lo <= hi and lo <= s_hi for k, s_lo, s_hi in existing_keys) or any(
+                    s_lo <= hi and lo <= s_hi and sum(1 for t in titles if k in t) >= SAME_EVENT_SHARE * len(titles)
+                    for k, s_lo, s_hi in existing_keys):
+                stats["skipped_existing_event"] += 1
+                keep([m["url"] for m in members])
+                continue
+            reason = exclusion_reason(members)
+            if reason:
+                stats["rejected_" + reason] += 1
+                fail("rejected_" + reason, [m["url"] for m in members])
+                continue
+            jids = detect_jurisdictions(titles)
+            actors = detect_gov_actors(titles, jids)
+            for m in members:
+                host = (m["url"].split("/")[2] if "//" in m["url"] else "")
+                if m.get("source_class") == "official_statement" and host in tp.HOSTS and tp.HOSTS[host][1] not in actors:
+                    actors.append(tp.HOSTS[host][1])
+            if not actors:
+                stats["rejected_no_gov_actor"] += 1
+                fail("rejected_no_gov_actor", [m["url"] for m in members])
+                continue
+            local = [j for j in jids if j != "jur-tw"]
+            names = [next(n for jid, _, n, _ in JURS if jid == j)[:-2] for j in local]
+            name = tp.display_name(key, [s["title"] for s in seeds])
+            if not noun_phrase_name(name) or generic_name(name):
+                stats["rejected_name_quality"] += 1
+                fail("rejected_name_quality", [m["url"] for m in members])
+                continue
+            title = tp.topic_title(name, names, national="jur-tw" in jids)
+            event_id = stable_id(published_ids, title, members[0]["published_on"], members[-1]["published_on"],
+                                 topic_id(key, members[0]["published_on"], members[0]["url"]))
+            seed = {"event_id": event_id,
+                    "seed_urls": [s["url"] for s in seeds], "jurisdiction_ids": jids, "jurisdiction_names": names,
+                    "gov_levels": _levels(jids), "controversy_types": _classify(titles, CTYPES, "governance_procedure"),
+                    "policy_domains": _classify(titles, DOMAINS, "interior"), "actors": [(a, "other") for a in actors[:6]],
+                    "sensitive": False, "_keys": [key],
+                    "_name": name, "_generic": False}
+            urls = {m["url"] for m in members}
+            if any(len(urls & other) >= MERGE_OVERLAP * min(len(urls), len(other)) for other in published_sets):
+                stats["skipped_duplicate_topic"] += 1
+                keep(urls)
+                continue
+            ev = tp.build_event(seed, corpus, df, items=members)
+            used = list(ev["used"].values())
+            if not meets_source_rule(used):
+                stats["rejected_source_rule"] += 1
+                fail("rejected_source_rule", urls)
+                continue
+            if not meets_news_rule(used):
+                stats["rejected_news_rule"] += 1
+                fail("rejected_news_rule", urls)
+                continue
+            ev["review"]["sensitive"] = "misconduct" in seed["controversy_types"] or has_sensitive_term(
+                [it["title"] for it in used])
+            ensure_actor_files(root, [a for a, _ in ev["actors"]])
+            prior = prior_event(root, ev["id"])
+            tp.write_event(ev, seed, root, {}, actors_by_host=tp.HOSTS, overwrite_sources=False)
+            republished = republish_topic(root, ev["id"], prior, today or date.today().isoformat())
+            if republished:
+                stats["republished"] += 1
+            published.append({"id": ev["id"], "title": ev["title"], "sources": len(used), "key": key})
+            published_sets.append(urls)
+            out_seeds.append({k: v for k, v in seed.items() if not k.startswith("_")})
     stats["published"] = len(published)
     covered.update(p["id"] for p in published)
     failing = {pid: gate for pid, gate in failed.items() if pid not in covered}
