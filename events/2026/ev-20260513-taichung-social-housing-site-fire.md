@@ -3,8 +3,8 @@ schema_version: 1
 id: ev-20260513-taichung-social-housing-site-fire
 kind: controversy
 status: published
-title: 臺中北屯社宅工地火警與空污裁罰
-summary: 自由時報報導，臺中社宅工地火警悶燒逾 8 小時，環保局發布空污警示[@src-20260513-ltn-51bf8913]。臺中市政府表示將開罰最高 500 萬元[@src-20260514-ltn-b5427858]，內政部長回應裁罰[@src-20260516-ltn-95fd8121]。
+title: 臺中市社宅工地
+summary: 2026-05-13至2026-05-16，自由時報共 9 則報導提及社宅工地 [@src-20260513-ltn-aa193479]。
 start_date: '2026-05-13'
 start_date_precision: day
 gov_levels:
@@ -24,7 +24,7 @@ actors:
   role: affected_party
 questions:
 - id: q-01
-  text: 臺中市政府對社宅工地火警空污的應變與裁罰是否適當？
+  text: 社宅工地的經過與各方說明為何？
 positions:
 - id: pos-01
   question_id: q-01
@@ -34,22 +34,32 @@ timeline:
 - id: tl-01
   date: '2026-05-13'
   date_precision: day
-  title: 社宅工地火警悶燒，環保局發布空污警示
+  title: 2 則報導
   lifecycle_stage: emergence
   source_ids:
+  - src-20260513-ltn-aa193479
   - src-20260513-ltn-51bf8913
 - id: tl-02
   date: '2026-05-14'
   date_precision: day
-  title: 臺中市政府表示將開罰最高 500 萬元
-  attributed_to: ac-taichung-city-government
-  lifecycle_stage: decision
+  title: 4 則報導
+  lifecycle_stage: escalation
   source_ids:
+  - src-20260514-ltn-88268032
+  - src-20260514-ltn-7eccd017
   - src-20260514-ltn-b5427858
 - id: tl-03
+  date: '2026-05-15'
+  date_precision: day
+  title: 2 則報導
+  lifecycle_stage: escalation
+  source_ids:
+  - src-20260515-ltn-72595a27
+  - src-20260515-ltn-d5fe8315
+- id: tl-04
   date: '2026-05-16'
   date_precision: day
-  title: 內政部長回應裁罰
+  title: 1 則回應或澄清
   lifecycle_stage: institutional_response
   source_ids:
   - src-20260516-ltn-95fd8121
@@ -57,54 +67,98 @@ news_groups:
 - id: ng-01
   timeline_id: tl-01
   kind: report
+  title: 台中社宅工地火警悶燒逾10小時  網怒：北屯、西屯都聞到焦味
+  representative_source_id: src-20260513-ltn-aa193479
+  source_ids:
+  - src-20260513-ltn-aa193479
+- id: ng-02
+  timeline_id: tl-01
+  kind: report
   title: 台中社宅工地火警悶燒逾8小時  環保局發空污警示
   representative_source_id: src-20260513-ltn-51bf8913
   source_ids:
   - src-20260513-ltn-51bf8913
-  - src-20260513-ltn-aa193479
-- id: ng-02
+- id: ng-03
+  timeline_id: tl-02
+  kind: report
+  title: 狂燒逾14小時！台中社宅工地大火 地下支撐柱變形、車道崩塌
+  representative_source_id: src-20260514-ltn-88268032
+  source_ids:
+  - src-20260514-ltn-88268032
+- id: ng-04
+  timeline_id: tl-02
+  kind: report
+  title: 台中社宅工地惡火狂燒14小時！ 地下恐怖高溫破千度 排煙注水警戒畫面曝
+  representative_source_id: src-20260514-ltn-7eccd017
+  source_ids:
+  - src-20260514-ltn-7eccd017
+- id: ng-05
   timeline_id: tl-02
   kind: report
   title: 社宅工地大火燒14小時嚴重影響空氣品質 台中將開罰最高500萬元
   representative_source_id: src-20260514-ltn-b5427858
   source_ids:
   - src-20260514-ltn-b5427858
+- id: ng-06
+  timeline_id: tl-02
+  kind: report
+  title: 社宅工地上午大火 台中市府下午才空污警報
+  representative_source_id: src-20260514-ltn-586f0281
+  source_ids:
   - src-20260514-ltn-586f0281
-  - src-20260514-ltn-88268032
-  - src-20260514-ltn-7eccd017
-  - src-20260515-ltn-d5fe8315
-  - src-20260515-ltn-72595a27
-- id: ng-03
+- id: ng-07
   timeline_id: tl-03
   kind: report
+  title: 台中社宅工地悶燒14小時撲滅  附近烤鴨店再傳火警
+  representative_source_id: src-20260515-ltn-72595a27
+  source_ids:
+  - src-20260515-ltn-72595a27
+- id: ng-08
+  timeline_id: tl-03
+  kind: report
+  title: 台中北屯社宅工地火警空污 重罰500萬
+  representative_source_id: src-20260515-ltn-d5fe8315
+  source_ids:
+  - src-20260515-ltn-d5fe8315
+- id: ng-09
+  timeline_id: tl-04
+  kind: clarification
   title: 台中社宅工地火警悶燒14小時挨罰500萬 劉世芳回應了
   representative_source_id: src-20260516-ltn-95fd8121
   source_ids:
   - src-20260516-ltn-95fd8121
+  note: 報導中的回應或澄清
 privacy:
   contains_private_persons: false
   basis_source_ids: []
 review:
   sensitive: false
-  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。'
+  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'
+  status: draft-review
 ---
 
-## 2026-05-13　社宅工地火警悶燒，環保局發布空污警示
-
-自由時報以「台中社宅工地火警悶燒逾8小時  環保局發空污警示」為題報導 [@src-20260513-ltn-51bf8913]。
+## 2026-05-13　2 則報導
 
 自由時報以「台中社宅工地火警悶燒逾10小時  網怒：北屯、西屯都聞到焦味」為題報導 [@src-20260513-ltn-aa193479]。
 
-## 2026-05-14　臺中市政府表示將開罰最高 500 萬元
+自由時報以「台中社宅工地火警悶燒逾8小時  環保局發空污警示」為題報導 [@src-20260513-ltn-51bf8913]。
 
-自由時報以「社宅工地大火燒14小時嚴重影響空氣品質 台中將開罰最高500萬元」為題報導 [@src-20260514-ltn-b5427858]。
-
-自由時報以「社宅工地上午大火 台中市府下午才空污警報」為題報導 [@src-20260514-ltn-586f0281]。
+## 2026-05-14　4 則報導
 
 自由時報以「狂燒逾14小時！台中社宅工地大火 地下支撐柱變形、車道崩塌」為題報導 [@src-20260514-ltn-88268032]。
 
 自由時報以「台中社宅工地惡火狂燒14小時！ 地下恐怖高溫破千度 排煙注水警戒畫面曝」為題報導 [@src-20260514-ltn-7eccd017]。
 
-## 2026-05-16　內政部長回應裁罰
+自由時報以「社宅工地大火燒14小時嚴重影響空氣品質 台中將開罰最高500萬元」為題報導 [@src-20260514-ltn-b5427858]。
+
+自由時報以「社宅工地上午大火 台中市府下午才空污警報」為題報導 [@src-20260514-ltn-586f0281]。
+
+## 2026-05-15　2 則報導
+
+自由時報以「台中社宅工地悶燒14小時撲滅  附近烤鴨店再傳火警」為題報導 [@src-20260515-ltn-72595a27]。
+
+自由時報以「台中北屯社宅工地火警空污 重罰500萬」為題報導 [@src-20260515-ltn-d5fe8315]。
+
+## 2026-05-16　1 則回應或澄清
 
 自由時報以「台中社宅工地火警悶燒14小時挨罰500萬 劉世芳回應了」為題報導 [@src-20260516-ltn-95fd8121]。

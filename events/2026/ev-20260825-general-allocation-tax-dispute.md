@@ -3,8 +3,8 @@ schema_version: 1
 id: ev-20260825-general-allocation-tax-dispute
 kind: controversy
 status: published
-title: 中央統籌分配款分配引發地方質疑
-summary: 自由時報報導，新北市長表示明年新北人均統籌分配款最低[@src-20260825-ltn-33bf8ae7]，基隆市長表示基隆兩年減少 140 億元[@src-20260826-ltn-4b76df29]。
+title: 統籌分配款
+summary: 2026-08-25至2026-08-26，自由時報共 4 則報導提及統籌分配款 [@src-20260825-ltn-33bf8ae7]。
 start_date: '2026-08-25'
 start_date_precision: day
 gov_levels:
@@ -29,7 +29,7 @@ actors:
   role: affected_party
 questions:
 - id: q-01
-  text: 中央統籌分配款的分配方式是否公平？
+  text: 統籌分配款的經過與各方說明為何？
 positions:
 - id: pos-01
   question_id: q-01
@@ -39,14 +39,15 @@ timeline:
 - id: tl-01
   date: '2026-08-25'
   date_precision: day
-  title: 新北市長表示人均統籌分配款最低
+  title: 2 則報導
   lifecycle_stage: emergence
   source_ids:
   - src-20260825-ltn-33bf8ae7
+  - src-20260825-ltn-788114ac
 - id: tl-02
   date: '2026-08-26'
   date_precision: day
-  title: 基隆市長表示兩年減少 140 億元
+  title: 2 則報導
   lifecycle_stage: escalation
   source_ids:
   - src-20260826-ltn-4b76df29
@@ -58,8 +59,14 @@ news_groups:
   representative_source_id: src-20260825-ltn-33bf8ae7
   source_ids:
   - src-20260825-ltn-33bf8ae7
-  - src-20260825-ltn-788114ac
 - id: ng-02
+  timeline_id: tl-01
+  kind: report
+  title: 統籌分配款北市人均配額是新北兩倍  蘇巧慧：極度不公平
+  representative_source_id: src-20260825-ltn-788114ac
+  source_ids:
+  - src-20260825-ltn-788114ac
+- id: ng-03
   timeline_id: tl-02
   kind: report
   title: 2年少140億！統籌分配款基隆歲入大減  謝國樑：不公平
@@ -72,17 +79,16 @@ privacy:
   basis_source_ids: []
 review:
   sensitive: false
-  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。'
+  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'
+  status: draft-review
 ---
 
-## 2026-08-25　新北市長表示人均統籌分配款最低
+## 2026-08-25　2 則報導
 
 自由時報以「明年統籌分配款新北人均最低 侯友宜：中央真的要好好支援地方」為題報導 [@src-20260825-ltn-33bf8ae7]。
 
 自由時報以「統籌分配款北市人均配額是新北兩倍  蘇巧慧：極度不公平」為題報導 [@src-20260825-ltn-788114ac]。
 
-## 2026-08-26　基隆市長表示兩年減少 140 億元
+## 2026-08-26　2 則報導
 
 自由時報以「2年少140億！統籌分配款基隆歲入大減  謝國樑：不公平」為題報導 [@src-20260826-ltn-4b76df29]。
-
-自由時報以「基隆統籌分配款2年少140億 童子瑋：謝國樑應道歉」為題報導 [@src-20260827-ltn-10eecb52]。

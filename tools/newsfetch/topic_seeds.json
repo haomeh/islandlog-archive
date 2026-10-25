@@ -1,0 +1,1201 @@
+[
+ {
+  "event_id": "ev-20260424-mingjian-incinerator-eia",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5414600",
+   "https://news.ltn.com.tw/news/life/breakingnews/5414983",
+   "https://news.ltn.com.tw/news/life/breakingnews/5416984",
+   "https://news.ltn.com.tw/news/life/breakingnews/5417988",
+   "https://news.ltn.com.tw/news/life/breakingnews/5418367",
+   "https://news.ltn.com.tw/news/life/breakingnews/5418461",
+   "https://news.ltn.com.tw/news/life/breakingnews/5428537",
+   "https://news.ltn.com.tw/news/life/breakingnews/5428977",
+   "https://news.ltn.com.tw/news/life/breakingnews/5430110",
+   "https://news.ltn.com.tw/news/life/breakingnews/5435477",
+   "https://news.ltn.com.tw/news/life/breakingnews/5451241",
+   "https://news.ltn.com.tw/news/life/breakingnews/5452250",
+   "https://news.ltn.com.tw/news/life/breakingnews/5473565",
+   "https://news.ltn.com.tw/news/life/breakingnews/5537600",
+   "https://news.ltn.com.tw/news/life/breakingnews/5538218",
+   "https://news.ltn.com.tw/news/life/breakingnews/5554023",
+   "https://news.ltn.com.tw/news/life/paper/1752300",
+   "https://news.ltn.com.tw/news/life/paper/1752715",
+   "https://news.ltn.com.tw/news/life/paper/1752874",
+   "https://news.ltn.com.tw/news/life/paper/1754095",
+   "https://news.ltn.com.tw/news/life/paper/1754597",
+   "https://news.ltn.com.tw/news/life/paper/1754752",
+   "https://news.ltn.com.tw/news/life/paper/1756725",
+   "https://news.ltn.com.tw/news/life/paper/1759148",
+   "https://news.ltn.com.tw/news/life/paper/1765175",
+   "https://news.ltn.com.tw/news/life/paper/1766459",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5526169",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5537478",
+   "https://news.ltn.com.tw/news/society/breakingnews/5497235"
+  ],
+  "jurisdiction_ids": [
+   "jur-10008000"
+  ],
+  "jurisdiction_names": [
+   "南投縣"
+  ],
+  "gov_levels": [
+   "county_city"
+  ],
+  "controversy_types": [
+   "environment"
+  ],
+  "policy_domains": [
+   "environment"
+  ],
+  "actors": [
+   [
+    "ac-nantou-county-government",
+    "proposer"
+   ],
+   [
+    "ac-mingjian-incinerator-self-help",
+    "opponent"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260427-kaohsiung-potato-poisoning-rumor",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5417424",
+   "https://news.ltn.com.tw/news/life/breakingnews/5417527",
+   "https://news.ltn.com.tw/news/life/breakingnews/5418050",
+   "https://news.ltn.com.tw/news/society/breakingnews/5417717",
+   "https://news.ltn.com.tw/news/society/breakingnews/5418608",
+   "https://news.ltn.com.tw/news/society/paper/1752840",
+   "https://www.mygopen.com/2026/04/potato-Kaohsiung.html"
+  ],
+  "jurisdiction_ids": [
+   "jur-64000000",
+   "jur-tw"
+  ],
+  "jurisdiction_names": [
+   "高雄市"
+  ],
+  "gov_levels": [
+   "central",
+   "special_municipality"
+  ],
+  "controversy_types": [
+   "information"
+  ],
+  "policy_domains": [
+   "health_welfare"
+  ],
+  "actors": [
+   [
+    "ac-ministry-of-health-and-welfare",
+    "other"
+   ],
+   [
+    "ac-kaohsiung-city-government",
+    "other"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260504-danjiang-bridge-opening",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5428920",
+   "https://news.ltn.com.tw/news/life/breakingnews/5433043",
+   "https://news.ltn.com.tw/news/life/breakingnews/5433106",
+   "https://news.ltn.com.tw/news/life/breakingnews/5433551",
+   "https://news.ltn.com.tw/news/life/breakingnews/5433955",
+   "https://news.ltn.com.tw/news/life/breakingnews/5433991",
+   "https://news.ltn.com.tw/news/life/breakingnews/5434504",
+   "https://news.ltn.com.tw/news/life/breakingnews/5434584",
+   "https://news.ltn.com.tw/news/life/breakingnews/5434802",
+   "https://news.ltn.com.tw/news/life/breakingnews/5434893",
+   "https://news.ltn.com.tw/news/life/breakingnews/5435184",
+   "https://news.ltn.com.tw/news/life/breakingnews/5435610",
+   "https://news.ltn.com.tw/news/life/breakingnews/5435717",
+   "https://news.ltn.com.tw/news/life/breakingnews/5436411",
+   "https://news.ltn.com.tw/news/life/paper/1753500",
+   "https://news.ltn.com.tw/news/life/paper/1754439",
+   "https://news.ltn.com.tw/news/life/paper/1754561",
+   "https://news.ltn.com.tw/news/life/paper/1754660",
+   "https://news.ltn.com.tw/news/life/paper/1754713",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5424818",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5433592",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5433777",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5435237",
+   "https://news.ltn.com.tw/news/society/breakingnews/5435665"
+  ],
+  "jurisdiction_ids": [
+   "jur-65000000"
+  ],
+  "jurisdiction_names": [
+   "新北市"
+  ],
+  "gov_levels": [
+   "central",
+   "special_municipality",
+   "cross_level"
+  ],
+  "controversy_types": [
+   "public_works"
+  ],
+  "policy_domains": [
+   "transport"
+  ],
+  "actors": [
+   [
+    "ac-highway-bureau",
+    "decision_maker"
+   ],
+   [
+    "ac-new-taipei-city-government",
+    "affected_party"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260505-changhua-fangyuan-crematorium",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5425615",
+   "https://news.ltn.com.tw/news/life/breakingnews/5426249",
+   "https://news.ltn.com.tw/news/life/breakingnews/5426368",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519685",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519913",
+   "https://news.ltn.com.tw/news/life/breakingnews/5520125",
+   "https://news.ltn.com.tw/news/life/paper/1753767",
+   "https://news.ltn.com.tw/news/life/paper/1764540"
+  ],
+  "jurisdiction_ids": [
+   "jur-10007000"
+  ],
+  "jurisdiction_names": [
+   "彰化縣"
+  ],
+  "gov_levels": [
+   "county_city"
+  ],
+  "controversy_types": [
+   "land_development",
+   "environment"
+  ],
+  "policy_domains": [
+   "interior"
+  ],
+  "actors": [
+   [
+    "ac-changhua-county-government",
+    "proposer"
+   ],
+   [
+    "ac-fangyuan-crematorium-self-help",
+    "opponent"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260511-escape-room-safety",
+  "seed_urls": [
+   "https://ec.ltn.com.tw/article/breakingnews/5447074",
+   "https://news.ltn.com.tw/news/life/breakingnews/5437917",
+   "https://news.ltn.com.tw/news/life/breakingnews/5438415",
+   "https://news.ltn.com.tw/news/life/breakingnews/5444402",
+   "https://news.ltn.com.tw/news/life/breakingnews/5444531",
+   "https://news.ltn.com.tw/news/life/breakingnews/5444583",
+   "https://news.ltn.com.tw/news/life/breakingnews/5444653",
+   "https://news.ltn.com.tw/news/life/breakingnews/5445002",
+   "https://news.ltn.com.tw/news/life/breakingnews/5445886",
+   "https://news.ltn.com.tw/news/life/breakingnews/5445937",
+   "https://news.ltn.com.tw/news/life/breakingnews/5446799",
+   "https://news.ltn.com.tw/news/life/breakingnews/5481672",
+   "https://news.ltn.com.tw/news/life/paper/1755924",
+   "https://news.ltn.com.tw/news/life/paper/1759168",
+   "https://news.ltn.com.tw/news/life/paper/1760560",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5446442",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5446727",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5446780",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5446831",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5446867",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5446998",
+   "https://news.ltn.com.tw/news/society/breakingnews/5432628",
+   "https://news.ltn.com.tw/news/society/breakingnews/5432750",
+   "https://news.ltn.com.tw/news/society/breakingnews/5433017",
+   "https://news.ltn.com.tw/news/society/breakingnews/5433057",
+   "https://news.ltn.com.tw/news/society/breakingnews/5437802",
+   "https://news.ltn.com.tw/news/society/breakingnews/5444499",
+   "https://news.ltn.com.tw/news/society/breakingnews/5486226",
+   "https://news.ltn.com.tw/news/society/paper/1754475"
+  ],
+  "jurisdiction_ids": [
+   "jur-63000000",
+   "jur-66000000",
+   "jur-tw"
+  ],
+  "jurisdiction_names": [
+   "臺北市",
+   "臺中市"
+  ],
+  "gov_levels": [
+   "special_municipality",
+   "central",
+   "cross_level"
+  ],
+  "controversy_types": [
+   "public_safety"
+  ],
+  "policy_domains": [
+   "interior"
+  ],
+  "actors": [
+   [
+    "ac-taipei-city-government",
+    "decision_maker"
+   ],
+   [
+    "ac-taichung-city-government",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": true
+ },
+ {
+  "event_id": "ev-20260513-taichung-social-housing-site-fire",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5436068",
+   "https://news.ltn.com.tw/news/life/paper/1754750",
+   "https://news.ltn.com.tw/news/life/paper/1754908",
+   "https://news.ltn.com.tw/news/society/breakingnews/5435870",
+   "https://news.ltn.com.tw/news/society/breakingnews/5436372",
+   "https://news.ltn.com.tw/news/society/breakingnews/5436665",
+   "https://news.ltn.com.tw/news/society/breakingnews/5437258",
+   "https://news.ltn.com.tw/news/society/breakingnews/5438467",
+   "https://news.ltn.com.tw/news/society/breakingnews/5439181"
+  ],
+  "jurisdiction_ids": [
+   "jur-66000000"
+  ],
+  "jurisdiction_names": [
+   "臺中市"
+  ],
+  "gov_levels": [
+   "special_municipality",
+   "central"
+  ],
+  "controversy_types": [
+   "public_safety",
+   "environment"
+  ],
+  "policy_domains": [
+   "environment"
+  ],
+  "actors": [
+   [
+    "ac-taichung-city-government",
+    "decision_maker"
+   ],
+   [
+    "ac-ministry-of-the-interior",
+    "affected_party"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260618-taichung-costco-fine-appeal",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5476126",
+   "https://news.ltn.com.tw/news/life/paper/1759386",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5476175",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5477027"
+  ],
+  "jurisdiction_ids": [
+   "jur-66000000"
+  ],
+  "jurisdiction_names": [
+   "臺中市"
+  ],
+  "gov_levels": [
+   "special_municipality"
+  ],
+  "controversy_types": [
+   "governance_procedure"
+  ],
+  "policy_domains": [
+   "health_welfare"
+  ],
+  "actors": [
+   [
+    "ac-taichung-city-government",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260622-wanli-river-barrier-lake",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5479864",
+   "https://news.ltn.com.tw/news/life/breakingnews/5479984",
+   "https://news.ltn.com.tw/news/life/breakingnews/5480709",
+   "https://news.ltn.com.tw/news/life/breakingnews/5481037",
+   "https://news.ltn.com.tw/news/life/breakingnews/5481487",
+   "https://news.ltn.com.tw/news/life/breakingnews/5481518",
+   "https://news.ltn.com.tw/news/life/breakingnews/5482900",
+   "https://news.ltn.com.tw/news/life/breakingnews/5483277",
+   "https://news.ltn.com.tw/news/life/breakingnews/5483295",
+   "https://news.ltn.com.tw/news/life/breakingnews/5483337",
+   "https://news.ltn.com.tw/news/life/breakingnews/5483377",
+   "https://news.ltn.com.tw/news/life/breakingnews/5483510",
+   "https://news.ltn.com.tw/news/life/breakingnews/5483580",
+   "https://news.ltn.com.tw/news/life/breakingnews/5484010",
+   "https://news.ltn.com.tw/news/life/breakingnews/5484776",
+   "https://news.ltn.com.tw/news/life/breakingnews/5485613",
+   "https://news.ltn.com.tw/news/life/breakingnews/5485659",
+   "https://news.ltn.com.tw/news/life/breakingnews/5485848",
+   "https://news.ltn.com.tw/news/life/breakingnews/5485906",
+   "https://news.ltn.com.tw/news/life/breakingnews/5485912",
+   "https://news.ltn.com.tw/news/life/breakingnews/5485949",
+   "https://news.ltn.com.tw/news/life/breakingnews/5486044",
+   "https://news.ltn.com.tw/news/life/breakingnews/5506570",
+   "https://news.ltn.com.tw/news/life/breakingnews/5506989",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507478",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507784",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507969",
+   "https://news.ltn.com.tw/news/life/breakingnews/5508323",
+   "https://news.ltn.com.tw/news/life/breakingnews/5509025",
+   "https://news.ltn.com.tw/news/life/breakingnews/5509163",
+   "https://news.ltn.com.tw/news/life/breakingnews/5509368",
+   "https://news.ltn.com.tw/news/life/breakingnews/5509465",
+   "https://news.ltn.com.tw/news/life/breakingnews/5509708",
+   "https://news.ltn.com.tw/news/life/breakingnews/5511011",
+   "https://news.ltn.com.tw/news/life/breakingnews/5511037",
+   "https://news.ltn.com.tw/news/life/breakingnews/5511480",
+   "https://news.ltn.com.tw/news/life/breakingnews/5511542",
+   "https://news.ltn.com.tw/news/life/breakingnews/5512309",
+   "https://news.ltn.com.tw/news/life/breakingnews/5513044",
+   "https://news.ltn.com.tw/news/life/breakingnews/5514766",
+   "https://news.ltn.com.tw/news/life/breakingnews/5515166",
+   "https://news.ltn.com.tw/news/life/breakingnews/5516071",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517327",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517930",
+   "https://news.ltn.com.tw/news/life/breakingnews/5522517",
+   "https://news.ltn.com.tw/news/life/paper/1759864",
+   "https://news.ltn.com.tw/news/life/paper/1762734",
+   "https://news.ltn.com.tw/news/life/paper/1762982",
+   "https://news.ltn.com.tw/news/life/paper/1763642",
+   "https://news.ltn.com.tw/news/life/paper/1763886",
+   "https://news.ltn.com.tw/news/life/paper/1764766",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5506320"
+  ],
+  "jurisdiction_ids": [
+   "jur-10015000",
+   "jur-tw"
+  ],
+  "jurisdiction_names": [
+   "花蓮縣"
+  ],
+  "gov_levels": [
+   "central",
+   "county_city"
+  ],
+  "controversy_types": [
+   "public_safety"
+  ],
+  "policy_domains": [
+   "agriculture"
+  ],
+  "actors": [
+   [
+    "ac-ministry-of-agriculture",
+    "decision_maker"
+   ],
+   [
+    "ac-hualien-county-government",
+    "affected_party"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260626-formosa-fun-coast-state-compensation",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5520626",
+   "https://news.ltn.com.tw/news/society/breakingnews/5485160",
+   "https://news.ltn.com.tw/news/society/breakingnews/5485217",
+   "https://news.ltn.com.tw/news/society/breakingnews/5485307",
+   "https://news.ltn.com.tw/news/society/paper/1760392"
+  ],
+  "jurisdiction_ids": [
+   "jur-65000000",
+   "jur-tw"
+  ],
+  "jurisdiction_names": [
+   "新北市"
+  ],
+  "gov_levels": [
+   "central",
+   "special_municipality"
+  ],
+  "controversy_types": [
+   "public_safety"
+  ],
+  "policy_domains": [
+   "transport"
+  ],
+  "actors": [
+   [
+    "ac-supreme-court",
+    "decision_maker"
+   ],
+   [
+    "ac-tourism-administration",
+    "affected_party"
+   ],
+   [
+    "ac-new-taipei-city-government",
+    "affected_party"
+   ]
+  ],
+  "sensitive": true
+ },
+ {
+  "event_id": "ev-20260701-chunglien-soybean-oil-bap",
+  "seed_urls": [
+   "https://ec.ltn.com.tw/article/breakingnews/5496495",
+   "https://ec.ltn.com.tw/article/breakingnews/5501245",
+   "https://ec.ltn.com.tw/article/breakingnews/5511690",
+   "https://ec.ltn.com.tw/article/breakingnews/5519642",
+   "https://ec.ltn.com.tw/article/breakingnews/5526972",
+   "https://ec.ltn.com.tw/article/breakingnews/5526991",
+   "https://ec.ltn.com.tw/article/breakingnews/5527022",
+   "https://ec.ltn.com.tw/article/breakingnews/5530985",
+   "https://ent.ltn.com.tw/news/breakingnews/5495037",
+   "https://ent.ltn.com.tw/news/breakingnews/5500259",
+   "https://ent.ltn.com.tw/news/breakingnews/5514506",
+   "https://ent.ltn.com.tw/news/breakingnews/5514533",
+   "https://news.ltn.com.tw/news/life/breakingnews/5490726",
+   "https://news.ltn.com.tw/news/life/breakingnews/5490818",
+   "https://news.ltn.com.tw/news/life/breakingnews/5491104",
+   "https://news.ltn.com.tw/news/life/breakingnews/5491145",
+   "https://news.ltn.com.tw/news/life/breakingnews/5491213",
+   "https://news.ltn.com.tw/news/life/breakingnews/5491317",
+   "https://news.ltn.com.tw/news/life/breakingnews/5491452",
+   "https://news.ltn.com.tw/news/life/breakingnews/5495063",
+   "https://news.ltn.com.tw/news/life/breakingnews/5495143",
+   "https://news.ltn.com.tw/news/life/breakingnews/5495165",
+   "https://news.ltn.com.tw/news/life/breakingnews/5495204",
+   "https://news.ltn.com.tw/news/life/breakingnews/5495243",
+   "https://news.ltn.com.tw/news/life/breakingnews/5495319",
+   "https://news.ltn.com.tw/news/life/breakingnews/5496039",
+   "https://news.ltn.com.tw/news/life/breakingnews/5496313",
+   "https://news.ltn.com.tw/news/life/breakingnews/5496371",
+   "https://news.ltn.com.tw/news/life/breakingnews/5496436",
+   "https://news.ltn.com.tw/news/life/breakingnews/5496487",
+   "https://news.ltn.com.tw/news/life/breakingnews/5496787",
+   "https://news.ltn.com.tw/news/life/breakingnews/5499005",
+   "https://news.ltn.com.tw/news/life/breakingnews/5499120",
+   "https://news.ltn.com.tw/news/life/breakingnews/5499204",
+   "https://news.ltn.com.tw/news/life/breakingnews/5499240",
+   "https://news.ltn.com.tw/news/life/breakingnews/5499261",
+   "https://news.ltn.com.tw/news/life/breakingnews/5499298",
+   "https://news.ltn.com.tw/news/life/breakingnews/5499936",
+   "https://news.ltn.com.tw/news/life/breakingnews/5499979",
+   "https://news.ltn.com.tw/news/life/breakingnews/5500531",
+   "https://news.ltn.com.tw/news/life/breakingnews/5500544",
+   "https://news.ltn.com.tw/news/life/breakingnews/5500762",
+   "https://news.ltn.com.tw/news/life/breakingnews/5500894",
+   "https://news.ltn.com.tw/news/life/breakingnews/5503403",
+   "https://news.ltn.com.tw/news/life/breakingnews/5506788",
+   "https://news.ltn.com.tw/news/life/breakingnews/5506976",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507037",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507193",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507310",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507408",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507516",
+   "https://news.ltn.com.tw/news/life/breakingnews/5507570",
+   "https://news.ltn.com.tw/news/life/breakingnews/5510890",
+   "https://news.ltn.com.tw/news/life/breakingnews/5511053",
+   "https://news.ltn.com.tw/news/life/breakingnews/5511204",
+   "https://news.ltn.com.tw/news/life/breakingnews/5511383",
+   "https://news.ltn.com.tw/news/life/breakingnews/5514636",
+   "https://news.ltn.com.tw/news/life/breakingnews/5514671",
+   "https://news.ltn.com.tw/news/life/breakingnews/5514848",
+   "https://news.ltn.com.tw/news/life/breakingnews/5514851",
+   "https://news.ltn.com.tw/news/life/breakingnews/5514983",
+   "https://news.ltn.com.tw/news/life/breakingnews/5515110",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517128",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517224",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517591",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517614",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517671",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517675",
+   "https://news.ltn.com.tw/news/life/breakingnews/5517687",
+   "https://news.ltn.com.tw/news/life/breakingnews/5518702",
+   "https://news.ltn.com.tw/news/life/breakingnews/5518948",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519120",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519124",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519229",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519332",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519388",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519532",
+   "https://news.ltn.com.tw/news/life/breakingnews/5520577",
+   "https://news.ltn.com.tw/news/life/breakingnews/5523220",
+   "https://news.ltn.com.tw/news/life/breakingnews/5527046",
+   "https://news.ltn.com.tw/news/life/breakingnews/5527264",
+   "https://news.ltn.com.tw/news/life/breakingnews/5527306",
+   "https://news.ltn.com.tw/news/life/breakingnews/5527421",
+   "https://news.ltn.com.tw/news/life/breakingnews/5530422",
+   "https://news.ltn.com.tw/news/life/breakingnews/5530500",
+   "https://news.ltn.com.tw/news/life/breakingnews/5530686",
+   "https://news.ltn.com.tw/news/life/breakingnews/5530731",
+   "https://news.ltn.com.tw/news/life/breakingnews/5530750",
+   "https://news.ltn.com.tw/news/life/breakingnews/5530825",
+   "https://news.ltn.com.tw/news/life/breakingnews/5531175",
+   "https://news.ltn.com.tw/news/life/paper/1763292",
+   "https://news.ltn.com.tw/news/life/paper/1763946",
+   "https://news.ltn.com.tw/news/life/paper/1765134",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5509637",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5511667",
+   "https://news.ltn.com.tw/news/politics/paper/1762915",
+   "https://tfc-taiwan.org.tw/central_union_oil_incident/",
+   "https://tfc-taiwan.org.tw/chung-lien-oil-inspection-counts-taichung-food-safety-inspection-explained/",
+   "https://www.mygopen.com/2026/07/Soybean-Oil.html",
+   "https://www.mygopen.com/2026/07/soy.html"
+  ],
+  "jurisdiction_ids": [
+   "jur-tw",
+   "jur-66000000"
+  ],
+  "jurisdiction_names": [
+   "臺中市"
+  ],
+  "gov_levels": [
+   "central",
+   "special_municipality",
+   "cross_level"
+  ],
+  "controversy_types": [
+   "public_safety"
+  ],
+  "policy_domains": [
+   "health_welfare"
+  ],
+  "actors": [
+   [
+    "ac-ministry-of-health-and-welfare",
+    "decision_maker"
+   ],
+   [
+    "ac-taiwan-fda",
+    "decision_maker"
+   ],
+   [
+    "ac-executive-yuan",
+    "decision_maker"
+   ],
+   [
+    "ac-taichung-city-government",
+    "decision_maker"
+   ],
+   [
+    "ac-chung-lien-oil",
+    "other"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260712-hengchun-ghost-festival-hiring-scam",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/paper/1762450",
+   "https://news.ltn.com.tw/news/society/breakingnews/5502383"
+  ],
+  "jurisdiction_ids": [
+   "jur-10013000"
+  ],
+  "jurisdiction_names": [
+   "屏東縣"
+  ],
+  "gov_levels": [
+   "township"
+  ],
+  "controversy_types": [
+   "information"
+  ],
+  "policy_domains": [
+   "interior"
+  ],
+  "actors": [
+   [
+    "ac-hengchun-township-office",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260715-china-branded-attendance-devices",
+  "seed_urls": [
+   "https://ec.ltn.com.tw/article/breakingnews/5506405",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5505837",
+   "https://news.ltn.com.tw/news/society/breakingnews/5506528",
+   "https://news.ltn.com.tw/news/society/paper/1762861"
+  ],
+  "jurisdiction_ids": [
+   "jur-tw"
+  ],
+  "jurisdiction_names": [],
+  "gov_levels": [
+   "central"
+  ],
+  "controversy_types": [
+   "cross_strait_foreign",
+   "information"
+  ],
+  "policy_domains": [
+   "interior"
+  ],
+  "actors": [
+   [
+    "ac-coast-guard-administration",
+    "decision_maker"
+   ],
+   [
+    "ac-customs-administration",
+    "decision_maker"
+   ],
+   [
+    "ac-national-police-agency",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260721-hsinchu-rice-noodle-formaldehyde",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5512698",
+   "https://news.ltn.com.tw/news/life/breakingnews/5513335",
+   "https://news.ltn.com.tw/news/life/breakingnews/5513384",
+   "https://news.ltn.com.tw/news/life/breakingnews/5513598",
+   "https://news.ltn.com.tw/news/life/breakingnews/5513983",
+   "https://news.ltn.com.tw/news/life/breakingnews/5514043",
+   "https://news.ltn.com.tw/news/life/breakingnews/5514303",
+   "https://news.ltn.com.tw/news/life/breakingnews/5519501",
+   "https://news.ltn.com.tw/news/life/breakingnews/5522254",
+   "https://news.ltn.com.tw/news/life/breakingnews/5522498",
+   "https://news.ltn.com.tw/news/life/breakingnews/5522850",
+   "https://news.ltn.com.tw/news/life/breakingnews/5524520",
+   "https://news.ltn.com.tw/news/life/breakingnews/5533481",
+   "https://news.ltn.com.tw/news/life/breakingnews/5539994",
+   "https://news.ltn.com.tw/news/life/breakingnews/5541247",
+   "https://news.ltn.com.tw/news/life/paper/1763430",
+   "https://news.ltn.com.tw/news/life/paper/1763614",
+   "https://news.ltn.com.tw/news/life/paper/1764416",
+   "https://news.ltn.com.tw/news/life/paper/1764748",
+   "https://news.ltn.com.tw/news/life/paper/1764749",
+   "https://news.ltn.com.tw/news/life/paper/1765589",
+   "https://news.ltn.com.tw/news/life/paper/1766081",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5511960",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5512341",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5512380",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5512382",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5514217",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5519098",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5519110",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5521386",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5522467",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5522942",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5523877",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5529012",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5529057",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5531798"
+  ],
+  "jurisdiction_ids": [
+   "jur-10018000"
+  ],
+  "jurisdiction_names": [
+   "新竹市"
+  ],
+  "gov_levels": [
+   "county_city"
+  ],
+  "controversy_types": [
+   "public_safety"
+  ],
+  "policy_domains": [
+   "health_welfare"
+  ],
+  "actors": [
+   [
+    "ac-hsinchu-city-government",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260729-moi-petition-dissolve-cupp",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5578678",
+   "https://news.ltn.com.tw/news/life/paper/1773062",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5522833",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5523167",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5523296",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5523437",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5523460",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5523474",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5523489",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5529648",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5531893",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5577778",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5577779",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5578302",
+   "https://news.ltn.com.tw/news/politics/paper/1764796",
+   "https://news.ltn.com.tw/news/politics/paper/1771133",
+   "https://news.ltn.com.tw/news/society/breakingnews/5529559",
+   "https://news.ltn.com.tw/news/society/breakingnews/5593579",
+   "https://news.ltn.com.tw/news/society/paper/1772187"
+  ],
+  "jurisdiction_ids": [
+   "jur-tw"
+  ],
+  "jurisdiction_names": [],
+  "gov_levels": [
+   "central"
+  ],
+  "controversy_types": [
+   "rights_liberties",
+   "cross_strait_foreign"
+  ],
+  "policy_domains": [
+   "interior"
+  ],
+  "actors": [
+   [
+    "ac-ministry-of-the-interior",
+    "proposer"
+   ],
+   [
+    "ac-constitutional-court",
+    "decision_maker"
+   ],
+   [
+    "ac-cupp",
+    "affected_party"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260804-hualien-emergency-kits",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/paper/1765461",
+   "https://news.ltn.com.tw/news/society/breakingnews/5528062"
+  ],
+  "jurisdiction_ids": [
+   "jur-10015000"
+  ],
+  "jurisdiction_names": [
+   "花蓮縣"
+  ],
+  "gov_levels": [
+   "county_city"
+  ],
+  "controversy_types": [
+   "budget"
+  ],
+  "policy_domains": [
+   "interior"
+  ],
+  "actors": [
+   [
+    "ac-hualien-county-government",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260816-dayuan-parent-child-center-flag",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/paper/1766949",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5541350",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5541559"
+  ],
+  "jurisdiction_ids": [
+   "jur-68000000"
+  ],
+  "jurisdiction_names": [
+   "桃園市"
+  ],
+  "gov_levels": [
+   "special_municipality"
+  ],
+  "controversy_types": [
+   "cross_strait_foreign"
+  ],
+  "policy_domains": [
+   "health_welfare"
+  ],
+  "actors": [
+   [
+    "ac-taoyuan-city-government",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260821-changhua-offshore-wind-turbine-fire",
+  "seed_urls": [
+   "https://ec.ltn.com.tw/article/breakingnews/5547674",
+   "https://ec.ltn.com.tw/article/breakingnews/5554494"
+  ],
+  "jurisdiction_ids": [
+   "jur-10007000",
+   "jur-tw"
+  ],
+  "jurisdiction_names": [
+   "彰化縣"
+  ],
+  "gov_levels": [
+   "central"
+  ],
+  "controversy_types": [
+   "public_safety"
+  ],
+  "policy_domains": [
+   "economy_energy"
+  ],
+  "actors": [
+   [
+    "ac-ministry-of-economic-affairs",
+    "decision_maker"
+   ],
+   [
+    "ac-orsted",
+    "other"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260821-tainan-annan-waste-fire",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5548966",
+   "https://news.ltn.com.tw/news/society/breakingnews/5548213",
+   "https://news.ltn.com.tw/news/society/breakingnews/5548272",
+   "https://news.ltn.com.tw/news/society/breakingnews/5548317",
+   "https://news.ltn.com.tw/news/society/breakingnews/5548567",
+   "https://news.ltn.com.tw/news/society/breakingnews/5548739",
+   "https://news.ltn.com.tw/news/society/breakingnews/5550504",
+   "https://news.ltn.com.tw/news/society/paper/1767694"
+  ],
+  "jurisdiction_ids": [
+   "jur-67000000"
+  ],
+  "jurisdiction_names": [
+   "臺南市"
+  ],
+  "gov_levels": [
+   "special_municipality"
+  ],
+  "controversy_types": [
+   "environment",
+   "public_safety"
+  ],
+  "policy_domains": [
+   "environment"
+  ],
+  "actors": [
+   [
+    "ac-tainan-city-government",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260825-general-allocation-tax-dispute",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/politics/breakingnews/5551230",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5551265",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5552649",
+   "https://news.ltn.com.tw/news/politics/paper/1768288"
+  ],
+  "jurisdiction_ids": [
+   "jur-tw",
+   "jur-65000000",
+   "jur-10017000"
+  ],
+  "jurisdiction_names": [
+   "新北市",
+   "基隆市"
+  ],
+  "gov_levels": [
+   "central",
+   "special_municipality",
+   "county_city",
+   "cross_level"
+  ],
+  "controversy_types": [
+   "budget"
+  ],
+  "policy_domains": [
+   "finance"
+  ],
+  "actors": [
+   [
+    "ac-ministry-of-finance",
+    "decision_maker"
+   ],
+   [
+    "ac-new-taipei-city-government",
+    "affected_party"
+   ],
+   [
+    "ac-keelung-city-government",
+    "affected_party"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260826-miaoli-sports-center-outsourcing",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/politics/breakingnews/5553154",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5554641",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5555276",
+   "https://news.ltn.com.tw/news/politics/paper/1768428"
+  ],
+  "jurisdiction_ids": [
+   "jur-10005000"
+  ],
+  "jurisdiction_names": [
+   "苗栗縣"
+  ],
+  "gov_levels": [
+   "township"
+  ],
+  "controversy_types": [
+   "governance_procedure"
+  ],
+  "policy_domains": [
+   "education"
+  ],
+  "actors": [
+   [
+    "ac-miaoli-city-office",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260923-taipei-jinhua-school-lunch",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5583537",
+   "https://news.ltn.com.tw/news/life/breakingnews/5583664",
+   "https://news.ltn.com.tw/news/life/breakingnews/5583852",
+   "https://news.ltn.com.tw/news/life/breakingnews/5584101",
+   "https://news.ltn.com.tw/news/life/breakingnews/5588474",
+   "https://news.ltn.com.tw/news/life/breakingnews/5588621",
+   "https://news.ltn.com.tw/news/life/breakingnews/5588716",
+   "https://news.ltn.com.tw/news/life/breakingnews/5588799",
+   "https://news.ltn.com.tw/news/life/breakingnews/5589289",
+   "https://news.ltn.com.tw/news/life/paper/1771933",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5584189",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5584394",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5584576",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5584818",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5585912",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5586900",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5588465",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5588540",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5588915",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5589121",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5589216",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5589412",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5589749",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5589751",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5589829",
+   "https://news.ltn.com.tw/news/politics/paper/1772066"
+  ],
+  "jurisdiction_ids": [
+   "jur-63000000"
+  ],
+  "jurisdiction_names": [
+   "臺北市"
+  ],
+  "gov_levels": [
+   "special_municipality"
+  ],
+  "controversy_types": [
+   "public_safety"
+  ],
+  "policy_domains": [
+   "education"
+  ],
+  "actors": [
+   [
+    "ac-taipei-city-government",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20260926-taipei-renai-roundabout-trees",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/life/breakingnews/5586874",
+   "https://news.ltn.com.tw/news/life/paper/1772266",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5586678"
+  ],
+  "jurisdiction_ids": [
+   "jur-63000000"
+  ],
+  "jurisdiction_names": [
+   "臺北市"
+  ],
+  "gov_levels": [
+   "special_municipality"
+  ],
+  "controversy_types": [
+   "environment"
+  ],
+  "policy_domains": [
+   "environment"
+  ],
+  "actors": [
+   [
+    "ac-taipei-city-government",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20261003-kaohsiung-dashu-heshan-solar-slope",
+  "seed_urls": [
+   "https://ec.ltn.com.tw/article/breakingnews/5596412",
+   "https://news.ltn.com.tw/news/life/breakingnews/5594462",
+   "https://news.ltn.com.tw/news/politics/breakingnews/5595148"
+  ],
+  "jurisdiction_ids": [
+   "jur-64000000"
+  ],
+  "jurisdiction_names": [
+   "高雄市"
+  ],
+  "gov_levels": [
+   "special_municipality",
+   "central"
+  ],
+  "controversy_types": [
+   "environment"
+  ],
+  "policy_domains": [
+   "economy_energy"
+  ],
+  "actors": [
+   [
+    "ac-kaohsiung-city-government",
+    "decision_maker"
+   ],
+   [
+    "ac-ministry-of-economic-affairs",
+    "decision_maker"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20261013-mol-migrant-worker-rumor",
+  "seed_urls": [
+   "https://ec.ltn.com.tw/article/breakingnews/5605089",
+   "https://ec.ltn.com.tw/article/breakingnews/5607266",
+   "https://ec.ltn.com.tw/article/breakingnews/5607700",
+   "https://ec.ltn.com.tw/article/breakingnews/5607750",
+   "https://news.ltn.com.tw/news/society/breakingnews/5609138",
+   "https://news.ltn.com.tw/news/society/breakingnews/5611612",
+   "https://news.ltn.com.tw/news/society/breakingnews/5612525",
+   "https://news.ltn.com.tw/news/society/breakingnews/5612533"
+  ],
+  "jurisdiction_ids": [
+   "jur-tw"
+  ],
+  "jurisdiction_names": [],
+  "gov_levels": [
+   "central"
+  ],
+  "controversy_types": [
+   "information"
+  ],
+  "policy_domains": [
+   "labor"
+  ],
+  "actors": [
+   [
+    "ac-ministry-of-labor",
+    "other"
+   ]
+  ],
+  "sensitive": false
+ },
+ {
+  "event_id": "ev-20261021-typhoon-qiangpi-response",
+  "seed_urls": [
+   "https://news.ltn.com.tw/news/Changhua/breakingnews/5616287",
+   "https://news.ltn.com.tw/news/Changhua/breakingnews/5616288",
+   "https://news.ltn.com.tw/news/Changhua/breakingnews/5616404",
+   "https://news.ltn.com.tw/news/Changhua/breakingnews/5617325",
+   "https://news.ltn.com.tw/news/Changhua/breakingnews/5617370",
+   "https://news.ltn.com.tw/news/Changhua/breakingnews/5617592",
+   "https://news.ltn.com.tw/news/Changhua/paper/1775744",
+   "https://news.ltn.com.tw/news/ChiayiCounty/paper/1775768",
+   "https://news.ltn.com.tw/news/HsinchuCity/breakingnews/5617304",
+   "https://news.ltn.com.tw/news/Kaohsiung/breakingnews/5616240",
+   "https://news.ltn.com.tw/news/society/breakingnews/5613987",
+   "https://www.cna.com.tw/news/afe/202610210354.aspx",
+   "https://www.cna.com.tw/news/ahel/202610210285.aspx",
+   "https://www.cna.com.tw/news/ahel/202610210294.aspx",
+   "https://www.storm.mg/article/11175430"
+  ],
+  "jurisdiction_ids": [
+   "jur-tw",
+   "jur-64000000"
+  ],
+  "jurisdiction_names": [
+   "高雄市"
+  ],
+  "gov_levels": [
+   "central",
+   "special_municipality"
+  ],
+  "controversy_types": [
+   "public_safety"
+  ],
+  "policy_domains": [
+   "interior"
+  ],
+  "actors": [
+   [
+    "ac-executive-yuan",
+    "decision_maker"
+   ],
+   [
+    "ac-kaohsiung-city-government",
+    "decision_maker"
+   ],
+   [
+    "ac-taiwan-power-company",
+    "affected_party"
+   ]
+  ],
+  "sensitive": false
+ }
+]

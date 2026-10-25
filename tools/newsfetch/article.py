@@ -29,7 +29,7 @@ KEPT_FIELDS = ("byline", "section", "published_at", "quote")
 # R61: hosts or paths that the article step must never open, whatever robots.txt says.
 DENIED_PATHS = {"udn.com": re.compile(r"^/news/", re.I)}
 LTN_SECTIONS = {"politics": "政治", "life": "生活", "society": "社會", "world": "國際", "local": "地方",
-                "business": "財經", "entertainment": "娛樂", "sports": "體育", "Taipei": "臺北"}
+                "business": "財經", "entertainment": "娛樂", "sports": "體育", "Taipei": "臺北", "art": "藝文"}
 BROWSER_SCRIPT = Path(__file__).with_name("article_browser.mjs")
 
 logger = logging.getLogger("newsfetch.article")

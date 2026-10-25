@@ -45,7 +45,7 @@ try {
     // Byline forms: 記者王小明／台北報導, 〔即時新聞／綜合報導〕
     const m = text.match(/([^\s〔\[／/]{2,30})[／/]([^\s〕\]／/]{0,10}報導)/)
     if (m) byline = m[1].startsWith('記者') ? m[1] : `${m[1]}／${m[2]}`
-    const isCaption = (t) => /圖擷自|擷取自|（圖|\(圖|圖／|翻攝|資料照/.test(t)
+    const isCaption = (t) => /圖擷自|擷取自|（圖|\(圖|圖／|翻攝|資料照|提供）|攝）|攝影）/.test(t)
     const paras = [...root.querySelectorAll('p')]
       .map((p) => p.textContent.replace(/\s+/g, ' ').trim())
       .filter((t) => t.length >= 20 && !isCaption(t) && !(m && t.includes(m[0])))
