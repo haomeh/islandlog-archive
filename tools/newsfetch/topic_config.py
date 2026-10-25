@@ -39,6 +39,13 @@ COMPANION_LIFT = 5  # ... and its share in the corpus is at most 1/COMPANION_LIF
 ONE_ISSUE_MIN_CORE = 20  # A key with at least this many core titles ... Case: 淡江大橋 (T15).
 ONE_ISSUE_SHARE = 0.6  # ... and a companion in this share of them names one story. Case: 通車 in 23 of 33 (T15).
 
+# --- Second anchor (R112.1: a member has a key and one more anchor of the seed titles) ---
+SECOND_ANCHOR_SHARE = 0.3  # A word is a second key word when this share of the seed titles has it ... Sample T18-AP (R112.1): 焚化爐 titles about a zoo or Taichung had none.
+SECOND_ANCHOR_MIN_SEEDS = 4  # With fewer seed titles than this no word can be shared, so a word of any one seed title counts. Start (R112.1).
+SECOND_ANCHOR_MIN = 2  # ... and in at least this many of them. A place or a government actor in this many seed titles is an anchor too. Sample T18-AP (R112.1).
+SECOND_ANCHOR_MAX_DF = 400  # A second key word is in at most this many items of the corpus. 回應 (1117) and 民眾 (858) are generic; 內政部 (288) and 縣府 (308) are not. Sample T18-AP (R112.1).
+SECOND_ANCHOR_MIN_LEN, SECOND_ANCHOR_MAX_LEN = 2, 4  # A second key word has 2 to 4 characters (環評, 憲法法庭). Sample T18-AP (R112.1).
+
 # --- Gates of the full run (topics_full.run) ---
 SAME_EVENT_SHARE = 0.3  # A topic that shares this share of its members with a published event is skipped. Start (R68).
 EXCLUDE_SHARE = {  # PRD 4.5: a topic is excluded when this share of its titles has the exclusion pattern. Start (R68).
@@ -53,5 +60,36 @@ CLASSIFY_SHARE = 0.2  # A controversy type or policy domain is set when this sha
 MERGE_OVERLAP = 0.5  # Two topics or a topic and a published one are the same when they share this share of sources. Start (R68, R82).
 SUBTOPIC_SHARE = 0.1  # A child topic needs this share of its titles to have the older topic key (R72). Start (R72).
 
+# --- Counts of the full-run gates (topics_full: PRD 4.4, R68, R73) and low limits (R117) ---
+SEED_MIN_ITEMS = 2  # A cluster with fewer items than this and no official or fact-check item is no seed. Start (R68).
+SOURCE_RULE_MIN_PUBLISHERS = 2  # PRD 4.4 item 2: grade C sources from at least this many publishers (or 1 grade A source). Start (R68).
+NEWS_RULE_MIN_ITEMS = 2  # R73: at least this many news items ... Start (R73).
+NEWS_RULE_MIN_PUBLISHERS = 2  # ... from at least this many news publishers. Start (R73).
+CONTINUATION_MIN_USES = 2  # A key with fewer uses than this is a fragment: the next-character test needs 2 uses. Start (R85).
+MIN_KEY_LEN = 3  # A key shorter than this many characters is not a topic name. Start (R68, R85).
+PAPER_DAYS = 2  # A newspaper copy joins a group of an earlier item at most this many days older. Start (R63).
+PAPER_OVERLAP = 0.5  # ... when its bigrams overlap this share of the smaller set. Start (R63).
+SHORT_KEY_LEN = 2  # A key of this length or less takes a longer display form from the seed titles (移工 -> 移工懷孕). Case (R69).
+DISPLAY_FORM_MIN_COUNT = 2  # A common 4-character form needs this many titles (薔琵 -> 薔琵颱風). Case (R69).
+CONTROVERSY_MIN_ACTORS = 2  # PRD 4.4 item 3, R73: a controversy needs real stances from this many actors. Start (R73).
+
+# --- Name and gate fixes of the precision sample (T22, R112) ---
+GENERIC_NAME_MAX_LEN = 3  # A name of this length or less that is a generic object (巡視船, 豎孤棚), or that is a few characters after a jurisdiction, is not a topic name. Sample T18-AP: 巡視船, 屏東縣豎孤棚 (R112.2).
+DISEASE_NAME_MAX_LEN = 6  # A name of this length or less that ends with a disease word and has no policy noun is only a disease (惡性腫瘤). Sample T18-AP: 惡性腫瘤 (R112.2).
+GOV_NAME_SHARE = 0.5  # A noun phrase is a policy name when this share of its titles names a government body: the quote and word-start tests are skipped. Sample T18-AP: 廚餘給弱勢 (教育局, 3 of 4), 不只高德地圖 (數發部, 3 of 3) (R112.4).
+FOREIGN_NAMED_SHARE = 0.3  # A topic outside Taiwan is foreign only when this share of its titles names a foreign country or leader. Sample T18-AP: 清潔公司掛羊頭賣狗肉 was labeled foreign with none (R112.5).
+
+SPLIT_MIN_TITLES = 2  # A jurisdiction splits a topic off when this many titles name it alone and another jurisdiction of the same level has as many. Sample T18-AP: 臺中市續放颱風假 holds 北市 (2 titles) and 台中 (4) (R112.3).
+
+# --- Re-gate of old topics and gate fixes of the second precision sample (T22 round 3, R126 to R130) ---
+BODY_VERB_NAME_MAX_LEN = 6  # A name of this length or less that is a body short name and a verb (北高行駁回, 5 characters) is not a topic name. Sample T22-P: e142b3a9 (R128).
+ELECTION_DAY = "2026-11-28"  # Day of the 2026 local elections. The campaign period ends the day before it. Ruling R136 final.
+CAMPAIGN_DAYS = 10  # Legal campaign activity period of the 公職人員選舉罷免法: the widest local period (縣市長, 縣市議員) is 10 days, 2026-11-18 to 2026-11-27. Before it, an election dispute with grade C sources passes. Ruling R136 final (user answer 2026-10-25), replaces the provisional 90 days (R130).
+ELECTION_DISPUTE_MIN_GRADE_A = 1  # An election dispute inside the campaign period needs this many grade A sources, else it is rejected_election_campaign. PRD R-10. Sample T22-P: e142b3a9 had 3 grade C sources (R130).
+
 # --- Hysteresis (R107b) ---
 WITHDRAW_AFTER_FAILS = 2  # A published topic is withdrawn after this many failing runs in a row. Ruling R107.
+
+# --- Safety stop for withdrawals (R133) ---
+WITHDRAW_MAX_COUNT = 3  # A run that would withdraw more topics than this withdraws none and writes withdraw_blocked. Ruling R133.
+WITHDRAW_MAX_SHARE = 0.1  # ... also when it would withdraw more than this share of the published system topics (at least 1 topic is always allowed). Ruling R133.
