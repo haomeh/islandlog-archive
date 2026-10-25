@@ -43,7 +43,8 @@ privacy:
   basis_source_ids: []
 review:
   sensitive: false
-  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。'
+  reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。本事件不寫表決票數：查到的來源票數不一致（61:50 與 60:51），待以立法院議事錄或公報確認後補上。'
+  status: draft-review
 ---
 
 ## 內容

@@ -68,6 +68,7 @@ privacy:
 review:
   sensitive: false
   reason: 'draft-review: 由代理人起草，使用者尚未審閱，公開前須審閱。'
+  status: draft-review
 ---
 
 ## 縣政府的說明

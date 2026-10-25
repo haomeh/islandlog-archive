@@ -1,0 +1,14 @@
+schema_version: 1
+id: src-20241025-judicial-judgment-9-summary
+source_class: official_statement
+grade: B
+title: "憲法法庭113年憲判字第9號判決摘要"
+publisher: "司法院（憲法法庭書記廳摘錄）"
+publisher_actor_id: ac-constitutional-court
+url: "https://www.judicial.gov.tw/tw/cp-1887-1187874-5cd85-1.html"
+published_on: 2024-10-25
+accessed_on: 2026-10-25
+has_archive_url: false
+quote: "其立法均逾越立法院憲法職權範圍，牴觸憲法權力分立原則，均自本判決宣示之日起，失其效力"
+official_identifier: "113年憲判字第9號"
+license: unknown
