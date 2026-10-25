@@ -53,5 +53,18 @@ CLASSIFY_SHARE = 0.2  # A controversy type or policy domain is set when this sha
 MERGE_OVERLAP = 0.5  # Two topics or a topic and a published one are the same when they share this share of sources. Start (R68, R82).
 SUBTOPIC_SHARE = 0.1  # A child topic needs this share of its titles to have the older topic key (R72). Start (R72).
 
+# --- Counts of the full-run gates (topics_full: PRD 4.4, R68, R73) and low limits (R117) ---
+SEED_MIN_ITEMS = 2  # A cluster with fewer items than this and no official or fact-check item is no seed. Start (R68).
+SOURCE_RULE_MIN_PUBLISHERS = 2  # PRD 4.4 item 2: grade C sources from at least this many publishers (or 1 grade A source). Start (R68).
+NEWS_RULE_MIN_ITEMS = 2  # R73: at least this many news items ... Start (R73).
+NEWS_RULE_MIN_PUBLISHERS = 2  # ... from at least this many news publishers. Start (R73).
+CONTINUATION_MIN_USES = 2  # A key with fewer uses than this is a fragment: the next-character test needs 2 uses. Start (R85).
+MIN_KEY_LEN = 3  # A key shorter than this many characters is not a topic name. Start (R68, R85).
+PAPER_DAYS = 2  # A newspaper copy joins a group of an earlier item at most this many days older. Start (R63).
+PAPER_OVERLAP = 0.5  # ... when its bigrams overlap this share of the smaller set. Start (R63).
+SHORT_KEY_LEN = 2  # A key of this length or less takes a longer display form from the seed titles (移工 -> 移工懷孕). Case (R69).
+DISPLAY_FORM_MIN_COUNT = 2  # A common 4-character form needs this many titles (薔琵 -> 薔琵颱風). Case (R69).
+CONTROVERSY_MIN_ACTORS = 2  # PRD 4.4 item 3, R73: a controversy needs real stances from this many actors. Start (R73).
+
 # --- Hysteresis (R107b) ---
 WITHDRAW_AFTER_FAILS = 2  # A published topic is withdrawn after this many failing runs in a row. Ruling R107.

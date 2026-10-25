@@ -37,12 +37,12 @@ from tools.newsfetch.cluster import bigrams, normalize_title, same_content
 from tools.newsfetch.topic_config import (
     ANCHOR_CORE_MIN, ANCHOR_MAX_DF, BAND, COMPANION_LIFT, COMPANION_MIN, COMPANION_SHARE, DOMINANT_SHARE, EXTEND_DF_SHARE,
     GENERIC_BURST, GENERIC_DF_MIN, GENERIC_DF_SHARE, KEY2_MIN_COVER, KEY2_MIN_COVER_SHARE, KEY2_SHARE, LOCAL_ANCHOR_MIN,
-    LOCAL_ANCHOR_SHARE, ONE_ISSUE_MIN_CORE, ONE_ISSUE_SHARE, PLACE_FILTER_DF, POOL_COVER_SHARE, RARE_KEY_MIN_LEN,
-    RARE_KEY_SHARE, SPECIFIC_KEY_MIN, SPECIFIC_KEY_SHARE, TOP_COVER_SHARE, WINDOW_AFTER, WINDOW_BEFORE)
+    CONTROVERSY_MIN_ACTORS, DISPLAY_FORM_MIN_COUNT, LOCAL_ANCHOR_SHARE, ONE_ISSUE_MIN_CORE, ONE_ISSUE_SHARE, PLACE_FILTER_DF,
+    POOL_COVER_SHARE, RARE_KEY_MIN_LEN, SHORT_KEY_LEN,
+    PAPER_DAYS, PAPER_OVERLAP, RARE_KEY_SHARE, SPECIFIC_KEY_MIN, SPECIFIC_KEY_SHARE, TOP_COVER_SHARE, WINDOW_AFTER, WINDOW_BEFORE)
 
 CAPTION = re.compile(r"圖擷自|擷取自|（圖|\(圖|圖／|翻攝|資料照|提供）|攝）|攝影）")
 
-PAPER_DAYS, PAPER_OVERLAP = 2, 0.5
 MAX_STATIONS, MAX_REPORT_MEMBERS, MAX_GROUPS, MAX_OFFICIAL = 10, 8, 40, 15
 CLAR = re.compile(r"澄清|駁斥|更正|嚴正|假訊息|不實|闢謠|否認|回應|說明|【錯誤】|【誤導】|【詐騙】")
 POST = re.compile(r"臉書|PO文|PO出|發文|貼文|FB|IG|Threads|社群平台|直播|YouTube|曬出|曬")
@@ -178,14 +178,14 @@ def display_name(key, titles):
             and c >= DOMINANT_SHARE * max(1, len(with_key))]
     if noun:
         return max(noun, key=lambda gc: (gc[1], -len(gc[0])))[0]
-    if len(key) > 2:
+    if len(key) > SHORT_KEY_LEN:
         return key
     ok = lambda g: len(g) == 4 and not VERB_END.search(g) and not VERB_START.search(g)
     for t in with_key[:1]:
         origin = [g for g in _grams(t) if key in g and ok(g)]
         if origin:
             return max(origin, key=lambda g: (cover[g], g.endswith(key), g.startswith(key)))
-    forms = [(g, c) for g, c in cover.items() if ok(g) and c >= 2]
+    forms = [(g, c) for g, c in cover.items() if ok(g) and c >= DISPLAY_FORM_MIN_COUNT]
     return max(forms, key=lambda gc: gc[1])[0] if forms else key
 
 
@@ -527,7 +527,7 @@ def has_sensitive_term(texts):
 def event_kind(positions):
     """R73: controversy needs real stances from 2 or more actors (PRD 4.4 item 3). Else historical_event."""
     actors = {p["actor_id"] for p in positions if p.get("stance") not in (None, "not_found")}
-    return "controversy" if len(actors) >= 2 else "historical_event"
+    return "controversy" if len(actors) >= CONTROVERSY_MIN_ACTORS else "historical_event"
 
 
 def _dump(doc):

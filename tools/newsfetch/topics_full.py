@@ -27,7 +27,8 @@ from pathlib import Path
 from tools.newsfetch import topics as tp
 from tools.newsfetch.topic_config import (
     BOUNDARY_SHARE, CLASSIFY_SHARE, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
-    MERGE_OVERLAP, QUOTED_SLOGAN_SHARE, RELEVANCE_SHARE, SAME_EVENT_SHARE, SUBTOPIC_SHARE, WITHDRAW_AFTER_FAILS)
+    CONTINUATION_MIN_USES, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
+    RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SUBTOPIC_SHARE, WITHDRAW_AFTER_FAILS)
 
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票|對手陣營|競辦|競總")  # R106: the last 3 name a campaign without an election word
@@ -159,7 +160,7 @@ def has_word_boundary(key, titles, df=None):
             if j < len(t) and tp.CJK_RUN.fullmatch(t[j]):
                 right[t[j]] += 1
             i = t.find(key, i + 1)
-    if n < 2:
+    if n < CONTINUATION_MIN_USES:
         return True
     sides = (left,) if noun else (left, right)  # a noun head ends the word on the right side only
     for side in sides:
@@ -220,7 +221,7 @@ def taiwan_relevant(titles):
 
 
 def name_ok(key, total_df, window_df):
-    if len(key) < 3 or key[0] in BAD_START or key[-1] in BAD_END or BAD_WORDS.search(key):
+    if len(key) < MIN_KEY_LEN or key[0] in BAD_START or key[-1] in BAD_END or BAD_WORDS.search(key):
         return False
     return total_df <= CONCENTRATION * max(1, window_df)
 
@@ -237,7 +238,7 @@ def meets_source_rule(items):
     if any(it.get("source_class") in ("official_record",) for it in items):
         return True
     pubs = {it["publisher"] for it in items if it.get("source_class") in ("news", "fact_check")}
-    return len(pubs) >= 2
+    return len(pubs) >= SOURCE_RULE_MIN_PUBLISHERS
 
 
 PLACE_FIXES = (("台北港", "新北港"), ("臺北港", "新北港"))  # 台北港 is in 新北市
@@ -246,7 +247,7 @@ PLACE_FIXES = (("台北港", "新北港"), ("臺北港", "新北港"))  # 台北
 def meets_news_rule(items):
     """R73: 2 or more news items from 2 or more news publishers (fact checks and official releases do not count)."""
     news = [it for it in items if it.get("source_class") == "news"]
-    return len(news) >= 2 and len({it["publisher"] for it in news}) >= 2
+    return len(news) >= NEWS_RULE_MIN_ITEMS and len({it["publisher"] for it in news}) >= NEWS_RULE_MIN_PUBLISHERS
 
 
 
@@ -645,7 +646,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     for c in clusters:
         urls = [u for g in c.get("news_groups", []) for u in g.get("source_ids", []) if u in by_url]
         has_official = any(by_url[u].get("source_class") != "news" for u in urls)
-        if len(urls) < 2 and not has_official:
+        if len(urls) < SEED_MIN_ITEMS and not has_official:
             stats["candidate_single_item"] += 1
             continue
         raw.append(urls)

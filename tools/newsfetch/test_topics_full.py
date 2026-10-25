@@ -468,12 +468,55 @@ class TopicConfigTest(unittest.TestCase):
         for name in ("SAME_EVENT_SHARE", "EXCLUDE_SHARE", "MERGE_OVERLAP", "RELEVANCE_SHARE", "WITHDRAW_AFTER_FAILS"):
             self.assertEqual(getattr(tf, name), getattr(tc, name))
 
+    # R117: a comparison with a number other than 0 and 1 in these functions is a size of text or of an argument list,
+    # not a gate. Every other numeric comparison in the two modules must read its number from topic_config.py.
+    STRUCTURAL = {("topics.py", "_is_person_or_speaker"), ("topics.py", "display_name"), ("topics.py", "_rare_grams"),
+                  ("topics.py", "companion_terms"), ("topics.py", "build_event"), ("topics.py", "main"),
+                  ("topics_full.py", "main"), ("topics_full.py", "window")}
+
+    def numeric_comparisons(self, name):
+        import ast
+        tree = ast.parse((REPO / "tools/newsfetch" / name).read_text(encoding="utf-8"))
+        found = []
+        for fn in ast.walk(tree):
+            if not isinstance(fn, ast.FunctionDef):
+                continue
+            for node in ast.walk(fn):
+                if isinstance(node, ast.Compare):
+                    for side in [node.left] + node.comparators:
+                        if isinstance(side, ast.Constant) and type(side.value) in (int, float) and side.value not in (0, 1):
+                            found.append((fn.name, node.lineno, ast.unparse(node)))
+        return found
+
     def test_the_modules_define_no_threshold_of_their_own(self):
+        import ast
         import re
         for name in ("topics.py", "topics_full.py"):
             text = (REPO / "tools/newsfetch" / name).read_text(encoding="utf-8")
             for const in ("ANCHOR_MAX_DF", "SPECIFIC_KEY_MIN", "COMPANION_SHARE", "ONE_ISSUE_SHARE", "SAME_EVENT_SHARE", "RELEVANCE_SHARE", "BAND"):
                 self.assertIsNone(re.search(rf"^{const} *=", text, re.M), f"{name} defines {const}")
+            for node in ast.parse(text).body:  # a module level number: PAPER_DAYS, PAPER_OVERLAP = 2, 0.5
+                targets = [n.id for t in getattr(node, "targets", []) for n in ast.walk(t) if isinstance(n, ast.Name)]
+                if targets and any(isinstance(n, ast.Constant) and type(n.value) in (int, float)
+                                for n in (node.value.elts if isinstance(node.value, ast.Tuple) else [node.value])) \
+                        and not all(n.startswith("MAX_") for n in targets):  # the display limits stay in topics.py
+                    self.fail(f"{name}:{node.lineno} defines a number: {targets}")
+            for fn, line, code in self.numeric_comparisons(name):
+                if (name, fn) not in self.STRUCTURAL:
+                    self.fail(f"{name}:{line} {fn} compares with a number of its own: {code}")
+
+    def test_the_test_finds_a_gate_number(self):
+        import tempfile
+        src = "def meets(items):\n    return len(items) >= 2\n"
+        with tempfile.TemporaryDirectory() as d:
+            (__import__("pathlib").Path(d) / "tools/newsfetch").mkdir(parents=True)
+            (__import__("pathlib").Path(d) / "tools/newsfetch/x.py").write_text(src, encoding="utf-8")
+            global REPO
+            old, REPO = REPO, __import__("pathlib").Path(d)
+            try:
+                self.assertEqual([c[0] for c in self.numeric_comparisons("x.py")], ["meets"])
+            finally:
+                REPO = old
 
 
 if __name__ == "__main__":
