@@ -41,14 +41,12 @@ timeline:
   date_precision: day
   title: 1 則官方發布
   attributed_to: ac-ministry-of-the-interior
-  lifecycle_stage: emergence
   source_ids:
   - src-20260729-moi-17f0d2ab
 - id: tl-02
   date: '2026-07-30'
   date_precision: day
   title: 8 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260730-ltn-e05be3a8
   - src-20260730-ltn-973c335c
@@ -57,14 +55,12 @@ timeline:
   date: '2026-07-31'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260731-ltn-02f03039
 - id: tl-04
   date: '2026-08-05'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260805-ltn-97ad58b7
   - src-20260805-ltn-2bbc6295
@@ -72,14 +68,12 @@ timeline:
   date: '2026-08-07'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260807-ltn-90b9db88
 - id: tl-06
   date: '2026-09-18'
   date_precision: day
   title: 5 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260918-ltn-03144a2e
   - src-20260918-ltn-4eae96e2
@@ -88,21 +82,18 @@ timeline:
   date: '2026-09-26'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260926-ltn-c0d85050
 - id: tl-08
   date: '2026-10-02'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261002-ltn-8c9e19bc
 - id: tl-09
   date: '2026-10-03'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261003-ltn-fcff1b53
   - src-20261004-ltn-7a3e2f2d
@@ -110,7 +101,6 @@ timeline:
   date: '2026-10-09'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261009-ltn-9f5543c1
   - src-20261009-ltn-9a9ec09d

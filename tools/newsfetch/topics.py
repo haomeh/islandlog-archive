@@ -378,11 +378,10 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
         news = [g for g in gs if g["kind"] != "official"]
         tl_items = [g["items"][0] for g in news][:3]
         tl_items += [it for it in official if actors_by_host[urllib.parse.urlparse(it["url"]).hostname][1] == actor][:3]
-        stage = "emergence" if n == 1 else ("institutional_response" if any(g["kind"] in ("official", "clarification") for g in gs) else "escalation")
         t = {"id": tl_id, "date": d, "date_precision": "day", "title": _station_title(gs)}
         if actor:
             t["attributed_to"] = actor
-        t["lifecycle_stage"] = stage
+        # No lifecycle_stage: a stage needs an editor and a source (a vote, a ruling). Title words do not prove it.
         t["source_urls"] = [it["url"] for it in tl_items]
         timeline.append(t)
         for g in news:

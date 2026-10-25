@@ -34,7 +34,6 @@ timeline:
   date: '2026-08-21'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260821-ltn-5f8ad88a
 - id: tl-02
@@ -42,7 +41,6 @@ timeline:
   date_precision: day
   title: 1 則報導、1 則官方發布
   attributed_to: ac-ministry-of-economic-affairs
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260827-ltn-19d617be
   - src-20260827-moea-4b5b2d01

@@ -31,14 +31,12 @@ timeline:
   date: '2026-08-04'
   date_precision: day
   title: 1 則回應或澄清
-  lifecycle_stage: emergence
   source_ids:
   - src-20260804-ltn-ee471cab
 - id: tl-02
   date: '2026-08-05'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260805-ltn-f7fa68eb
 news_groups:

@@ -35,7 +35,6 @@ timeline:
   date: '2026-05-13'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260513-ltn-aa193479
   - src-20260513-ltn-51bf8913
@@ -43,7 +42,6 @@ timeline:
   date: '2026-05-14'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260514-ltn-88268032
   - src-20260514-ltn-7eccd017
@@ -52,7 +50,6 @@ timeline:
   date: '2026-05-15'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260515-ltn-72595a27
   - src-20260515-ltn-d5fe8315
@@ -60,7 +57,6 @@ timeline:
   date: '2026-05-16'
   date_precision: day
   title: 1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260516-ltn-95fd8121
 news_groups:

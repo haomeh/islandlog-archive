@@ -145,6 +145,10 @@ class TopicTest(unittest.TestCase):
             text = (Path(root) / "events/2026" / f"{seed['event_id']}.md").read_text(encoding="utf-8")
             self.assertIn("sensitive: true", text)
 
+    def test_system_topics_have_no_lifecycle_stage(self):
+        event = topics.build_event(SEED, CORPUS, self.df, actors_by_host={})
+        self.assertTrue(all("lifecycle_stage" not in t for t in event["timeline"]))
+
     def test_review_status_is_draft(self):
         event = topics.build_event(SEED, CORPUS, self.df, actors_by_host={})
         self.assertEqual(event["review"]["status"], "draft-review")

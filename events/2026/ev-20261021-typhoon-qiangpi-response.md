@@ -41,7 +41,6 @@ timeline:
   date: '2026-10-14'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20261014-ltn-dbea5472
   - src-20261014-ltn-04c6e1db
@@ -50,7 +49,6 @@ timeline:
   date: '2026-10-15'
   date_precision: day
   title: 7 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261015-ltn-3bdf6c9e
   - src-20261015-ltn-8a883525
@@ -60,7 +58,6 @@ timeline:
   date_precision: day
   title: 1 則官方發布
   attributed_to: ac-kaohsiung-city-government
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261019-kcg-2391a97c
 - id: tl-04
@@ -68,7 +65,6 @@ timeline:
   date_precision: day
   title: 4 則報導、4 則官方發布
   attributed_to: ac-executive-yuan
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261021-ltn-02526dc9
   - src-20261021-cna-6c705322
@@ -79,7 +75,6 @@ timeline:
   date_precision: day
   title: 15 則報導、1 則回應或澄清、10 則官方發布
   attributed_to: ac-executive-yuan
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261022-ltn-7f504795
   - src-20261022-cna-7d6fc977
@@ -90,7 +85,6 @@ timeline:
   date: '2026-10-23'
   date_precision: day
   title: 14 則報導、3 則回應或澄清、2 則引述貼文
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261023-newtalk-aa3a0807
   - src-20261023-storm-406ade9e
@@ -99,7 +93,6 @@ timeline:
   date: '2026-10-24'
   date_precision: day
   title: 14 則報導、2 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261024-udn-3d3eec84
   - src-20261024-udn-625a198b

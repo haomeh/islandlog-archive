@@ -31,7 +31,6 @@ timeline:
   date: '2026-07-19'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260719-ltn-f4381498
   - src-20260720-ltn-4dd25f5b
@@ -39,7 +38,6 @@ timeline:
   date: '2026-07-21'
   date_precision: day
   title: 6 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260721-ltn-a49fb5e9
   - src-20260721-ltn-ae9d5b76
@@ -48,7 +46,6 @@ timeline:
   date: '2026-07-22'
   date_precision: day
   title: 7 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260722-ltn-4478a278
   - src-20260722-ltn-da14ef92
@@ -57,7 +54,6 @@ timeline:
   date: '2026-07-23'
   date_precision: day
   title: 6 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260723-ltn-56ba1df5
   - src-20260723-ltn-d1c60c5d
@@ -66,7 +62,6 @@ timeline:
   date: '2026-07-24'
   date_precision: day
   title: 8 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260724-ltn-bc834de2
   - src-20260724-ltn-9b36f1b2
@@ -75,7 +70,6 @@ timeline:
   date: '2026-07-27'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260727-ltn-f7948665
   - src-20260727-ltn-f5fac443
@@ -84,7 +78,6 @@ timeline:
   date: '2026-07-29'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260729-ltn-6203ad7f
   - src-20260729-ltn-2dc1e199
@@ -92,7 +85,6 @@ timeline:
   date: '2026-07-30'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260730-ltn-00dbf911
   - src-20260730-ltn-b6c15dd0
@@ -101,14 +93,12 @@ timeline:
   date: '2026-07-31'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260731-ltn-15f27eaa
 - id: tl-10
   date: '2026-08-05'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260805-ltn-3af9d1a2
 news_groups:

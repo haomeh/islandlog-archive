@@ -31,7 +31,6 @@ timeline:
   date: '2026-04-27'
   date_precision: day
   title: 4 則回應或澄清
-  lifecycle_stage: emergence
   source_ids:
   - src-20260427-ltn-7d07b5cb
   - src-20260427-ltn-8f5a9174
@@ -40,7 +39,6 @@ timeline:
   date: '2026-04-28'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260428-ltn-47518dff
   - src-20260428-ltn-577703f2
@@ -48,21 +46,18 @@ timeline:
   date: '2026-04-29'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260429-ltn-31b857b4
 - id: tl-04
   date: '2026-05-04'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260504-ltn-a616d46c
 - id: tl-05
   date: '2026-05-05'
   date_precision: day
   title: 1 則引述貼文
-  lifecycle_stage: escalation
   source_ids:
   - src-20260505-ltn-c231f53c
 news_groups:

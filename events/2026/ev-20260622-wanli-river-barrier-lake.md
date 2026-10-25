@@ -37,7 +37,6 @@ timeline:
   date: '2026-06-22'
   date_precision: day
   title: 3 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260622-ltn-e862dbc8
   - src-20260622-ltn-ceb4cc12
@@ -45,7 +44,6 @@ timeline:
   date: '2026-06-23'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260623-ltn-74989d99
   - src-20260623-ltn-11e8564f
@@ -54,7 +52,6 @@ timeline:
   date: '2026-06-24'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260624-ltn-c7960c43
   - src-20260624-ltn-2cba6b37
@@ -63,7 +60,6 @@ timeline:
   date: '2026-06-25'
   date_precision: day
   title: 9 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260625-ltn-6d70ec1b
   - src-20260625-ltn-ed98e1a1
@@ -72,7 +68,6 @@ timeline:
   date: '2026-06-26'
   date_precision: day
   title: 3 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260626-ltn-49cd7b95
   - src-20260626-ltn-eac7778b
@@ -81,7 +76,6 @@ timeline:
   date_precision: day
   title: 9 則報導、1 則官方發布
   attributed_to: ac-executive-yuan
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260627-ltn-cf2fd391
   - src-20260627-ltn-88f51ef2
@@ -91,7 +85,6 @@ timeline:
   date: '2026-06-28'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260628-ltn-5a40da52
   - src-20260628-ltn-89779268
@@ -101,7 +94,6 @@ timeline:
   date_precision: day
   title: 5 則報導、1 則官方發布
   attributed_to: ac-executive-yuan
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260629-ltn-7fc408b5
   - src-20260706-ltn-452a8276
@@ -112,7 +104,6 @@ timeline:
   date_precision: day
   title: 2 則報導、1 則官方發布
   attributed_to: ac-executive-yuan
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260716-ltn-d7b75d0c
   - src-20260716-ey-2150001f
@@ -121,7 +112,6 @@ timeline:
   date_precision: day
   title: 9 則報導、1 則官方發布
   attributed_to: ac-ministry-of-agriculture
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260717-ltn-12f6a965
   - src-20260719-ltn-6ecb5f9f

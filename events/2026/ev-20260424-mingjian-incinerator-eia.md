@@ -39,7 +39,6 @@ timeline:
   date: '2026-04-24'
   date_precision: day
   title: 5 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260424-ltn-b391e398
   - src-20260424-ltn-8b1a7586
@@ -48,14 +47,12 @@ timeline:
   date: '2026-04-27'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260427-ltn-e44403f6
 - id: tl-03
   date: '2026-04-28'
   date_precision: day
   title: 6 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260428-ltn-fc1f9ba4
   - src-20260428-ltn-6650c505
@@ -64,7 +61,6 @@ timeline:
   date: '2026-05-07'
   date_precision: day
   title: 5 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260507-ltn-3d56edb1
   - src-20260507-ltn-2732185f
@@ -73,7 +69,6 @@ timeline:
   date: '2026-05-13'
   date_precision: day
   title: 8 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260513-ltn-a4fc894f
   - src-20260513-ltn-c5d8cfc6
@@ -82,7 +77,6 @@ timeline:
   date: '2026-06-16'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260616-ltn-0ce01be6
   - src-20260630-ltn-2dc98893
@@ -91,7 +85,6 @@ timeline:
   date: '2026-08-02'
   date_precision: day
   title: 1 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260802-ltn-0138a0d3
   - src-20260803-ltn-138518c8
@@ -99,7 +92,6 @@ timeline:
   date: '2026-08-12'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260812-ltn-cbcffcff
   - src-20260812-ltn-80d1950b
@@ -109,14 +101,12 @@ timeline:
   date_precision: day
   title: 1 則官方發布
   attributed_to: ac-tainan-city-government
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260818-tainan-a520c9d2
 - id: tl-10
   date: '2026-08-27'
   date_precision: day
   title: 6 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260827-ltn-fbc31f97
   - src-20260827-ltn-0313ae0a

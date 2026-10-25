@@ -27,14 +27,12 @@ timeline:
   date: '2026-10-08'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20261008-ltn-59ef117c
 - id: tl-02
   date: '2026-10-09'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261009-ltn-7300f43a
 - id: tl-03
@@ -42,7 +40,6 @@ timeline:
   date_precision: day
   title: 1 則回應或澄清、1 則官方發布
   attributed_to: ac-ministry-of-labor
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261013-ltn-f21b2fd8
   - src-20261013-mol-454380f3
@@ -51,7 +48,6 @@ timeline:
   date_precision: day
   title: 2 則報導、2 則回應或澄清、1 則官方發布
   attributed_to: ac-ministry-of-labor
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261015-ltn-8988f3e3
   - src-20261015-mygopen-04fe5cdc
@@ -62,7 +58,6 @@ timeline:
   date_precision: day
   title: 1 則回應或澄清、1 則官方發布
   attributed_to: ac-ministry-of-labor
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261016-mygopen-265da83f
   - src-20261016-mol-09c6bb81
@@ -70,7 +65,6 @@ timeline:
   date: '2026-10-17'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261017-ltn-75c008aa
   - src-20261019-ltn-c6fce7b4
@@ -78,7 +72,6 @@ timeline:
   date: '2026-10-20'
   date_precision: day
   title: 3 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261020-ltn-1dfd3597
   - src-20261020-ltn-2f529840
@@ -86,7 +79,6 @@ timeline:
   date: '2026-10-21'
   date_precision: day
   title: 1 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20261021-tfc-fd17d7cd
   - src-20261021-ltn-860bd367
@@ -94,7 +86,6 @@ timeline:
   date: '2026-10-22'
   date_precision: day
   title: 3 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261022-ltn-bb62a1bf
   - src-20261022-cna-04f6ff17
@@ -103,7 +94,6 @@ timeline:
   date: '2026-10-24'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261024-ltn-5e101a8e
   - src-20261024-tvbs-66f7d57e

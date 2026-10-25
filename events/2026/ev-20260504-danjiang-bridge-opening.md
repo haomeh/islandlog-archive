@@ -39,21 +39,18 @@ timeline:
   date: '2026-04-29'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260429-ltn-9c8fdf2b
 - id: tl-02
   date: '2026-05-03'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260503-ltn-e7f19998
 - id: tl-03
   date: '2026-05-04'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260504-ltn-fd8f4042
 - id: tl-04
@@ -61,7 +58,6 @@ timeline:
   date_precision: day
   title: 1 則報導、1 則官方發布
   attributed_to: ac-executive-yuan
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260507-ltn-c1cf7387
   - src-20260507-ey-e498d6a6
@@ -70,14 +66,12 @@ timeline:
   date_precision: day
   title: 1 則官方發布
   attributed_to: ac-ministry-of-the-interior
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260508-moi-ca6d8a28
 - id: tl-06
   date: '2026-05-11'
   date_precision: day
   title: 3 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260511-ltn-83080cbc
   - src-20260511-ltn-9c8fe778
@@ -86,7 +80,6 @@ timeline:
   date: '2026-05-12'
   date_precision: day
   title: 13 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260512-ltn-d866b944
   - src-20260512-ltn-f27f2584
@@ -95,7 +88,6 @@ timeline:
   date: '2026-05-13'
   date_precision: day
   title: 6 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260513-ltn-1292911c
   - src-20260513-ltn-97f15497
@@ -104,7 +96,6 @@ timeline:
   date: '2026-05-14'
   date_precision: day
   title: 3 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260514-ltn-620ecab6
   - src-20260517-ltn-01bef4f8
@@ -113,7 +104,6 @@ timeline:
   date: '2026-05-20'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260520-ltn-1d604062
   - src-20260520-ltn-b9226e7b

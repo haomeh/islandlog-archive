@@ -43,7 +43,6 @@ timeline:
   date: '2026-05-11'
   date_precision: day
   title: 5 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260511-ltn-a603173a
   - src-20260511-ltn-5b52df92
@@ -52,7 +51,6 @@ timeline:
   date: '2026-05-15'
   date_precision: day
   title: 3 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260515-ltn-1c2bf69e
   - src-20260515-ltn-9ffa5479
@@ -61,7 +59,6 @@ timeline:
   date: '2026-05-16'
   date_precision: day
   title: 4 則報導、1 則引述貼文
-  lifecycle_stage: escalation
   source_ids:
   - src-20260516-ltn-e6b58d91
   - src-20260516-ltn-449cedcc
@@ -70,7 +67,6 @@ timeline:
   date: '2026-05-17'
   date_precision: day
   title: 2 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260517-ltn-e3ad326d
   - src-20260517-ltn-6022883b
@@ -79,7 +75,6 @@ timeline:
   date: '2026-05-18'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260518-ltn-48f75942
   - src-20260518-ltn-d08c3b1f
@@ -88,7 +83,6 @@ timeline:
   date_precision: day
   title: 1 則報導、1 則官方發布
   attributed_to: ac-ministry-of-the-interior
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260519-ltn-f6eb6e89
   - src-20260519-moi-e4e9fa3e
@@ -96,7 +90,6 @@ timeline:
   date: '2026-05-21'
   date_precision: day
   title: 6 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260521-ltn-feedef9e
   - src-20260521-ltn-ad7ae9d8
@@ -105,7 +98,6 @@ timeline:
   date: '2026-05-22'
   date_precision: day
   title: 3 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260522-ltn-4fd315de
   - src-20260522-ltn-84bf0925
@@ -114,7 +106,6 @@ timeline:
   date: '2026-05-23'
   date_precision: day
   title: 11 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260523-ltn-aae0bfd4
   - src-20260523-ltn-63d3dc47
@@ -123,7 +114,6 @@ timeline:
   date: '2026-05-25'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260525-ltn-6f1a4f16
   - src-20260601-ltn-6c7d5688

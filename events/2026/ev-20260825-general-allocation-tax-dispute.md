@@ -40,7 +40,6 @@ timeline:
   date: '2026-08-25'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: emergence
   source_ids:
   - src-20260825-ltn-33bf8ae7
   - src-20260825-ltn-788114ac
@@ -48,7 +47,6 @@ timeline:
   date: '2026-08-26'
   date_precision: day
   title: 2 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260826-ltn-4b76df29
 news_groups:

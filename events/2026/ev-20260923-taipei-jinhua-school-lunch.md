@@ -31,7 +31,6 @@ timeline:
   date: '2026-09-23'
   date_precision: day
   title: 3 則報導、2 則回應或澄清
-  lifecycle_stage: emergence
   source_ids:
   - src-20260923-ltn-2720eec5
   - src-20260923-ltn-65d319e2
@@ -40,7 +39,6 @@ timeline:
   date: '2026-09-24'
   date_precision: day
   title: 4 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260924-ltn-81b5b58c
   - src-20260924-ltn-177aafe9
@@ -49,7 +47,6 @@ timeline:
   date: '2026-09-25'
   date_precision: day
   title: 1 則報導、1 則回應或澄清
-  lifecycle_stage: institutional_response
   source_ids:
   - src-20260925-ltn-0fdd4415
   - src-20260925-ltn-d350c402
@@ -57,14 +54,12 @@ timeline:
   date: '2026-09-26'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260926-ltn-bd3335c3
 - id: tl-05
   date: '2026-09-28'
   date_precision: day
   title: 6 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260928-ltn-276be23e
   - src-20260928-ltn-9cddbbb5
@@ -73,7 +68,6 @@ timeline:
   date: '2026-09-29'
   date_precision: day
   title: 9 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260929-ltn-05f6b55d
   - src-20260929-ltn-be54d05c
@@ -82,7 +76,6 @@ timeline:
   date: '2026-09-30'
   date_precision: day
   title: 5 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20260930-ltn-65719963
   - src-20260930-ltn-e97975fa
@@ -91,7 +84,6 @@ timeline:
   date: '2026-10-07'
   date_precision: day
   title: 1 則報導
-  lifecycle_stage: escalation
   source_ids:
   - src-20261007-ltn-9bf037c4
 news_groups:

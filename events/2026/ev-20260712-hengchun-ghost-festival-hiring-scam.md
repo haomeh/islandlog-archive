@@ -31,7 +31,6 @@ timeline:
   date: '2026-07-12'
   date_precision: day
   title: 2 則回應或澄清
-  lifecycle_stage: emergence
   source_ids:
   - src-20260712-ltn-bae5bfd1
 news_groups:
