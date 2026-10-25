@@ -512,7 +512,8 @@ class ExclusionExceptionsTest(unittest.TestCase):
 
     def test_r112_4_a_court_ruling_on_a_candidacy_is_not_campaign_content(self):
         titles = ["聲請暫准參選竹北市長遭北高行駁回　李貞秀：尊重司法", "李貞秀求暫准參選竹北市長　北高行駁回", "李貞秀遞狀聲請保「參選資格」 北高行駁回"]
-        self.assertIsNone(tf.exclusion_reason(self.items(titles)))
+        record = [item("rec", "李貞秀參選資格案 裁定公報", "2026-10-21", "司法院", "official_record")]  # R130: inside the campaign period the dispute needs a grade A source
+        self.assertIsNone(tf.exclusion_reason(self.items(titles) + record))
         self.assertEqual(tf.exclusion_reason(self.items(["某某登記參選市長", "某某參選市長拜票", "某某參選造勢"])), "election_campaign")
 
     def test_r112_4_a_law_passed_by_the_legislature_is_not_sensitive_by_its_subject(self):
@@ -688,6 +689,151 @@ class TopicConfigTest(unittest.TestCase):
                 self.assertEqual([c[0] for c in self.numeric_comparisons("x.py")], ["meets"])
             finally:
                 REPO = old
+
+
+class NotTaiwanTest(unittest.TestCase):
+    """R127: a topic is about Taiwan when its titles name a central body, the Legislative Yuan, a Taiwan party, a
+    legislator, a minister, or a national law or policy noun. The six cases are the not_taiwan rejects of the T22-P sample."""
+
+    CASES = {
+        "food safety act": ["卓榮泰提修食安法 徐巧芯質疑：現行法都做不到誰信修法能改善？", "行政院23日擬通過食安法修法 重罰惡意欺瞞", "國民黨團「食安法」修法10項改革明送案  重大事件最高罰10億"],
+        "arms purchase": ["軍購案金額藍營內鬨 侯友宜：國防預算不低於GDP3％", "侯友宜重申國防預算不低於GDP 3％ 蘇巧慧：各黨護國主權立場應一致", "侯友宜表態國防預算不低於GDP3％ 李四川：國民黨一定做最好審定"],
+        "public share fund": ["公股投信四合一\u3000金管會審查盯3重點", "公股投信四合一組資產管理國家隊\u3000目標排名衝高至第8名", "公股投信四合一拍板\u3000第一金投信擔任存續公司"],
+        "nurse ratio": ["「三班護病比入法」拚上路 醫界提「2配套」防關床潮", "三班護病比入法方向曝 石崇良：保留彈性上路時間待議", "護理界盼三班護病比入法 卓揆：增人力、留人才、擴大預算"],
+        "delivery act": ["外送專法子法拍板！平台業者表態：全力配合、儘速研析新制", "外送專法7月21日上路 3子法明確4大保障", "外送專法21日上路！DEAT提3大建議、專家示警5大衝擊"],
+        "road safety budget": ["在野大砍道安預算！交通部：恐衝擊事故防治與宣導", "藍白大砍道安預算！綠委怒轟：拿人民安全當政治攻防", "罔顧「行人地獄」？在野大砍近億道安預算  白狂剁85％道路品管費"],
+    }
+
+    def test_r127_the_six_quoted_cases_are_about_taiwan(self):
+        for name, titles in self.CASES.items():
+            self.assertTrue(tf.taiwan_relevant(titles), name)
+
+    def test_r127_a_foreign_law_or_budget_is_still_not_taiwan(self):
+        self.assertFalse(tf.taiwan_relevant(["美國國防預算創新高", "川普簽署預算法案", "日本修法放寬移民"]))
+        self.assertFalse(tf.taiwan_relevant(["西藏那曲地震", "那曲震災死傷", "外交部慰問"]))
+
+
+class BodyVerbNameTest(unittest.TestCase):
+    def test_r128_a_body_short_name_and_a_verb_is_not_a_name(self):
+        for bad in ("北高行駁回", "金管會回應", "市府說明", "衛福部宣布"):
+            self.assertFalse(tf.name_quality_ok(bad, [bad + "，李貞秀"], 3, 3), bad)
+
+    def test_r128_a_body_with_a_subject_is_still_a_name(self):
+        self.assertTrue(tf.name_quality_ok("公股投信四合一", ["公股投信四合一 金管會審查盯3重點", "公股投信四合一拍板"], 3, 3))
+
+
+class CourtNameTest(unittest.TestCase):
+    TITLES = ["李貞秀遞狀聲請保「參選資格」 北高行駁回", "聲請暫准參選竹北市長遭北高行駁回　李貞秀：尊重司法", "李貞秀求暫准參選竹北市長　北高行駁回"]
+
+    def test_r129_a_court_name_is_not_a_jurisdiction_or_a_local_government_actor(self):
+        jids = tf.detect_jurisdictions(self.TITLES)
+        self.assertNotIn("jur-63000000", jids)
+        self.assertNotIn("ac-taipei-city-government", tf.detect_gov_actors(self.TITLES, jids))
+        self.assertEqual(jids, ["jur-10004000"])
+        self.assertEqual(tf._title_jurisdictions(self.TITLES[1]), {"jur-10004000"})
+
+    def test_r129_a_taipei_title_still_gives_taipei(self):
+        self.assertEqual(tf.detect_jurisdictions(["北市府回應行道樹爭議", "台北市政府說明"]), ["jur-63000000"])
+        self.assertEqual(tf.detect_jurisdictions(["北高行審理北市府案"]), ["jur-63000000"])
+
+
+class ElectionDisputeGradeATest(unittest.TestCase):
+    """R130 (PRD R-10): an election dispute in the campaign period needs 1 grade A source."""
+
+    def items(self, day="2026-10-22", record=False):
+        out = [item(f"u{i}", t, day, "中央通訊社") for i, t in enumerate(CourtNameTest.TITLES)]
+        if record:
+            out.append(item("rec", "李貞秀參選資格案 北高行裁定公報", day, "司法院", "official_record"))
+        return out
+
+    def test_r130_a_dispute_without_a_grade_a_source_is_rejected(self):
+        self.assertEqual(tf.exclusion_reason(self.items()), "election_campaign")
+
+    def test_r130_one_grade_a_source_lets_the_dispute_pass(self):
+        self.assertIsNone(tf.exclusion_reason(self.items(record=True)))
+
+    def test_r130_a_dispute_outside_the_campaign_period_passes(self):
+        self.assertIsNone(tf.exclusion_reason(self.items(day="2027-03-01")))
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class RegateTest(unittest.TestCase):
+    """R126: each run checks every published system topic with review.status draft-review again."""
+
+    ID = "ev-20261023-topic-aaaaaaaa"
+    ON = ["桃園市府會勘南崁溪淤積問題", "南崁溪淤積嚴重 桃園市府將疏濬", "南崁溪淤積 桃園市府編列疏濬預算", "桃園南崁溪淤積　議員要求市府說明", "南崁溪淤積問題 桃園市府回應議員"]
+    OFF = "北部釣客談南崁溪淤積 魚獲大減"
+
+    def setup(self, root, publishers=2, status="draft-review"):
+        from tools.newsfetch import topics as tp
+        corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        topic = [item(f"t{i}", t, "2026-10-23", "自由時報" if i % publishers == 0 else "聯合新聞網") for i, t in enumerate(self.ON)]
+        topic.append(item("off", self.OFF, "2026-10-24", "中央通訊社"))
+        corpus += topic
+        for d in ("events/2026", "sources/2026", "actors"):
+            (root / d).mkdir(parents=True, exist_ok=True)
+        seed = {"event_id": self.ID, "seed_urls": [t["url"] for t in topic[:3]], "jurisdiction_ids": ["jur-68000000"],
+                "jurisdiction_names": ["桃園市"], "gov_levels": ["special_municipality"], "controversy_types": ["environment"],
+                "policy_domains": ["environment"], "actors": [["ac-taoyuan-city-government", "other"]], "sensitive": False}
+        probe = dict(seed, actors=[("ac-taoyuan-city-government", "other")])
+        df = tp.document_frequency(corpus)
+        probe["_keys"], probe["_name"] = ["南崁溪淤積"], "南崁溪淤積"
+        ev = tp.build_event(probe, corpus, df, items=topic)
+        ev["review"]["status"] = status
+        tf.ensure_actor_files(root, ["ac-taoyuan-city-government"])
+        tp.write_event(ev, probe, root, {}, overwrite_sources=False)
+        return corpus, seed, tp.src_id(topic[-1], tp.HOSTS)
+
+    def run_gate(self, root, corpus, seed, today="2026-10-25"):
+        return tf.run(corpus, [], [seed], root, root / "report.json", today=today)
+
+    def test_r126_an_old_topic_with_off_topic_members_loses_them(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            corpus, seed, off_id = self.setup(root)
+            path = root / "events/2026" / f"{self.ID}.md"
+            self.assertIn(off_id, path.read_text(encoding="utf-8"))
+            stats, _, _ = self.run_gate(root, corpus, seed)
+            text = path.read_text(encoding="utf-8")
+            self.assertNotIn(off_id, text)
+            self.assertIn(f"id: {self.ID}", text)
+            self.assertIn("status: published", text)
+            self.assertEqual((stats["regate_passed"], stats["regate_failed"]), (1, 0))
+
+    def test_r126_an_old_topic_that_fails_once_stays_published_with_a_fail_count(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            corpus, seed, _ = self.setup(root)
+            for it in corpus:
+                if it["url"] in ("t1", "t3", "off"):
+                    it["publisher"] = "自由時報"  # one news publisher is left
+            before = (root / "events/2026" / f"{self.ID}.md").read_text(encoding="utf-8")
+            stats, _, _ = self.run_gate(root, corpus, seed)
+            self.assertEqual((stats["regate_failed"], stats["withdrawn"], stats["withdraw_pending"]), (1, 0, 1))
+            self.assertEqual((root / "events/2026" / f"{self.ID}.md").read_text(encoding="utf-8"), before)
+            state = json.loads((root / "tools/newsfetch/topic_state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state[self.ID]["fails"], 1)
+
+    def test_r126_an_editor_approved_topic_is_not_touched(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            corpus, seed, _ = self.setup(root, status="editor-approved")
+            path = root / "events/2026" / f"{self.ID}.md"
+            path.write_text(path.read_text(encoding="utf-8").replace("draft-review: 系統", "editor-approved: 編輯"), encoding="utf-8")
+            before = path.read_text(encoding="utf-8")
+            stats, _, _ = self.run_gate(root, corpus, seed)
+            self.assertEqual(path.read_text(encoding="utf-8"), before)
+            self.assertEqual(stats["regate_passed"] + stats["regate_failed"], 0)
+            state = root / "tools/newsfetch/topic_state.json"
+            self.assertNotIn(self.ID, json.loads(state.read_text(encoding="utf-8")) if state.exists() else {})
 
 
 if __name__ == "__main__":
