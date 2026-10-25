@@ -233,20 +233,20 @@ def names_foreign(titles):
 def name_quality_ok(key, titles, total_df, window_df, df=None):
     """The name gates of the full run. R112.2: only a place, a disease or a generic object fails. R112.4: a key with
     a policy noun, or a key whose titles name a government body in GOV_NAME_SHARE, skips the quote and word-start tests;
-    a key with a policy noun skips the word-boundary test too. R141.5: so does a key whose titles name a central body,
-    a minister or 大法官 in GOV_NAME_SHARE."""
+    a key with a policy noun skips the word-boundary test too. R146: so does a key that itself holds a central body,
+    a minister title, 大法官 or 原住民族; the quote test still applies to it. The titles never excuse the key."""
     if not noun_phrase_name(key) or generic_name(key) or is_person_or_party(key, titles) or is_place_name(key):
         return False
     policy_key = bool(POLICY_NOUN.search(key))
     policy_titles = sum(1 for t in titles if names_government(t)) >= GOV_NAME_SHARE * max(1, len(titles))
-    central_titles = sum(1 for t in titles if names_central(t)) >= GOV_NAME_SHARE * max(1, len(titles))
+    central_key = names_central(key)
     if not name_ok(key, total_df, window_df, loose=policy_key or policy_titles):
         return False
-    if policy_key or central_titles:
+    if policy_key:
         return True
-    if not has_word_boundary(key, titles, df):
+    if not central_key and not has_word_boundary(key, titles, df):
         return False
-    return policy_titles or not is_quoted_slogan(key, titles)
+    return (policy_titles and not central_key) or not is_quoted_slogan(key, titles)
 
 
 NATIONAL_SYSTEMS = re.compile(r"健保|勞保|勞退|國民年金|國保|公保|軍保|長照|衛福部|衛生福利部|健保署|勞保局|勞動部|國人")  # R84
