@@ -83,8 +83,8 @@ SPLIT_MIN_TITLES = 2  # A jurisdiction splits a topic off when this many titles 
 
 # --- Re-gate of old topics and gate fixes of the second precision sample (T22 round 3, R126 to R130) ---
 BODY_VERB_NAME_MAX_LEN = 6  # A name of this length or less that is a body short name and a verb (北高行駁回, 5 characters) is not a topic name. Sample T22-P: e142b3a9 (R128).
-ELECTION_DAY = "2026-11-28"  # Day of the 2026 local elections. The campaign period is the CAMPAIGN_DAYS before it. Start (R130); provisional until the user confirms (R136).
-CAMPAIGN_DAYS = 90  # An election dispute dated this many days or fewer before ELECTION_DAY counts as inside the campaign period. Sample T22-P: e142b3a9 is dated 37 days before; the PM rules it inside (R130). Provisional until the user confirms (R136).
+ELECTION_DAY = "2026-11-28"  # Day of the 2026 local elections. The campaign period ends the day before it. Ruling R136 final.
+CAMPAIGN_DAYS = 10  # Legal campaign activity period of the 公職人員選舉罷免法: the widest local period (縣市長, 縣市議員) is 10 days, 2026-11-18 to 2026-11-27. Before it, an election dispute with grade C sources passes. Ruling R136 final (user answer 2026-10-25), replaces the provisional 90 days (R130).
 ELECTION_DISPUTE_MIN_GRADE_A = 1  # An election dispute inside the campaign period needs this many grade A sources, else it is rejected_election_campaign. PRD R-10. Sample T22-P: e142b3a9 had 3 grade C sources (R130).
 
 # --- Hysteresis (R107b) ---

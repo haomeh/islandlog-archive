@@ -440,7 +440,7 @@ def election_dispute_without_grade_a(items):
     if not items or dispute < EXCLUDE_SHARE["election_campaign"] * len(items):
         return False
     last = max(_day(it["published_on"]) for it in items)
-    if not 0 <= (_day(ELECTION_DAY) - last).days <= CAMPAIGN_DAYS:
+    if not 1 <= (_day(ELECTION_DAY) - last).days <= CAMPAIGN_DAYS:
         return False
     return sum(1 for it in items if it.get("source_class") == "official_record") < ELECTION_DISPUTE_MIN_GRADE_A
 

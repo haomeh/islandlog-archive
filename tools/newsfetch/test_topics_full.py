@@ -512,8 +512,7 @@ class ExclusionExceptionsTest(unittest.TestCase):
 
     def test_r112_4_a_court_ruling_on_a_candidacy_is_not_campaign_content(self):
         titles = ["聲請暫准參選竹北市長遭北高行駁回　李貞秀：尊重司法", "李貞秀求暫准參選竹北市長　北高行駁回", "李貞秀遞狀聲請保「參選資格」 北高行駁回"]
-        record = [item("rec", "李貞秀參選資格案 裁定公報", "2026-10-21", "司法院", "official_record")]  # R130: inside the campaign period the dispute needs a grade A source
-        self.assertIsNone(tf.exclusion_reason(self.items(titles) + record))
+        self.assertIsNone(tf.exclusion_reason(self.items(titles)))  # 2026-10-21 is before the legal campaign period (R136)
         self.assertEqual(tf.exclusion_reason(self.items(["某某登記參選市長", "某某參選市長拜票", "某某參選造勢"])), "election_campaign")
 
     def test_r112_4_a_law_passed_by_the_legislature_is_not_sensitive_by_its_subject(self):
@@ -740,7 +739,7 @@ class CourtNameTest(unittest.TestCase):
 class ElectionDisputeGradeATest(unittest.TestCase):
     """R130 (PRD R-10): an election dispute in the campaign period needs 1 grade A source."""
 
-    def items(self, day="2026-10-22", record=False):
+    def items(self, day="2026-11-20", record=False):
         out = [item(f"u{i}", t, day, "中央通訊社") for i, t in enumerate(CourtNameTest.TITLES)]
         if record:
             out.append(item("rec", "李貞秀參選資格案 北高行裁定公報", day, "司法院", "official_record"))
@@ -754,6 +753,13 @@ class ElectionDisputeGradeATest(unittest.TestCase):
 
     def test_r130_a_dispute_outside_the_campaign_period_passes(self):
         self.assertIsNone(tf.exclusion_reason(self.items(day="2027-03-01")))
+
+    def test_r136_the_legal_campaign_period_is_the_10_days_before_the_election_day(self):
+        self.assertIsNone(tf.exclusion_reason(self.items(day="2026-10-22")))  # a grade C dispute before the period passes
+        self.assertIsNone(tf.exclusion_reason(self.items(day="2026-11-17")))
+        self.assertEqual(tf.exclusion_reason(self.items(day="2026-11-18")), "election_campaign")
+        self.assertEqual(tf.exclusion_reason(self.items(day="2026-11-27")), "election_campaign")
+        self.assertIsNone(tf.exclusion_reason(self.items(day="2026-11-28")))  # the campaign ends the day before the vote
 
 
 class WithdrawLimitTest(unittest.TestCase):
