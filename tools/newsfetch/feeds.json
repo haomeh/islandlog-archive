@@ -17,8 +17,9 @@
       "url": "https://news.pts.org.tw/dailynews?page={page}",
       "max_pages": 100,
       "link": "news\\.pts\\.org\\.tw/article/\\d+",
-      "date_where": "inner",
-      "date_regex": "(?P<m>\\d\\d)/(?P<d>\\d\\d) \\d\\d:\\d\\d"
+      "date_where": "after",
+      "date_regex": "(?P<y>20\\d\\d)/(?P<m>\\d{1,2})/(?P<d>\\d{1,2}) \\d\\d:\\d\\d",
+      "anchor_before": "<h[12][^>]*>\\s*$"
     },
     "latest_sitemap": "https://news.pts.org.tw/xml/sitemap.xml"
   },
@@ -215,7 +216,7 @@
       "row_selector": ".news_list_item",
       "date_where": "relative",
       "date_regex": "x",
-      "max_steps": 1800,
+      "max_steps": 2500,
       "delay_ms": 1200
     },
     "latest_sitemap": "https://www.setn.com/sitemapGoogleNews.xml"
@@ -229,17 +230,24 @@
       "民視",
       "民視新聞"
     ],
-    "type": "paged_list",
-    "url": "https://www.ftvnews.com.tw/realtime/?page={page}",
-    "status": "ok",
-    "route": {
-      "url": "https://www.ftvnews.com.tw/realtime/?page={page}",
-      "max_pages": 9000,
-      "link": "ftvnews\\.com\\.tw/news/detail/",
-      "date_where": "url",
-      "date_regex": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
-      "title_strip": "^\\d{4}/\\d\\d/\\d\\d \\d\\d:\\d\\d(:\\d\\d)?\\s*"
-    }
+    "type": "blocked",
+    "status": "blocked",
+    "disabled_route": {
+      "type": "browser_list",
+      "url": "https://www.ftvnews.com.tw/realtime/?page=1",
+      "route": {
+        "url": "https://www.ftvnews.com.tw/realtime/?page=1",
+        "max_pages": 9000,
+        "link": "ftvnews\\.com\\.tw/news/detail/",
+        "date_where": "url",
+        "date_regex": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
+        "title_strip": "^\\d{4}/\\d\\d/\\d\\d \\d\\d:\\d\\d(:\\d\\d)?\\s*",
+        "page_template": "https://www.ftvnews.com.tw/realtime/?page={page}",
+        "stop_probe": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
+        "max_steps": 9000
+      }
+    },
+    "blocked_reason": "robots.txt unreadable: the TLS check fails (Missing Subject Key Identifier) and a TLS error is never bypassed, so the crawler fails closed. A dated list exists (realtime/?page=N, date in the article id). Needs a PM ruling to read robots.txt in the browser."
   },
   {
     "id": "ebc",

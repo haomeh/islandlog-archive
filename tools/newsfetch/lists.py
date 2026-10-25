@@ -67,7 +67,7 @@ def parse_anchor_list(html_text: str, route: Dict, base_url: str, today: str, pu
     """Reads the article links of one list page.
 
     route: link (regex on the absolute href), date_where (url, before, after, inner or time_attr),
-    date_regex (groups y, m, d), title_min and title_strip (optional).
+    date_regex (groups y, m, d), title_min, title_strip and anchor_before (optional; anchor_before is a regex for the markup right before the link).
     """
     link_re = re.compile(route["link"])
     date_re = re.compile(route["date_regex"])
@@ -82,6 +82,8 @@ def parse_anchor_list(html_text: str, route: Dict, base_url: str, today: str, pu
             continue
         href = urllib.parse.urljoin(base_url, html.unescape(href_m.group(1)))
         if not link_re.search(href):
+            continue
+        if route.get("anchor_before") and not re.search(route["anchor_before"], html_text[max(0, m.start() - 300): m.start()]):
             continue
         url = canonical_url(href)
         if url in seen:
@@ -246,7 +248,14 @@ def fetch_browser_list(route: Dict, crawler: PoliteCrawler, publisher: str, sinc
         "delay_ms": max(1000, route.get("delay_ms", 1200)),
         "stop_before": since,
         "deny": robots_deny_patterns(crawler, url),
+        "row_selector": route.get("row_selector", ""),
+        "page_template": route.get("page_template", ""),
+        "last_page": route.get("last_page", 9000),
+        "light": bool(route.get("page_template")),
+        "stop_probe": route.get("stop_probe", ""),
     }
+    if route.get("partial"):
+        config["partial"] = route["partial"]
     result = browser(url, crawler.user_agent, config)
     if result.get("denied"):
         logger.warning("Browser aborted %d robots-denied requests: %s", len(result["denied"]), result["denied"][:3])
@@ -264,6 +273,9 @@ def fetch_browser_list(route: Dict, crawler: PoliteCrawler, publisher: str, sinc
             if where != "url":
                 anchor = anchor + " " + html.escape(text)
             probe = {"link": route["link"], "date_regex": route["date_regex"], "date_where": where}
+            for key in ("title_strip", "title_min"):
+                if key in route:
+                    probe[key] = route[key]
             parsed = parse_anchor_list(anchor, probe, url, today, publisher)
         for item in parsed:
             if item["url"] not in seen:

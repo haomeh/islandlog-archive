@@ -3,6 +3,8 @@
 // It prints {items, denied}. Each item has href, title, row (the short text of the list row) and hint (a date in the row markup). No article body leaves the page.
 // config: { link: "regex for article hrefs", more: "css selector of a load-more button" | "",
 //           max_steps: 60, delay_ms: 1200, stop_before: "YYYY-MM-DD" | "",
+//           page_template: "URL with {page}" | "", last_page: 9000, light: true,  (page mode: one page load per step)
+//           stop_probe: "regex on href with groups y, m, d" (page mode: stop when a page is older than stop_before)
 //           row_selector: "css selector of one list row" | "",
 //           deny: ["regex of URL paths that robots.txt disallows"] }
 // The page may load only its own site. A request to another site or to a denied path is aborted and counted.
@@ -17,7 +19,7 @@ if (!url || !userAgent) {
   console.error('usage: node list_browser.mjs <url> <user-agent> <config-json>')
   process.exit(2)
 }
-const config = Object.assign({ link: '', more: '', max_steps: 60, delay_ms: 1200, stop_before: '', deny: [], row_selector: '', partial: '' }, JSON.parse(configText || '{}'))
+const config = Object.assign({ link: '', more: '', max_steps: 60, delay_ms: 1200, stop_before: '', deny: [], row_selector: '', partial: '', page_template: '', last_page: 9000, light: false, stop_probe: '' }, JSON.parse(configText || '{}'))
 const delay = Math.max(1000, config.delay_ms)
 
 const browser = await chromium.launch()
@@ -31,6 +33,8 @@ try {
     const req = route.request()
     const u = new URL(req.url())
     if (['image', 'media', 'font'].includes(req.resourceType())) return route.abort()
+    // Page mode reads server-rendered lists: skip scripts and styles, so one page costs one request.
+    if (config.light && ['stylesheet', 'script'].includes(req.resourceType())) return route.abort()
     if (!u.hostname.endsWith(site)) return route.abort()
     if (denyRes.some((re) => re.test(u.pathname + u.search))) {
       denied.add(u.pathname)
@@ -61,6 +65,40 @@ try {
     return out
   }, [config.link, config.row_selector])
 
+  if (config.page_template) {
+    const all = new Map()
+    const probe = config.stop_probe ? new RegExp(config.stop_probe) : null
+    const letters = { A: 10, B: 11, C: 12 }
+    for (let pageNo = 1; pageNo <= Math.min(config.last_page, config.max_steps); pageNo++) {
+      // Page 1 is already open (the start url).
+      if (pageNo > 1) {
+        await page.goto(config.page_template.replace('{page}', String(pageNo)), { waitUntil: 'domcontentloaded', timeout: 30000 })
+      }
+      const items = await collect()
+      let added = 0
+      for (const it of items) {
+        if (!all.has(it.href)) { all.set(it.href, it); added += 1 }
+      }
+      if (!added) break
+      if (probe && config.stop_before) {
+        const dates = items.map((i) => {
+          const m = i.href.match(probe)
+          if (!m) return ''
+          const mo = letters[m.groups.m] || Number(m.groups.m)
+          return `${m.groups.y}-${String(mo).padStart(2, '0')}-${m.groups.d}`
+        }).filter(Boolean)
+        if (dates.length && dates.every((d) => d < config.stop_before)) break
+      }
+      if (config.partial && pageNo % 50 === 0) {
+        writeFileSync(config.partial, JSON.stringify({ items: [...all.values()], denied: [...denied] }))
+      }
+      await page.waitForTimeout(delay)
+    }
+    process.stdout.write(JSON.stringify({ items: [...all.values()], denied: [...denied] }) + '\n')
+    await browser.close()
+    process.exit(0)
+  }
+
   let lastCount = -1
   let stale = 0
   for (let step = 0; step < config.max_steps; step++) {
@@ -71,7 +109,7 @@ try {
     }
     if (items.length === lastCount) {
       stale += 1
-      if (stale >= 3) break
+      if (stale >= 8) break
     } else {
       stale = 0
     }
