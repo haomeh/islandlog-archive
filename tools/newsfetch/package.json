@@ -1,0 +1,10 @@
+{
+  "name": "islandlog-newsfetch-browser",
+  "private": true,
+  "description": "Browser helper for the article step (article_browser.mjs). R60, R61, R71.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "playwright": "1.64.1"
+  }
+}

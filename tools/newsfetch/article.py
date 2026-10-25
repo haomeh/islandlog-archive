@@ -5,8 +5,8 @@ This module keeps only those fields, cuts the quote to 150 characters and never 
 caches or logs the article body.
 
 CLI: python3 -m tools.newsfetch.article in.jsonl out.jsonl
-The browser helper is article_browser.mjs. It needs Node and the playwright package
-(set NEWSFETCH_NODE_PATH to a node_modules folder that has it).
+The browser helper is article_browser.mjs. It needs Node and the pinned playwright package:
+run `npm ci` in tools/newsfetch once (R71). NEWSFETCH_NODE_PATH can point to another node_modules folder.
 """
 
 import json
