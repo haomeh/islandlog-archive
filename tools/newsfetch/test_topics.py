@@ -121,6 +121,12 @@ class TopicTest(unittest.TestCase):
         self.assertEqual(topics.event_kind([{"actor_id": "a", "stance": "support"}, {"actor_id": "b", "stance": "oppose"}]), "controversy")
         self.assertEqual(topics.event_kind([{"actor_id": "a", "stance": "support"}, {"actor_id": "a", "stance": "oppose"}]), "historical_event")
 
+    def test_benign_phrases_are_not_sensitive(self):
+        self.assertFalse(topics.has_sensitive_term(["呼籲市府全面體檢危險廢棄物堆置場"]))
+        self.assertFalse(topics.has_sensitive_term(["為解決民眾就醫需求，醫院開設門診"]))
+        self.assertTrue(topics.has_sensitive_term(["病患就醫紀錄外洩"]))
+        self.assertTrue(topics.has_sensitive_term(["市長公開體檢報告"]))
+
     @unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
     def test_sensitive_from_source_quotes(self):
         import tempfile

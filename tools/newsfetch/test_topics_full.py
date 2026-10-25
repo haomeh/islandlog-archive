@@ -115,6 +115,11 @@ class RulesTest(unittest.TestCase):
                           "  status: draft-review\n---\n\n報導 [@src-20261023-cna-aaaaaaaa]。\n", encoding="utf-8")
             self.assertEqual(tf.refresh_sensitive(root), ["ev-x"])
             self.assertIn("sensitive: true", ev.read_text(encoding="utf-8"))
+            # A benign phrase only: the flag goes back to false.
+            (Path(root) / "sources/2026/src-20261023-cna-aaaaaaaa.yaml").write_text(
+                'title: "颱風期間醫院門診"\nquote: "為解決民眾就醫需求"\n', encoding="utf-8")
+            self.assertEqual(tf.refresh_sensitive(root), ["ev-x"])
+            self.assertIn("sensitive: false", ev.read_text(encoding="utf-8"))
 
     def test_topic_id_is_stable_ascii(self):
         a = tf.topic_id("仁愛圓環", "2026-09-26", "https://example.com/1")

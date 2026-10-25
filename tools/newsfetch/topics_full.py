@@ -576,23 +576,30 @@ def ensure_actor_files(root, ids):
 SYSTEM_REASON = "draft-review: 系統"
 
 
-def refresh_sensitive(root):
-    """R76 after the fact: read the source files that each system topic cites (title and quote) and set
-    review.sensitive: true on a hit. Returns the ids that changed."""
+def refresh_sensitive(root, seeds_path=None):
+    """R76 after the fact: recompute review.sensitive of each system topic from the cited source files
+    (title and quote), the seed flag and the misconduct type. Returns the ids that changed."""
     root = Path(root)
     texts = {}
     for p in (root / "sources").glob("*/*.yaml"):
         raw = p.read_text(encoding="utf-8")
         texts[p.stem] = [m.group(1) for m in re.finditer(r'^(?:title|quote): "?(.+?)"?$', raw, re.M)]
+    seeds_path = Path(seeds_path) if seeds_path else Path(__file__).with_name("topic_seeds.json")
+    try:
+        seed_flags = {s["event_id"]: bool(s.get("sensitive")) for s in json.load(open(seeds_path, encoding="utf-8"))}
+    except OSError:
+        seed_flags = {}
     changed = []
     for p in (root / "events" / "2026").glob("*.md"):
         doc, body = _read_event(p)
         review = doc.get("review", {})
-        if not str(review.get("reason", "")).startswith(SYSTEM_REASON) or review.get("sensitive"):
+        if not str(review.get("reason", "")).startswith(SYSTEM_REASON):
             continue
         cited = set(re.findall(r"src-[0-9a-z-]+", p.read_text(encoding="utf-8")))
-        if tp.has_sensitive_term([t for s in cited for t in texts.get(s, [])]):
-            review["sensitive"] = True
+        want = (seed_flags.get(doc["id"], False) or "misconduct" in doc.get("controversy_types", [])
+                or tp.has_sensitive_term([t for s in cited for t in texts.get(s, [])]))
+        if bool(review.get("sensitive")) != want:
+            review["sensitive"] = want
             _write_event(p, doc, body)
             changed.append(doc["id"])
     return changed

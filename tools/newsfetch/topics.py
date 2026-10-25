@@ -438,9 +438,14 @@ except OSError:
     SENSITIVE_TERMS = ()
 
 
+# The same benign phrases as the server CI-15 rule (server pkg/archive/rules.go, benignSensitiveRe).
+BENIGN_SENSITIVE = re.compile(r"(?:全面|徹底|重新|通盤)體檢|就醫(?:需求|不便|便利|時間|管道|資訊)")
+
+
 def has_sensitive_term(texts):
-    """R76: a sensitive term in a source title or a source quote makes the event sensitive (CI-15)."""
-    return any(term in t for t in texts if t for term in SENSITIVE_TERMS)
+    """R76: a sensitive term in a source title or a source quote makes the event sensitive (CI-15).
+    A benign phrase (全面體檢, 就醫需求) is removed first, as the server does."""
+    return any(term in BENIGN_SENSITIVE.sub("", t) for t in texts if t for term in SENSITIVE_TERMS)
 
 
 def event_kind(positions):
