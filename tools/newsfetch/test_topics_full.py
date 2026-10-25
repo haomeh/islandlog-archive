@@ -147,5 +147,63 @@ class RulesTest(unittest.TestCase):
         self.assertEqual(dfw["薔琵"], 2)
 
 
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class WithdrawTest(unittest.TestCase):
+    """R82: a published system topic that fails a gate is withdrawn. Its file and id stay."""
+    EVENT_ID = "ev-20261023-topic-c8f31c28"
+
+    def corpus(self, second_news_publisher):
+        filler = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        topic = [item("a", "桃園市府會勘南崁溪淤積問題", "2026-10-23"),
+                 item("b", "南崁溪石礫堆積 桃園市府將會勘", "2026-10-24", "聯合新聞網" if second_news_publisher else "自由時報"),
+                 item("c", "【錯誤】南崁溪淤積謠言", "2026-10-24", "MyGoPen", "fact_check")]
+        return filler + topic, topic
+
+    def run_in(self, root, second_news_publisher):
+        from tools.newsfetch import topics as tp
+        corpus, topic = self.corpus(second_news_publisher)
+        clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
+        ids = [tp.src_id(t, tp.HOSTS) for t in topic]
+        event = root / "events/2026" / f"{self.EVENT_ID}.md"
+        if not event.exists():
+            event.parent.mkdir(parents=True)
+            (root / "sources/2026").mkdir(parents=True)
+            (root / "actors").mkdir()
+            event.write_text(f"---\nid: {self.EVENT_ID}\nstatus: published\ntitle: 南崁溪\ntimeline:\n- date: '2026-10-23'\n"
+                             f"  source_ids: [{ids[0]}]\n- date: '2026-10-24'\n  source_ids: [{ids[1]}, {ids[2]}]\n"
+                             "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
+                             "  status: draft-review\n---\n\n報導。\n", encoding="utf-8")
+        stats, _, _ = tf.run(corpus, clusters, [], root, root / "report.json")
+        return stats, event.read_text(encoding="utf-8")
+
+    def test_a_topic_that_fails_a_gate_is_withdrawn_not_deleted(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            stats, text = self.run_in(Path(tmp), second_news_publisher=False)
+            self.assertEqual(stats["rejected_news_rule"], 1)
+            self.assertEqual(stats["withdrawn"], 1)
+            self.assertIn("status: withdrawn", text)
+            self.assertIn("reason: 'withdrawn: rejected_news_rule'", text.replace('"', "'"))
+            self.assertIn(f"id: {self.EVENT_ID}", text)
+            stats, again = self.run_in(Path(tmp), second_news_publisher=False)  # a second run changes nothing
+            self.assertEqual(again, text)
+
+    def test_a_topic_that_passes_the_gates_is_not_withdrawn(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            stats, text = self.run_in(Path(tmp), second_news_publisher=True)
+            self.assertEqual(stats["withdrawn"], 0)
+            self.assertEqual(stats["published"], 1)
+            self.assertIn("status: published", text)
+            self.assertIn(self.EVENT_ID, text)
+
+    def test_matching_published_needs_half_of_the_sources(self):
+        published = [{"id": "ev-1", "src_ids": {"s1", "s2", "s3", "s4"}}, {"id": "ev-2", "src_ids": set()}]
+        self.assertEqual(tf.matching_published(published, {"s1", "s2", "x"}), ["ev-1"])
+        self.assertEqual(tf.matching_published(published, {"s1", "x"}), [])
+
+
 if __name__ == "__main__":
     unittest.main()
