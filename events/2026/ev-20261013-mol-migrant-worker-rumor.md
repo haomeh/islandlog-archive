@@ -4,7 +4,7 @@ id: ev-20261013-mol-migrant-worker-rumor
 kind: historical_event
 status: published
 title: 移工懷孕
-summary: 2026-10-08至2026-10-24，自由時報、中央通訊社、聯合新聞網等共 14 則報導提及移工懷孕 [@src-20261008-ltn-59ef117c]。行政院等機關發布 2 則相關說明 [@src-20261013-mol-454380f3]。
+summary: 2026-10-08至2026-10-24，自由時報、中央通訊社、聯合新聞網等共 14 則報導提及移工懷孕 [@src-20261008-ltn-59ef117c]。行政院等機關發布 3 則相關說明 [@src-20261013-mol-454380f3]。
 start_date: '2026-10-08'
 start_date_precision: day
 gov_levels:
@@ -40,17 +40,20 @@ timeline:
 - id: tl-03
   date: '2026-10-15'
   date_precision: day
-  title: 2 則報導、1 則回應或澄清
+  title: 2 則報導、2 則回應或澄清、1 則官方發布
+  attributed_to: ac-ministry-of-labor
   source_ids:
   - src-20261015-ltn-8988f3e3
+  - src-20261015-mygopen-04fe5cdc
   - src-20261015-ltn-bd2a8209
-  - src-20261015-ltn-65fa3b1b
+  - src-20261015-mol-126dced3
 - id: tl-04
   date: '2026-10-16'
   date_precision: day
-  title: 1 則官方發布
+  title: 1 則回應或澄清、1 則官方發布
   attributed_to: ac-ministry-of-labor
   source_ids:
+  - src-20261016-mygopen-265da83f
   - src-20261016-mol-09c6bb81
 - id: tl-05
   date: '2026-10-17'
@@ -117,33 +120,49 @@ news_groups:
   note: 報導中的回應或澄清
 - id: ng-04
   timeline_id: tl-03
+  kind: clarification
+  title: 【誤導】移工來臺費用最高19萬元全由雇主買單？圖卡混淆適用對象與實施時程
+  representative_source_id: src-20261015-mygopen-04fe5cdc
+  source_ids:
+  - src-20261015-mygopen-04fe5cdc
+  note: MyGoPen的查核
+- id: ng-05
+  timeline_id: tl-03
   kind: report
   title: 移工政策惹民怨！雇主協會調查94％不滿意 近9成反對失聯移工就地合法
   representative_source_id: src-20261015-ltn-bd2a8209
   source_ids:
   - src-20261015-ltn-bd2a8209
-- id: ng-05
+- id: ng-06
   timeline_id: tl-03
   kind: report
   title: 逾9成家事移工雇主不滿移工政策要求改革 勞動部這麼說
   representative_source_id: src-20261015-ltn-65fa3b1b
   source_ids:
   - src-20261015-ltn-65fa3b1b
-- id: ng-06
+- id: ng-07
+  timeline_id: tl-04
+  kind: clarification
+  title: 【錯誤】網傳「印尼群組攻略」教移工領百萬老年給付？惡意解讀！不實說法且金額誇大
+  representative_source_id: src-20261016-mygopen-265da83f
+  source_ids:
+  - src-20261016-mygopen-265da83f
+  note: MyGoPen的查核
+- id: ng-08
   timeline_id: tl-05
   kind: report
   title: 失聯移工見警駕車逃竄  高雄警強力追捕2人送辦
   representative_source_id: src-20261017-ltn-75c008aa
   source_ids:
   - src-20261017-ltn-75c008aa
-- id: ng-07
+- id: ng-09
   timeline_id: tl-06
   kind: report
   title: 碧潭大橋驚魂記！疑失聯移工躲查緝 跳2樓半高慘摔空地
   representative_source_id: src-20261019-ltn-c6fce7b4
   source_ids:
   - src-20261019-ltn-c6fce7b4
-- id: ng-08
+- id: ng-10
   timeline_id: tl-07
   kind: report
   title: 非法媒介失聯移工7年暴賺4千萬 主嫌起訴求刑3年
@@ -151,14 +170,14 @@ news_groups:
   source_ids:
   - src-20261020-ltn-1dfd3597
   - src-20261021-ltn-ce31d053
-- id: ng-09
+- id: ng-11
   timeline_id: tl-07
   kind: report
   title: 仲介招攬失聯移工大賺黑心錢 移民署查抄逮14人
   representative_source_id: src-20261020-ltn-2f529840
   source_ids:
   - src-20261020-ltn-2f529840
-- id: ng-10
+- id: ng-12
   timeline_id: tl-08
   kind: clarification
   title: 從歧視、高額仲介費到黑戶寶寶，為什麼移工寧願「失聯」也不敢求救？
@@ -166,28 +185,28 @@ news_groups:
   source_ids:
   - src-20261021-tfc-fd17d7cd
   note: 台灣事實查核中心的查核
-- id: ng-11
+- id: ng-13
   timeline_id: tl-09
   kind: report
   title: 移民署查獲14名失聯移工及逾期停留者台南打黑工
   representative_source_id: src-20261022-cna-04f6ff17
   source_ids:
   - src-20261022-cna-04f6ff17
-- id: ng-12
+- id: ng-14
   timeline_id: tl-09
   kind: report
   title: 印尼移工網售藥物仲介診所助墮胎　一審判刑2年6月
   representative_source_id: src-20261022-cna-f5503712
   source_ids:
   - src-20261022-cna-f5503712
-- id: ng-13
+- id: ng-15
   timeline_id: tl-10
   kind: report
   title: 追捕失聯越南籍移工 2海巡人員遭蜂螫傷無生命危險
   representative_source_id: src-20261024-udn-cda2df53
   source_ids:
   - src-20261024-udn-cda2df53
-- id: ng-14
+- id: ng-16
   timeline_id: tl-10
   kind: report
   title: 外籍移工福利優於台灣勞工？懷孕拿60天薪水、8周全薪假　生育補助最高10萬誰能領？
@@ -213,15 +232,21 @@ review:
 
 行政院發布「有關社群軟體上流傳貼文「移工懷孕勞動部一句話讓雇主養他全家」為嚴重錯誤資訊，勞動部澄清」 [@src-20261013-mol-454380f3]。
 
-## 2026-10-15　2 則報導、1 則回應或澄清
+## 2026-10-15　2 則報導、2 則回應或澄清、1 則官方發布
 
 自由時報以「遭控縱容雇主鑽漏洞剝削履約移工 勞動部提出5點回應」為題報導 [@src-20261015-ltn-8988f3e3]。
+
+MyGoPen發布查核報告「【誤導】移工來臺費用最高19萬元全由雇主買單？圖卡混淆適用對象與實施時程」 [@src-20261015-mygopen-04fe5cdc]。
+
+行政院發布「民間團體於今日（15）針對移工雇主權益所召開之記者會，勞動部回應」 [@src-20261015-mol-126dced3]。
 
 自由時報以「移工政策惹民怨！雇主協會調查94％不滿意 近9成反對失聯移工就地合法」為題報導 [@src-20261015-ltn-bd2a8209]。
 
 自由時報以「逾9成家事移工雇主不滿移工政策要求改革 勞動部這麼說」為題報導 [@src-20261015-ltn-65fa3b1b]。
 
-## 2026-10-16　1 則官方發布
+## 2026-10-16　1 則回應或澄清、1 則官方發布
+
+MyGoPen發布查核報告「【錯誤】網傳「印尼群組攻略」教移工領百萬老年給付？惡意解讀！不實說法且金額誇大」 [@src-20261016-mygopen-265da83f]。
 
 行政院發布「針對移工聯盟及台權會今(10/15)日召開「台灣離岸風電產業蓬勃發展，背後卻存在大規模剝削外籍專業技術工人的制度漏洞！」記者會，勞動部回應」 [@src-20261016-mol-09c6bb81]。
 

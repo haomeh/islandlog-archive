@@ -127,6 +127,7 @@
     },
     "external_refs": { "$ref": "common.schema.json#/$defs/external_refs" },
     "privacy": { "$ref": "common.schema.json#/$defs/privacy" },
+    "correction_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/correction_id" } },
     "review": { "$ref": "common.schema.json#/$defs/review" }
   },
   "allOf": [

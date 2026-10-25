@@ -5,7 +5,7 @@
   "description": "Applies to corrections/<YYYY>/cr-*.yaml. Correction records are append-only. A takedown record must not name the removed personal data.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "id", "target_ids", "date", "type", "summary", "mr_url"],
+  "required": ["schema_version", "id", "target_ids", "date", "type", "summary", "made_by"],
   "properties": {
     "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
     "id": { "$ref": "common.schema.json#/$defs/correction_id" },
@@ -13,6 +13,11 @@
     "date": { "$ref": "common.schema.json#/$defs/date" },
     "type": { "enum": ["factual", "attribution", "source", "privacy", "takedown"] },
     "summary": { "type": "string", "minLength": 1 },
-    "mr_url": { "$ref": "common.schema.json#/$defs/url" }
-  }
+    "made_by": { "enum": ["editor", "tool"], "description": "An editor record names its merge request. A tool record is written by a tool and names the gate and the rule." },
+    "mr_url": { "$ref": "common.schema.json#/$defs/url" },
+    "gate": { "type": "string", "minLength": 1, "description": "The gate counter that failed, for example rejected_no_gov_actor." },
+    "rule_id": { "type": "string", "pattern": "^R[0-9]+$", "description": "The rule that required the correction, for example R82." }
+  },
+  "if": { "properties": { "made_by": { "const": "editor" } }, "required": ["made_by"] },
+  "then": { "required": ["mr_url"] }
 }

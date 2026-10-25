@@ -76,9 +76,9 @@ CENTRAL = [  # regex, actor id, name, actor type
     (r"法務部", "ac-ministry-of-justice", "法務部", "gov_agency"),
     (r"經濟部|能源署", "ac-ministry-of-economic-affairs", "經濟部", "gov_agency"),
     (r"交通部|公路局|觀光署|氣象署", "ac-ministry-of-transportation", "交通部", "gov_agency"),
-    (r"勞動部", "ac-ministry-of-labor", "勞動部", "gov_agency"),
+    (r"勞動部|勞保|勞退", "ac-ministry-of-labor", "勞動部", "gov_agency"),
     (r"農業部|林保署|防檢署", "ac-ministry-of-agriculture", "農業部", "gov_agency"),
-    (r"衛福部|衛生福利部|健保署|疾管署", "ac-ministry-of-health-and-welfare", "衛生福利部", "gov_agency"),
+    (r"衛福部|衛生福利部|健保|國民年金|疾管署", "ac-ministry-of-health-and-welfare", "衛生福利部", "gov_agency"),
     (r"食藥署", "ac-taiwan-fda", "衛生福利部食品藥物管理署", "gov_agency"),
     (r"環境部", "ac-ministry-of-environment", "環境部", "gov_agency"),
     (r"文化部", "ac-ministry-of-culture", "文化部", "gov_agency"),
@@ -406,9 +406,38 @@ def matching_published(published, src_ids):
             if p.get("src_ids") and len(src_ids & p["src_ids"]) >= MERGE_OVERLAP * len(p["src_ids"])]
 
 
-def withdraw_topic(root, event_id, gate, ref="HEAD"):
-    """R82: a published system topic that fails a gate keeps its file and id. It gets status withdrawn and the
-    failed gate in review.reason. A missing file is restored from the git ref first. Returns the file path."""
+WITHDRAW_RULE = "R82"
+
+
+def _correction_records(root):
+    import yaml
+    return [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted((Path(root) / "corrections").glob("*/cr-*.yaml"))]
+
+
+def write_withdrawal_record(root, event_id, gate, today):
+    """R86, R95: a withdrawal writes a correction record made by the tool: the event, the date, the failed gate
+    and the rule. A second run finds the record of the same event and gate and writes nothing. Returns the id."""
+    import yaml
+    root = Path(root)
+    records = _correction_records(root)
+    for r in records:
+        if r.get("made_by") == "tool" and r.get("target_ids") == [event_id] and r.get("gate") == gate:
+            return r["id"]
+    stamp = today.replace("-", "")
+    used = [int(r["id"][-2:]) for r in records if r["id"].startswith(f"cr-{stamp}-")]
+    cid = f"cr-{stamp}-{max(used, default=0) + 1:02d}"
+    doc = {"schema_version": 1, "id": cid, "target_ids": [event_id], "date": today, "type": "factual",
+           "summary": f"系統撤回事件：未通過 {gate}（{WITHDRAW_RULE}）。", "made_by": "tool", "gate": gate, "rule_id": WITHDRAW_RULE}
+    path = root / "corrections" / today[:4] / f"{cid}.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000), encoding="utf-8")
+    return cid
+
+
+def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
+    """R82: a published system topic that fails a gate keeps its file and id. It gets status withdrawn, the
+    failed gate in review.reason and a link to its correction record (R86). A missing file is restored from the
+    git ref first. Returns the file path."""
     import subprocess
     root = Path(root)
     year = event_id.split("-")[1][:4]
@@ -421,6 +450,9 @@ def withdraw_topic(root, event_id, gate, ref="HEAD"):
     doc, body = _read_event(path)
     doc["status"] = "withdrawn"
     doc["review"]["reason"] = f"withdrawn: {gate}"
+    cid = write_withdrawal_record(root, event_id, gate, today or date.today().isoformat())
+    if cid not in doc.get("correction_ids", []):
+        doc["correction_ids"] = doc.get("correction_ids", []) + [cid]
     _write_event(path, doc, body)
     return path
 
@@ -501,7 +533,7 @@ def published_source_urls(root):
     return cited
 
 
-def run(corpus, clusters, existing_seeds, root, report_path):
+def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     df = tp.document_frequency(corpus)
     mf = MonthFrequency(corpus)
     by_url = {it["url"]: it for it in corpus}
@@ -665,7 +697,7 @@ def run(corpus, clusters, existing_seeds, root, report_path):
     covered.update(p["id"] for p in published)
     withdrawn = {pid: gate for pid, gate in failed.items() if pid not in covered}
     for pid, gate in sorted(withdrawn.items()):
-        withdraw_topic(root, pid, gate)
+        withdraw_topic(root, pid, gate, today=today)
     stats["withdrawn"] = len(withdrawn)
     keys = {k[0]: k[1] for k in existing_key_by_id}
     keys.update({p["id"]: p["key"] for p in published})

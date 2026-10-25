@@ -170,6 +170,22 @@ class RulesTest(unittest.TestCase):
         self.assertEqual(dfw["薔琵"], 2)
 
 
+class NationalSystemActorTest(unittest.TestCase):
+    """R94: a national system in a title maps to its agency."""
+
+    def actors(self, title):
+        return tf.detect_gov_actors([title], ["jur-tw"])
+
+    def test_each_system_maps_to_its_agency(self):
+        cases = {"健保": "ac-ministry-of-health-and-welfare", "國民年金": "ac-ministry-of-health-and-welfare",
+                 "勞保": "ac-ministry-of-labor", "勞退": "ac-ministry-of-labor"}
+        for term, agency in cases.items():
+            self.assertEqual(self.actors(f"長者{term}費 新制上路"), [agency], term)
+
+    def test_a_real_title(self):
+        self.assertIn("ac-ministry-of-health-and-welfare", self.actors("爸媽搬去子女家，健保費會取消嗎？"))
+
+
 @unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
 class WithdrawTest(unittest.TestCase):
     """R82: a published system topic that fails a gate is withdrawn. Its file and id stay."""
@@ -182,7 +198,7 @@ class WithdrawTest(unittest.TestCase):
                  item("c", "【錯誤】南崁溪淤積謠言", "2026-10-24", "MyGoPen", "fact_check")]
         return filler + topic, topic
 
-    def run_in(self, root, second_news_publisher):
+    def run_in(self, root, second_news_publisher, today="2026-10-25"):
         from tools.newsfetch import topics as tp
         corpus, topic = self.corpus(second_news_publisher)
         clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
@@ -196,7 +212,7 @@ class WithdrawTest(unittest.TestCase):
                              f"  source_ids: [{ids[0]}]\n- date: '2026-10-24'\n  source_ids: [{ids[1]}, {ids[2]}]\n"
                              "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
                              "  status: draft-review\n---\n\n報導。\n", encoding="utf-8")
-        stats, _, _ = tf.run(corpus, clusters, [], root, root / "report.json")
+        stats, _, _ = tf.run(corpus, clusters, [], root, root / "report.json", today=today)
         return stats, event.read_text(encoding="utf-8")
 
     def test_a_topic_that_fails_a_gate_is_withdrawn_not_deleted(self):
@@ -211,6 +227,23 @@ class WithdrawTest(unittest.TestCase):
             self.assertIn(f"id: {self.EVENT_ID}", text)
             stats, again = self.run_in(Path(tmp), second_news_publisher=False)  # a second run changes nothing
             self.assertEqual(again, text)
+
+    def test_a_withdrawal_writes_one_correction_record(self):
+        import tempfile
+        import yaml
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=False, today="2026-10-25")
+            files = sorted((root / "corrections").glob("*/cr-*.yaml"))
+            self.assertEqual([f.name for f in files], ["cr-20261025-01.yaml"])
+            rec = yaml.safe_load(files[0].read_text(encoding="utf-8"))
+            self.assertEqual((rec["made_by"], rec["gate"], rec["rule_id"]), ("tool", "rejected_news_rule", "R82"))
+            self.assertEqual((rec["target_ids"], rec["date"], "mr_url" in rec), ([self.EVENT_ID], "2026-10-25", False))
+            doc = yaml.safe_load((root / "events/2026" / f"{self.EVENT_ID}.md").read_text(encoding="utf-8").split("---\n")[1])
+            self.assertEqual(doc["correction_ids"], ["cr-20261025-01"])
+            self.run_in(root, second_news_publisher=False, today="2026-10-26")  # a later run adds nothing
+            self.assertEqual(len(list((root / "corrections").glob("*/cr-*.yaml"))), 1)
 
     def test_a_topic_that_passes_the_gates_is_not_withdrawn(self):
         import tempfile
