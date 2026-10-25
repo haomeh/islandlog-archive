@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260618-taichung-costco-fine-appeal
-kind: controversy
+kind: historical_event
 status: published
 title: 臺中市好市多
 summary: 2026-06-12至2026-07-15，自由時報共 16 則報導提及好市多 [@src-20260612-ltn-f4ecdcef]。臺南市政府等機關發布 1 則相關說明 [@src-20260707-tainan-1d67783e]。

@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260712-hengchun-ghost-festival-hiring-scam
-kind: controversy
+kind: historical_event
 status: published
 title: 屏東縣豎孤棚
 summary: 2026-07-12，自由時報共 2 則報導提及豎孤棚 [@src-20260712-ltn-bae5bfd1]。

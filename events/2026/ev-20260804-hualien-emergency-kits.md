@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260804-hualien-emergency-kits
-kind: controversy
+kind: historical_event
 status: published
 title: 花蓮避難包
 summary: 2026-08-04至2026-08-05，自由時報共 2 則報導提及花蓮避難包 [@src-20260804-ltn-ee471cab]。

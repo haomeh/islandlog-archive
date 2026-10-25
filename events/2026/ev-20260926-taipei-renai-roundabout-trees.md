@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260926-taipei-renai-roundabout-trees
-kind: controversy
+kind: historical_event
 status: published
 title: 臺北市仁愛圓環
 summary: 2026-09-26，自由時報共 3 則報導提及仁愛圓環 [@src-20260926-ltn-b2721815]。

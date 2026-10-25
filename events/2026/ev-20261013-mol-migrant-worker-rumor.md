@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20261013-mol-migrant-worker-rumor
-kind: controversy
+kind: historical_event
 status: published
 title: 移工懷孕
 summary: 2026-10-08至2026-10-24，自由時報、中央通訊社、TVBS等共 19 則報導提及移工懷孕 [@src-20261008-ltn-59ef117c]。行政院等機關發布 3 則相關說明 [@src-20261013-mol-454380f3]。

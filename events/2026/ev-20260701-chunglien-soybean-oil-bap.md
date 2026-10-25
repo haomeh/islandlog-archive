@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260701-chunglien-soybean-oil-bap
-kind: controversy
+kind: historical_event
 status: published
 title: 中聯油脂
 summary: 2026-07-01至2026-07-15，自由時報共 45 則報導提及中聯油脂 [@src-20260701-ltn-9e6942bd]。臺南市政府等機關發布 10 則相關說明 [@src-20260703-tainan-130954d4]。

@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260424-mingjian-incinerator-eia
-kind: controversy
+kind: historical_event
 status: published
 title: 南投縣焚化爐
 summary: 2026-04-24至2026-08-27，自由時報共 43 則報導提及焚化爐 [@src-20260424-ltn-b391e398]。臺南市政府等機關發布 1 則相關說明 [@src-20260818-tainan-a520c9d2]。

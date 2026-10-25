@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260626-formosa-fun-coast-state-compensation
-kind: controversy
+kind: historical_event
 status: published
 title: 八仙塵爆
 summary: 2026-06-26至2026-07-28，自由時報共 5 則報導提及八仙塵爆 [@src-20260626-ltn-f8d3ea75]。

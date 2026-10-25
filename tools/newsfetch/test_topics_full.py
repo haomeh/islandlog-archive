@@ -82,6 +82,25 @@ class RulesTest(unittest.TestCase):
         self.assertTrue(tf.has_sensitive_term(["確保國人出入平安及就醫權益"]))
         self.assertFalse(tf.has_sensitive_term(["餵豬罰鍰提高"]))
 
+    def test_news_rule_needs_two_news_publishers(self):
+        stats = [item("a", "統計", "2026-10-24", "內政部", "official_statement"), item("b", "統計2", "2026-10-24", "內政部", "official_statement")]
+        self.assertFalse(tf.meets_news_rule(stats))
+        one = [item("c", "x", "2026-10-24"), item("d", "y", "2026-10-24")]
+        self.assertFalse(tf.meets_news_rule(one))
+        self.assertFalse(tf.meets_news_rule([item("c", "x", "2026-10-24"), item("e", "【錯誤】x", "2026-10-24", "MyGoPen", "fact_check")]))
+        self.assertTrue(tf.meets_news_rule(one + [item("f", "z", "2026-10-24", "中央通訊社")]))
+
+    def test_sub_topic_links_to_the_older_topic(self):
+        parent = {"id": "ev-typhoon", "start": "2026-10-21", "end": "2026-10-24", "jurisdictions": ["jur-tw", "jur-64000000"],
+                  "key": "薔琵", "titles": ["薔琵颱風逼近"] * 5}
+        child = {"id": "ev-dayoff", "start": "2026-10-23", "end": "2026-10-23", "jurisdictions": ["jur-66000000"], "key": "颱風假",
+                 "titles": ["台中續放颱風假", "薔琵來襲 台中颱風假", "颱風假 市府宣布"]}
+        other = {"id": "ev-oil", "start": "2026-07-01", "end": "2026-08-31", "jurisdictions": ["jur-tw"], "key": "中聯",
+                 "titles": ["中聯油脂"]}
+        self.assertEqual(tf.link_subtopics([parent, child, other]), {"ev-dayoff": "ev-typhoon"})
+        child["titles"] = ["台中續放颱風假"] * 11  # under 10% mention 薔琵
+        self.assertEqual(tf.link_subtopics([parent, child, other]), {})
+
     def test_topic_id_is_stable_ascii(self):
         a = tf.topic_id("仁愛圓環", "2026-09-26", "https://example.com/1")
         self.assertEqual(a, tf.topic_id("仁愛圓環", "2026-09-26", "https://example.com/1"))

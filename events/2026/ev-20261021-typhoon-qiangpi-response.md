@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20261021-typhoon-qiangpi-response
-kind: controversy
+kind: historical_event
 status: published
 title: 薔琵颱風
 summary: 2026-10-14至2026-10-24，自由時報、中央通訊社、Newtalk等共 66 則報導提及薔琵颱風 [@src-20261014-ltn-dbea5472]。高雄市政府等機關發布 15 則相關說明 [@src-20261019-kcg-2391a97c]。

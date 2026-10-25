@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260729-moi-petition-dissolve-cupp
-kind: controversy
+kind: historical_event
 status: published
 title: 統促黨
 summary: 2026-07-29至2026-10-09，自由時報共 27 則報導提及統促黨 [@src-20260729-moi-17f0d2ab]。內政部等機關發布 1 則相關說明 [@src-20260729-moi-17f0d2ab]。

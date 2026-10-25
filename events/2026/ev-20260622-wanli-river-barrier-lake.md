@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260622-wanli-river-barrier-lake
-kind: controversy
+kind: historical_event
 status: published
 title: 萬里溪堰塞湖
 summary: 2026-06-22至2026-07-17，自由時報共 52 則報導提及萬里溪堰塞湖 [@src-20260622-ltn-e862dbc8]。行政院等機關發布 4 則相關說明 [@src-20260627-ey-cd805902]。

@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 id: ev-20260427-kaohsiung-potato-poisoning-rumor
-kind: controversy
+kind: historical_event
 status: published
 title: 馬鈴薯中毒
 summary: 2026-04-27至2026-05-05，自由時報共 8 則報導提及馬鈴薯中毒 [@src-20260427-ltn-7d07b5cb]。
