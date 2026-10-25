@@ -19,5 +19,6 @@ values:
   - { slug: indigenous_community, label_zh: 原住民族部落 }
   - { slug: academic_expert, label_zh: 學者專家 }
   - { slug: media, label_zh: 媒體 }
+  - { slug: public_commentator, label_zh: 公眾評論者, note: R58. Named only for public posts. Needs named_basis_source_ids that state the public identity. }
   - { slug: private_individual, label_zh: 私人, note: Limited by D10. Needs named_basis_source_ids of grade A. }
   - { slug: foreign_actor, label_zh: 外國行動者 }

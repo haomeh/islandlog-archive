@@ -20,6 +20,8 @@
     "archive_url": { "$ref": "common.schema.json#/$defs/url" },
     "has_archive_url": { "type": "boolean" },
     "quote": { "type": "string", "minLength": 1 },
+    "section": { "type": "string", "minLength": 1, "maxLength": 40 },
+    "byline": { "type": "string", "minLength": 1, "maxLength": 80 },
     "official_identifier": { "type": "string", "minLength": 1 },
     "license": { "$ref": "common.schema.json#/$defs/license" },
     "attribution": { "type": "string", "minLength": 1 }

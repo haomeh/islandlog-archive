@@ -14,7 +14,7 @@ review_reason:
 
 ## Checklist
 
-- [ ] A senior editor decided the request (CONTRIBUTING, section 6).
+- [ ] A senior editor decided the request (CONTRIBUTING, section 7).
 - [ ] The public correction record does not write the removed personal data.
 - [ ] Two approvals, one from a senior editor.
 - [ ] `islandlog validate .` passes on my machine.

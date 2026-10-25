@@ -38,7 +38,7 @@
       "enum": ["interior", "foreign_affairs", "defense", "finance", "education", "justice", "economy_energy", "transport", "labor", "agriculture", "health_welfare", "environment", "culture", "digital_affairs", "ocean", "science_technology", "indigenous_peoples", "hakka_affairs", "veterans", "financial_supervision", "fair_trade", "communications", "mainland_affairs", "overseas_community"]
     },
     "actor_type": {
-      "enum": ["gov_agency", "elected_official", "appointed_official", "civil_servant", "legislature", "party", "court", "control_body", "company", "state_owned_enterprise", "industry_association", "ngo", "social_movement", "community_group", "indigenous_community", "academic_expert", "media", "private_individual", "foreign_actor"]
+      "enum": ["gov_agency", "elected_official", "appointed_official", "civil_servant", "legislature", "party", "court", "control_body", "company", "state_owned_enterprise", "industry_association", "ngo", "social_movement", "community_group", "indigenous_community", "academic_expert", "media", "public_commentator", "private_individual", "foreign_actor"]
     },
     "lifecycle_stage": {
       "description": "Only stages 1 to 7. dormant and reopened are computed at query time and are rejected here (CI-23).",
@@ -69,7 +69,8 @@
       "required": ["sensitive", "reason"],
       "properties": {
         "sensitive": { "type": "boolean" },
-        "reason": { "type": "string" }
+        "reason": { "type": "string" },
+        "status": { "enum": ["draft-review", "editor-approved"] }
       }
     },
     "external_ref": {
