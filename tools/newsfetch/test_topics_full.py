@@ -91,6 +91,29 @@ class RulesTest(unittest.TestCase):
         self.assertFalse(tf.taiwan_relevant(["西藏那曲地震", "那曲震災死傷", "外交部慰問"]))
         self.assertTrue(tf.taiwan_relevant(["新北敬老卡改制", "新北市府說明", "長者不滿"]))
 
+    def test_national_systems_count_as_taiwan(self):  # R84
+        titles = ["長者健保費補助爭議　台灣前進陣線全台串連宣講", "藍議員問長者健保費中央買單？周春米：立法院要「精傱」一點啦",
+                  "蘇巧慧支持中央補助長者健保費且全國一致", "《少康戰情室專訪》蘇巧慧：長者健保費補助 全國應一致"]
+        self.assertTrue(tf.taiwan_relevant(titles))
+        self.assertTrue(tf.taiwan_relevant(["勞保年金改革", "國民年金保費調漲", "衛福部說明"]))
+        self.assertFalse(tf.taiwan_relevant(["美國醫保改革", "川普簽署醫保法案", "日本年金制度"]))
+
+    def test_name_must_be_a_noun_phrase(self):  # R85
+        for bad in ("總統府高層也在場", "總統府高層", "官員表示", "部長指出", "局長回應", "專家強調", "委員認為", "他透露", "名嘴坦言", "市府稱", "北市府說"):
+            self.assertFalse(tf.noun_phrase_name(bad), bad)
+        for good in ("長者健保費", "敬老卡", "薔琵颱風", "南崁溪淤積", "豎孤棚"):
+            self.assertTrue(tf.noun_phrase_name(good), good)
+
+    def test_next_candidate_is_tried_and_none_fails(self):  # R85
+        from tools.newsfetch import topics as tp
+        titles = ["颱風天燒千萬公帑「幫徐佳青辦慶生趴」？他再曝：總統府高層也在場",
+                  "僑委會颱風天燒1492萬幫徐佳青慶生 凌濤再爆：多名總統府高層也在場"]
+        corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)] + \
+                 [item(str(i), t, "2026-10-24") for i, t in enumerate(titles)]
+        df = tp.document_frequency(corpus)
+        key = tf.pick_noun_key(titles, df, len(corpus))
+        self.assertTrue(key == "" or tf.noun_phrase_name(key), key)
+
     def test_sensitive_terms_from_taxonomy(self):
         self.assertTrue(tf.has_sensitive_term(["確保國人出入平安及就醫權益"]))
         self.assertFalse(tf.has_sensitive_term(["餵豬罰鍰提高"]))

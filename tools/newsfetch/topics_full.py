@@ -194,12 +194,33 @@ def is_person_or_party(key, titles):
     return bool(PARTIES.search(key)) or tp._is_person_or_speaker(key, titles) or bool(re.search(r"議長|議員|市長|縣長|立委|部長", key))
 
 
+NATIONAL_SYSTEMS = re.compile(r"健保|勞保|勞退|國民年金|國保|公保|軍保|長照|衛福部|衛生福利部|健保署|勞保局|勞動部|國人")  # R84
+SPEECH_END = re.compile(r"(表示|指出|在場|回應|強調|認為|透露|坦言|[說稱])$")  # R85
+ROLE_FRAGMENT = re.compile(r"(高層|高官|幕僚|官員|人士|發言人)$")
+
+
+def noun_phrase_name(name):
+    """R85: a topic name is a noun phrase. A speech or sentence predicate at the end, or a person-role fragment, fails."""
+    return not (SPEECH_END.search(name) or ROLE_FRAGMENT.search(name))
+
+
+def pick_noun_key(titles, df, total, dfw=None):
+    """The best key whose name is a noun phrase (R85). A rejected candidate and its overlaps are left out and the next
+    candidate is tried. Returns an empty string when no candidate passes."""
+    tried = []
+    while True:
+        key = tp.pick_key(titles, df, total, exclude=tuple(tried), dfw=dfw)
+        if not key or noun_phrase_name(key):
+            return key
+        tried.append(key)
+
+
 def taiwan_relevant(titles):
     n = max(1, len(titles))
     hits = 0
     for t in titles:
         if any(term in t for _, _, _, terms in JURS for term in terms) or LOCAL_GOV.search(t) \
-                or any(re.search(p, t) for p, _, _, _ in CENTRAL) or re.search(r"台灣|臺灣|全台|國人", t):
+                or any(re.search(p, t) for p, _, _, _ in CENTRAL) or NATIONAL_SYSTEMS.search(t) or re.search(r"台灣|臺灣|全台|國人", t):
             hits += 1
     return hits >= RELEVANCE_SHARE * n
 
@@ -514,7 +535,7 @@ def run(corpus, clusters, existing_seeds, root, report_path):
         its = sorted((by_url[u] for u in urls), key=lambda j: (j["published_on"], j["url"]))
         lo = _day(its[0]["published_on"]) - timedelta(days=tp.WINDOW_BEFORE)
         hi = _day(its[-1]["published_on"]) + timedelta(days=tp.WINDOW_AFTER)
-        key = tp.pick_key([i["title"] for i in its], df, len(corpus), dfw=mf.window(lo, hi)) if len(its) > 1 else ""
+        key = pick_noun_key([i["title"] for i in its], df, len(corpus), dfw=mf.window(lo, hi)) if len(its) > 1 else ""
         if not key:
             stats["rejected_no_key"] += 1
             fail("rejected_no_key", urls)
@@ -571,7 +592,7 @@ def run(corpus, clusters, existing_seeds, root, report_path):
             members = [m for m in members if full in m["title"]]
             titles = [m["title"] for m in members]
             key = full
-        if not name_ok(key, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members)) \
+        if not noun_phrase_name(key) or not name_ok(key, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members)) \
                 or not has_word_boundary(key, titles, df) or is_person_or_party(key, titles) \
                 or is_quoted_slogan(key, titles) or is_place_name(key):
             stats["rejected_name_quality"] += 1
@@ -605,6 +626,10 @@ def run(corpus, clusters, existing_seeds, root, report_path):
         local = [j for j in jids if j != "jur-tw"]
         names = [next(n for jid, _, n, _ in JURS if jid == j)[:-2] for j in local]
         name = tp.display_name(key, [s["title"] for s in seeds])
+        if not noun_phrase_name(name):
+            stats["rejected_name_quality"] += 1
+            fail("rejected_name_quality", [m["url"] for m in members])
+            continue
         title = tp.topic_title(name, names, national="jur-tw" in jids)
         event_id = stable_id(published_ids, title, members[0]["published_on"], members[-1]["published_on"],
                              topic_id(key, members[0]["published_on"], members[0]["url"]))
