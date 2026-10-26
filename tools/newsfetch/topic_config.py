@@ -123,3 +123,11 @@ THEME_MIN_MONTHS = 6  # A key is a theme word when it has 2 uses or more in this
 THEME_MAX_MONTH_SHARE = 0.5  # ... and no month holds this share of its uses: a case or an issue has a burst. Sample T26-P: 政治獻金 top month 38%, 追加預算 46% (R162).
 DUPLICATE_NEAR_DAYS = 7  # Two new topics, or a new topic and an old one, that are at most this many days apart are one issue when they share a rare term of DUPLICATE_NEAR_TERM_LEN characters. Sample T26-P: 立院三讀免健保費 and 長者有條件免健保費 are 1 day apart (R162).
 DUPLICATE_NEAR_TERM_LEN = 4  # ... which is shorter than DUPLICATE_TERM_LEN because the topics are close in time. Sample T26-P: 免健保費 (R162).
+
+# --- Gate round T32 (R194 to R199): the general rules after the day-2 precision fail. ---
+TITLE_TERM_MIN_TITLES = 2  # A key that sits inside a quote, or after a colon or 稱, in this many titles is words of a speaker (R196.2). Sample T31-P: 大不過憲法 (8 of 10 titles), 立院刪預算 (3 of 3).
+TITLE_TERM_SHARE = 0.4  # ... and in this share of the titles that hold the key. An issue that a few titles quote (卓榮泰：無人機條例需修正) stays a name. Start (R196.2); the dry run measures it.
+SCOPE_MIN_TITLES = 2  # A government level is a big group of a topic when this many titles name it alone ... Sample T31-P: 提追加預算 has 2 city titles and 2 central titles (R196.4).
+SCOPE_MIN_SHARE = 0.25  # ... and they are this share of the titles. Two big groups of two levels are a mixed cluster. A smaller group is off topic title by title: 媒宣費 has 2 city titles in 34 (R196.4, R196.6).
+ACTOR_SHARE = 0.5  # A body is the actor of a topic when this share of its titles names it. The duplicate test compares the actors (R196.7).
+ACT_MATCH_LEN = 2  # Two names have the same act when their act parts share this many characters (人事同意權 and 人事) (R196.7).

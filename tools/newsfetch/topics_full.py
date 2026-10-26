@@ -37,7 +37,8 @@ from tools.newsfetch.topic_config import (
     ACCIDENT_POLICY_SHARE, ACCIDENT_SHARE, CANDIDATE_MIN_TITLES, CANDIDATE_SHARE, DUPLICATE_GAP_DAYS, DUPLICATE_MIN_TITLES,
     DUPLICATE_TERM_LEN, DUPLICATE_TERM_MAX_DF, GOV_ACT_SHARE,
     NUMBER_CUT_SHARE, OFFICIAL_HEALTH_SHARE, QUOTE_COLON_SHARE, SLOGAN_MAX_LEN, THEME_MAX_MONTH_SHARE, THEME_MIN_MONTHS, THEME_MIN_USES,
-    DUPLICATE_NEAR_DAYS, DUPLICATE_NEAR_TERM_LEN)
+    DUPLICATE_NEAR_DAYS, DUPLICATE_NEAR_TERM_LEN,
+    ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE)
 
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票|對手陣營|競辦|競總")  # R106: the last 3 name a campaign without an election word
@@ -368,6 +369,82 @@ def spoken_after_colon(key, titles):
 def new_name_ok(key, titles):
     """R154, R162: the name tests that only a new topic must pass: the key has no cut edge and is no words of a speaker or a slogan."""
     return not cut_edge(key, titles) and not spoken_after_colon(key, titles) and not copied_quote(key, titles)
+
+
+ACT_VERB_LEAD = re.compile(r"^(?:免(?![費簽])|提|刪|砍|減|增(?!值)|追加|聲請|申請|修|補發|撤換|降|擴(?!建)|縮)")  # R196.1: a name that starts with an act verb has no subject (免健保費, 提追加預算, 聲請釋憲)
+ENTITY_END = re.compile(r"(?:基金會?|公司|集團|企業|銀行|協會|公會|學會|財團|工會|聯盟|商會)$")  # R196.3: the end of a bare organization, fund or company
+ACT_ISSUE = re.compile(r"採購|預算|決算|條例|修法|立法|草案|彈劾|人事|同意|提名|任命|徵收|釋憲|補助|稅|費|審查|調查|招標|仲裁|訴訟|選舉|罷免|公投|協議|協商|改革|爭議|弊|軍購|招商|拆遷|都更|違建|貸款|薪資|工資|延役|除役|修憲|開放|管制|放寬")  # R196.3: a word that names the act or the issue of a case (炸藥採購案), not only an entity
+GENERIC_OBJECT = r"(?:追加|總|年度|特別)?(?:預算|經費|法案|款項|條例|草案|法律|政策|計畫|方案|補助)"
+GENERIC_CLAUSE = re.compile(r"^.{1,6}?(?:通過|凍結|刪減|撤回|退回|刪|砍|凍|減|增|提|退|擋|撤|撥|砸)" + GENERIC_OBJECT + "$")  # R196.8: a subject, an act verb and a generic object (立院刪預算)
+SPOKEN_FROM = re.compile(r"[：:]|稱(?![號霸呼讚])")
+
+
+def act_verb_lead(name):
+    """R196.1: the first word of the name is a verb or an act verb, and no subject comes before it. Only a new topic must pass."""
+    return bool(ACT_VERB_LEAD.search(name))
+
+
+def title_term(key, titles):
+    """R196.2: the key sits inside a quote (「」), or after a colon or 稱, in TITLE_TERM_MIN_TITLES titles or more and in
+    TITLE_TERM_SHARE of the titles that hold it. A name that a source quotes is words of a speaker (大不過憲法), not an issue."""
+    holding = [t for t in titles if key in t]
+    spoken = 0
+    for t in holding:
+        parts = re.findall(r"[「『]([^」』]*)", t)
+        m = SPOKEN_FROM.search(t)
+        if m:
+            parts.append(t[m.end():])
+        if any(key in p for p in parts):
+            spoken += 1
+    return spoken >= TITLE_TERM_MIN_TITLES and spoken >= TITLE_TERM_SHARE * max(1, len(holding))
+
+
+def bare_entity(name):
+    """R196.3: a bare organization, fund or company name, or <entity>案 with no word of an act or an issue before 案 (兆基案)."""
+    m = ENTITY_END.search(name)
+    if m:
+        rest = name[:m.start()]
+        return not (ACT_ISSUE.search(rest) or ISSUE_HEAD.search(rest))
+    if name.endswith("案") and len(name) > 1:
+        rest = name[:-1]
+        return not (ACT_ISSUE.search(rest) or ISSUE_HEAD.search(rest))
+    return False
+
+
+def generic_clause(name):
+    """R196.8: a clause of a subject, an act verb and a generic object (預算, 法案) with no named item (立院刪預算)."""
+    return bool(GENERIC_CLAUSE.search(name))
+
+
+def title_level(title):
+    """R196.6: "local" when the title names a local government and no central body, "central" for the reverse, else None."""
+    local = bool(LOCAL_GOV.search(home_text(title)))
+    central = names_central(title, True)
+    return "local" if local and not central else "central" if central and not local else None
+
+
+def scope_levels(titles, national):
+    """R196.4, R196.6: returns (the indexes of the titles that name another government level than the topic, mixed). A title of the other
+    level fails (b). `mixed` is true when two levels each have SCOPE_MIN_TITLES titles or more and SCOPE_MIN_SHARE of the titles: the
+    cluster joins two issues that share a keyword."""
+    levels = [title_level(t) for t in titles]
+    own = "central" if national else "local"
+    off = [i for i, lv in enumerate(levels) if lv and lv != own]
+    big = max(SCOPE_MIN_TITLES, SCOPE_MIN_SHARE * len(titles))
+    mixed = levels.count("local") >= big and levels.count("central") >= big
+    return off, mixed
+
+
+def place_scope(titles, jids):
+    """R196.5: a place stays in the name of the topic only when every title names it. The other places go out of the name. The topic keeps
+    its jurisdictions and its actors."""
+    kept = [j for j in jids if j != "jur-tw" and all(j in _title_jurisdictions(t) for t in titles)]
+    return kept or ["jur-tw"]
+
+
+def t32_name_ok(key, name, titles):
+    """R196.1, R196.2, R196.3, R196.8: the name tests that only a new topic must pass."""
+    return not (act_verb_lead(name) or generic_clause(name) or bare_entity(name) or any(title_term(k, titles) for k in {key, name}))
 
 
 def name_quality_ok(key, titles, total_df, window_df, df=None, new=False):
@@ -703,7 +780,7 @@ def private_health_of_official(title):
     return bool(HEALTH.search(title)) and bool(OFFICIAL_PERSON.search(title) or TAIWAN_FIGURE.search(title) or any(n in title for n in _CANDIDATES))
 
 
-NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_keyword_bundle", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter")  # R154: the labels of the rules that only a new topic must pass
+NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_keyword_bundle", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter", "rejected_mixed_cluster", "rejected_government_scope")  # R154, R196: the labels of the rules that only a new topic must pass
 
 
 def new_topic_reason(items):
@@ -752,7 +829,30 @@ def issue_profile(key, members):
     terms = Counter()
     for m in members:
         terms.update(g for g in tp._grams(m["title"]) if len(g) >= DUPLICATE_NEAR_TERM_LEN)
-    return {"key": key, "first": min(days), "last": max(days), "terms": terms}
+    return {"key": key, "first": min(days), "last": max(days), "terms": terms, "actors": profile_actors(members), "act": act_part(key)}
+
+
+ACTOR_WORDS = re.compile("|".join([p for p, _, _, _ in CENTRAL] + [tp.PLACE.pattern, LOCAL_GOV.pattern]))
+GENERIC_END = re.compile(r"(?:案|法|事件|爭議|問題)$")
+
+
+def profile_actors(members):
+    """R196.7: the central bodies that ACTOR_SHARE of the member titles names."""
+    n = max(1, len(members))
+    return {aid for pattern, aid, _, _ in CENTRAL if sum(1 for m in members if re.search(pattern, home_text(m["title"]))) >= ACTOR_SHARE * n}
+
+
+def act_part(key):
+    """R196.7: the key without its bodies, places and generic end (監察院人事同意權案 -> 人事同意權, 監委人事案 -> 人事)."""
+    return GENERIC_END.sub("", ACTOR_WORDS.sub("", key))
+
+
+def same_actor_act(a, b):
+    """R196.7: the topics name one body in most titles, and the act parts of the keys share ACT_MATCH_LEN characters or more."""
+    if not (a.get("actors", set()) & b.get("actors", set())):
+        return False
+    x, y = a.get("act", ""), b.get("act", "")
+    return len(x) >= ACT_MATCH_LEN and len(y) >= ACT_MATCH_LEN and any(x[i:i + ACT_MATCH_LEN] in y for i in range(len(x) - ACT_MATCH_LEN + 1))
 
 
 def same_issue(a, b, df):
@@ -766,6 +866,8 @@ def same_issue(a, b, df):
     if a["key"] in b["key"] or b["key"] in a["key"]:
         return True
     near = gap <= DUPLICATE_NEAR_DAYS
+    if near and same_actor_act(a, b):  # R196.7: 監察院人事同意權案 and 監委人事案
+        return True
     return any((len(g) >= DUPLICATE_TERM_LEN or (near and g in a["key"] and g in b["key"]))
                and c >= DUPLICATE_MIN_TITLES and b["terms"].get(g, 0) >= DUPLICATE_MIN_TITLES and df.get(g, 0) <= DUPLICATE_TERM_MAX_DF
                for g, c in a["terms"].items())
@@ -1109,6 +1211,13 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
         return "rejected_no_gov_actor", None
     if irrelevant:  # the gate still rejects a topic with no Taiwan term; a later gate above gave the label first
         return "rejected_not_taiwan", None
+    off = []
+    if new:
+        off, mixed = scope_levels(titles, jids == ["jur-tw"])  # R196.4, R196.6
+        if mixed:
+            return "rejected_mixed_cluster", None
+        if len(titles) - len(off) < SEED_MIN_ITEMS:
+            return "rejected_government_scope", None
     name = known["name"] if known else tp.display_name(key, [s["title"] for s in seeds])
     if not noun_phrase_name(name) or generic_name(name):
         return "rejected_name_quality", None
@@ -1116,7 +1225,9 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
         return "rejected_issue_name", None
     if not known and mf is not None and theme_word(key, mf.months):
         return "rejected_keyword_bundle", None  # R162: the key is a theme word that joins many cases
-    return "ok", {"jids": jids, "actors": actors, "name": name}
+    if new and not t32_name_ok(key, name, titles):  # R196.1, R196.2, R196.3, R196.8
+        return "rejected_issue_name", None
+    return "ok", {"jids": jids, "actors": actors, "name": name, "name_jids": place_scope(titles, jids) if new else jids, "off_level": {members[i]["url"] for i in off}}
 
 
 def build_checked(seed, corpus, df, members):
@@ -1389,7 +1500,10 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
                     fail(outcome, [m["url"] for m in members])
                 continue
             jids, actors, name = found["jids"], found["actors"], found["name"]
-            local = [j for j in jids if j != "jur-tw"]
+            if found["off_level"]:  # R196.6: a title of another government level fails (b)
+                members = [m for m in members if m["url"] not in found["off_level"]]
+                stats["scope_titles_removed"] += len(found["off_level"])
+            local = [j for j in found["name_jids"] if j != "jur-tw"]  # R196.5: a place that not every title names stays out of the name
             names = [next(n for jid, _, n, _ in JURS if jid == j)[:-2] for j in local]
             title = tp.topic_title(name, names, national="jur-tw" in jids)
             event_id = stable_id(published_ids, title, members[0]["published_on"], members[-1]["published_on"],
