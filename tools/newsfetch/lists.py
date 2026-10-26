@@ -230,7 +230,7 @@ def node_list_browser(url: str, user_agent: str, config: Dict, timeout: int = 90
     proc = subprocess.run(["node", str(BROWSER_SCRIPT), url, user_agent, json.dumps(config)],
                           capture_output=True, text=True, timeout=timeout, env=env)
     if proc.returncode != 0:
-        raise RuntimeError(f"list browser exit {proc.returncode}")
+        raise RuntimeError(f"list browser exit {proc.returncode}: {proc.stderr.strip()[-300:]}")
     return json.loads(proc.stdout.strip().splitlines()[-1])
 
 
