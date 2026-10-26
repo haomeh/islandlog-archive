@@ -47,6 +47,9 @@ class TestBrowserGate(unittest.TestCase):
         self.assertEqual(LIST_BROWSER.count("route.continue()"), 1)
         self.assertLess(LIST_BROWSER.index("gate.admit("), LIST_BROWSER.index("route.continue()"))
 
+    def test_stop_probe_accepts_python_group_names(self):
+        self.assertIn("replace(/\\(\\?P</g", LIST_BROWSER)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -76,7 +76,7 @@ try {
 
   if (config.page_template) {
     const all = new Map()
-    const probe = config.stop_probe ? new RegExp(config.stop_probe) : null
+    const probe = config.stop_probe ? new RegExp(config.stop_probe.replace(/\(\?P</g, '(?<'))  // feeds.json uses Python group names : null
     const letters = { A: 10, B: 11, C: 12 }
     for (let pageNo = 1; pageNo <= Math.min(config.last_page, config.max_steps); pageNo++) {
       // Page 1 is already open (the start url).
