@@ -58,7 +58,7 @@ CENTRAL = [  # regex, actor id, name, actor type
     (r"總統府", "ac-office-of-the-president", "總統府", "gov_agency"),
     (r"監察院|監委", "ac-control-yuan", "監察院", "control_body"),
     (r"司法院", "ac-judicial-yuan", "司法院", "court"),
-    (r"憲法法庭", "ac-constitutional-court", "憲法法庭", "court"),
+    (r"憲法法庭|大法官", "ac-constitutional-court", "憲法法庭", "court"),  # R141.5: the justices sit in the court
     (r"內政部|國土署", "ac-ministry-of-the-interior", "內政部", "gov_agency"),
     (r"警政署", "ac-national-police-agency", "內政部警政署", "gov_agency"),
     (r"消防署", "ac-national-fire-agency", "內政部消防署", "gov_agency"),

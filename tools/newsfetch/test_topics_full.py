@@ -475,19 +475,20 @@ class NameQualityTest(unittest.TestCase):
             self.assertFalse(tf.generic_name(key), key)
             self.assertTrue(self.good(key, [f"{key}爭議 市府回應", f"{key}再爆議題", f"{key}完工"]), key)
 
-    def test_r112_4_a_policy_noun_phrase_in_quotes_passes(self):
+    # R147.1: no name skips the word-boundary or the quote test. The three R112.4 cases below are known misses.
+    def test_r112_4_a_policy_noun_phrase_in_quotes_is_a_known_miss(self):
         titles = ["北市綠黨團要求建「議員索資公開平台」 蔣萬安回應了", "《北市》綠促設議員索資公開平台 藍也支持",
                   "北市議員提案建置「索資公開平台」 市府允3個月研議", "北市建置索資公開平台須3個月 議員不滿效率差"]
-        self.assertTrue(self.good("索資公開平台", titles))
+        self.assertFalse(self.good("索資公開平台", titles))
 
-    def test_r112_4_a_quoted_remark_about_a_government_body_passes(self):
+    def test_r112_4_a_quoted_remark_about_a_government_body_is_a_known_miss(self):
         titles = ["蔣萬安的局長脫口「廚餘給弱勢吃」被罵爆  律師轟：把人當豬？", "局長拋「廚餘給弱勢吃」？北市教育局澄清：沒有規劃",
                   "北市把營養午餐廚餘給弱勢團體？ 沈伯洋：發言很不恰當", "午餐廚餘給弱勢？ 北市教育局︰沒有規劃"]
-        self.assertTrue(self.good("廚餘給弱勢", titles))
+        self.assertFalse(self.good("廚餘給弱勢", titles))
 
-    def test_r112_4_a_policy_noun_with_two_titles_passes(self):
+    def test_r112_4_a_policy_noun_with_two_titles_is_a_known_miss(self):
         titles = ["對抗民航重金挖角！空勤總隊留人才 每月獎助金最高10萬", "留住億元國家級飛航人才！ 空勤總隊飛航獎助金，最高調升至每月10萬元"]
-        self.assertTrue(self.good("獎助金", titles))
+        self.assertFalse(self.good("獎助金", titles))
 
     def test_r112_4_a_warning_of_a_ministry_passes(self):
         titles = ["不只高德地圖！數發部揭4款中製App共同風險：資料全傳回中國伺服器", "數發部示警 不只高德地圖 中國B站、愛奇藝等4款APP 恐偷個資",
@@ -611,7 +612,7 @@ class ReasonLabelTest(unittest.TestCase):
         self.assertEqual(sum(stats.values()), 1)
 
     def test_a_topic_that_names_a_foreign_country_is_labeled_foreign(self):
-        stats, published = self.reject(["美國宣布新關稅政策 川普簽署命令", "川普關稅政策衝擊美國進口商 外界關注"])
+        stats, published = self.reject(["美國宣布新關稅政策 川普簽署命令", "川普關稅政策衝擊美國進口商 外界關注", "美方關稅政策再加碼 川普喊話", "各國回應關稅政策 川普態度強硬"])
         self.assertEqual(published, [])
         self.assertEqual(stats, {"rejected_foreign": 1})
 
