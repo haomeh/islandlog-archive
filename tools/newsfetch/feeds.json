@@ -235,7 +235,8 @@
       "scroll_to": "#indicator",
       "max_steps": 1500,
       "empty_limit": 4,
-      "request_cap": 6000
+      "request_cap": 6000,
+      "timeout_s": 21600
     }
   },
   {
@@ -269,7 +270,8 @@
       "settle_ms": 1500,
       "max_steps": 2600,
       "empty_limit": 4,
-      "request_cap": 40000
+      "request_cap": 40000,
+      "timeout_s": 21600
     }
   },
   {
@@ -455,7 +457,8 @@
       "next": "button.news-pagination-btn[aria-label=\"下一頁\"]",
       "max_steps": 2500,
       "empty_limit": 4,
-      "request_cap": 40000
+      "request_cap": 40000,
+      "timeout_s": 21600
     }
   },
   {

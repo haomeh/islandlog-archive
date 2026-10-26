@@ -223,7 +223,8 @@ def robots_deny_patterns(crawler: PoliteCrawler, url: str) -> List[str]:
     return patterns
 
 
-def node_list_browser(url: str, user_agent: str, config: Dict, timeout: int = 900) -> Dict:
+def node_list_browser(url: str, user_agent: str, config: Dict, timeout: Optional[int] = None) -> Dict:
+    timeout = timeout or config.get("timeout_s", 900)
     env = dict(os.environ)
     if os.environ.get("NEWSFETCH_NODE_PATH"):
         env["NODE_PATH"] = os.environ["NEWSFETCH_NODE_PATH"]
@@ -295,7 +296,7 @@ def fetch_browser_list(route: Dict, crawler: PoliteCrawler, publisher: str, sinc
 
 
 CLICK_DATE_RE = re.compile(r"(?P<y>20\d\d)[-/.](?P<m>\d{1,2})[-/.](?P<d>\d{1,2})")
-CLICK_KEYS = ("rows", "link", "link_selector", "title_selector", "date_selector", "next", "next_text", "scroll_to", "scroll",
+CLICK_KEYS = ("timeout_s", "rows", "link", "link_selector", "title_selector", "date_selector", "next", "next_text", "scroll_to", "scroll",
               "wait_ms", "settle_ms", "no_script", "add_query", "empty_limit", "allow_hosts", "max_steps", "request_cap")
 
 
@@ -344,7 +345,16 @@ def fetch_click_list(route: Dict, crawler: PoliteCrawler, publisher: str, since:
         })
         if os.environ.get("NEWSFETCH_REQUEST_LOG"):
             config["request_log"] = os.environ["NEWSFETCH_REQUEST_LOG"]
-        result = browser(url, crawler.user_agent, config)
+        partial = Path(os.environ["NEWSFETCH_CLICK_PARTIAL_DIR"]) / f"{abs(hash(url)) % 10**8}.json" if os.environ.get("NEWSFETCH_CLICK_PARTIAL_DIR") else None
+        if partial:
+            config["partial"] = str(partial)
+        try:
+            result = browser(url, crawler.user_agent, config)
+        except (subprocess.TimeoutExpired, RuntimeError) as err:
+            # A long route can run out of time or crash: keep the rows that the browser saved on the way.
+            logger.error("Click route failed for %s: %s", url, type(err).__name__)
+            saved = json.loads(partial.read_text(encoding="utf-8")) if partial and partial.exists() else {"items": []}
+            result = dict(saved, stop="error")
         report.update({"stop": result.get("stop", ""), "steps": result.get("steps", 0), "oldest": result.get("oldest", ""),
                        "robots_aborts": result.get("robots_aborts", {}), "min_gap_ms": result.get("min_gap_ms"),
                        "capped": bool(result.get("capped"))})

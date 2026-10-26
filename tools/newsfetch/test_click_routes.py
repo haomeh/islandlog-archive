@@ -257,6 +257,29 @@ class TestClickRunner(unittest.TestCase):
                                        browser=lambda u, a, c: {"items": rows, "stop": "no_next"}, sleep=lambda s: None)
         self.assertEqual([i["url"] for i in items], ["https://x.test/n/1"])
 
+    def test_a_failed_browser_run_keeps_the_rows_saved_on_the_way(self):
+        import os
+        import subprocess as sp
+        tmp = tempfile.mkdtemp()
+        seen = {}
+
+        def browser(url, ua, config):
+            seen.update(config)
+            Path(config["partial"]).write_text(json.dumps({"items": self.result(1)["items"]}), encoding="utf-8")
+            raise sp.TimeoutExpired("node", 1)
+
+        reports = []
+        route = dict(self.ROUTE, urls=["https://x.test/a"])
+        with mock.patch.dict(os.environ, {"NEWSFETCH_CLICK_PARTIAL_DIR": tmp}):
+            items = lists.fetch_click_list(route, self.crawler((200, {}, b"User-agent: *\n")), "測試報", "2026-04-24", TODAY, browser=browser,
+                                           sleep=lambda s: None, reports=reports)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(reports[0]["stop"], "error")
+
+    def test_long_routes_set_their_own_time_limit(self):
+        for outlet in ("udn", "cts", "chinatimes"):
+            self.assertGreaterEqual(FEEDS[outlet]["click_route"]["timeout_s"], 14400)
+
     def test_click_mode_skips_an_outlet_without_a_click_route(self):
         feed = {"id": "z", "publisher": "測試報", "type": "sitemap", "url": "https://x.test/s.xml"}
         crawler = self.crawler((200, {}, b"User-agent: *\n"))
