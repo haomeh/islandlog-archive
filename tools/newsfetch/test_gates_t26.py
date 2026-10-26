@@ -315,6 +315,34 @@ class OldTopicTest(unittest.TestCase):
         state = Path(root) / "tools/newsfetch/topic_state.json"
         return stats, (json.loads(state.read_text(encoding="utf-8")) if state.exists() else {})
 
+    def test_a_candidate_that_rebuilds_an_old_topic_gets_no_fail_count_from_a_new_topic_word(self):  # R168 (P1): the candidate path, not only exclusion_reason
+        import json
+        import tempfile
+        from pathlib import Path
+        for word in ("縱火", "以色列"):  # a word of CRIME_NEW only, a word of FOREIGN_NEW only
+            titles = [f"桃園市府會勘南崁溪淤積問題 {word}", f"南崁溪淤積 桃園市府將疏濬 {word}", f"南崁溪淤積問題 {word} 桃園市府回應"]
+            topic = [item("a", titles[0], "2026-10-23"), item("b", titles[1], "2026-10-24", "聯合新聞網"), item("c", titles[2], "2026-10-24", "中央通訊社")]
+            filler = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+            clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
+            ids = [tp.src_id(t, tp.HOSTS) for t in topic]
+            event_id = "ev-20261023-topic-b1c2d3e4"
+            with tempfile.TemporaryDirectory() as root:
+                event = Path(root) / "events/2026" / f"{event_id}.md"
+                event.parent.mkdir(parents=True)
+                (Path(root) / "sources/2026").mkdir(parents=True)
+                (Path(root) / "actors").mkdir()
+                for t, i in zip(topic, ids):  # the old topic cites its source files, so the run finds the rebuild
+                    (Path(root) / "sources/2026" / f"{i}.yaml").write_text(
+                        f'id: {i}\nurl: "{t["url"]}"\ntitle: "{t["title"]}"\npublished_on: "{t["published_on"]}"\npublisher: "{t["publisher"]}"\nsource_class: news\n', encoding="utf-8")
+                event.write_text(f"---\nid: {event_id}\nstatus: published\ntitle: 桃園市南崁溪淤積問題\ntimeline:\n- date: '2026-10-23'\n"
+                                 f"  source_ids: [{ids[0]}]\n- date: '2026-10-24'\n  source_ids: [{ids[1]}, {ids[2]}]\n"
+                                 "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
+                                 "  status: draft-review\n---\n\n報導。\n", encoding="utf-8")
+                tf.run(filler + topic, clusters, [], root, Path(root) / "report.json", today="2026-10-25")
+                state = Path(root) / "tools/newsfetch/topic_state.json"
+                state = json.loads(state.read_text(encoding="utf-8")) if state.exists() else {}
+                self.assertNotIn(event_id, state, word)
+
     def test_a_bare_candidate_name_is_rejected_and_the_old_topic_gets_no_fail_count(self):
         import tempfile
         with tempfile.TemporaryDirectory() as root:

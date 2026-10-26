@@ -1064,21 +1064,22 @@ def recorded_name_passes(name, titles):
     return noun_phrase_name(name) and not generic_name(name) and not is_person_or_party(name, titles) and not is_place_name(name)
 
 
-def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, known=None, mf=None):
+def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, known=None, mf=None, rebuilds_old=False):
     """The gates of one member list, in order: name quality, foreign, existing event, exclusion, government actor, Taiwan,
     name. Returns (outcome, found). The outcome is "ok", "skipped_existing_event" or a rejected_* label. `found` holds the
     jurisdictions, the actors and the name of a topic that passes. `existing_keys` and `window` (lo, hi) are for a new candidate only.
     `known` (R134, R135) is an old topic: its recorded name, jurisdictions, actors and sensitive flag. Its name gets the structural
     name tests only, because the key statistics test a key that was just picked. Its recorded jurisdictions, actors and flag count
-    when the titles name none."""
+    when the titles name none. `rebuilds_old` (R155.4, R168) marks a candidate that rebuilds a published old topic: the rules of a new
+    topic do not apply to it, as they do not apply to `known`."""
     titles = [m["title"] for m in members]
     if known:
         if not recorded_name_passes(known["name"], titles):
             return "rejected_name_quality", None
-    elif not name_quality_ok(key, titles, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members), df, new=True):
+    elif not name_quality_ok(key, titles, df.get(key, 0) or sum(1 for it in corpus if key in it["title"]), len(members), df, new=not rebuilds_old):
         return "rejected_name_quality", None
     local_known = [j for j in (known or {}).get("jids", []) if j != "jur-tw"]
-    new = not known  # R155.4, R162 (N1): the rules of a new topic do not change the result for an old topic
+    new = not known and not rebuilds_old  # R155.4, R162 (N1), R168: the rules of a new topic do not change the result for an old topic
     irrelevant = not taiwan_relevant(titles, new) and not local_known
     if irrelevant and names_foreign(titles, new):  # R112.5: only a title that names a foreign country gets the foreign label
         return "rejected_foreign", None
@@ -1370,7 +1371,9 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
         for members in groups:
             titles = [m["title"] for m in members]
             seeds = all_seeds if len(groups) == 1 else ([s for s in all_seeds if s["url"] in {m["url"] for m in members}] or members[:1])
-            outcome, found = gate_topic(key, members, seeds, df, corpus, existing_keys, (lo, hi), mf=mf)
+            member_urls = {m["url"] for m in members}
+            rebuilds_old = any(len(member_urls & old_urls) >= MERGE_OVERLAP * min(len(member_urls), len(old_urls)) for _, old_urls in old_issues)
+            outcome, found = gate_topic(key, members, seeds, df, corpus, existing_keys, (lo, hi), mf=mf, rebuilds_old=rebuilds_old)
             if outcome == "skipped_existing_event":
                 stats[outcome] += 1
                 keep([m["url"] for m in members])
@@ -1398,8 +1401,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
                 keep(urls)
                 continue
             profile = issue_profile(key, members)
-            rebuilds = [p for p, old_urls in old_issues if len(urls & old_urls) < MERGE_OVERLAP * min(len(urls), len(old_urls))]  # a candidate that rebuilds an old topic is no duplicate of it
-            if is_duplicate_issue(profile, published_issues + rebuilds, df):  # R154, R162: one issue gives one topic, old topics and skipped duplicates included
+            other_old_issues = [p for p, old_urls in old_issues if len(urls & old_urls) < MERGE_OVERLAP * min(len(urls), len(old_urls))]  # a candidate that rebuilds an old topic is no duplicate of it
+            if is_duplicate_issue(profile, published_issues + other_old_issues, df):  # R154, R162: one issue gives one topic, old topics and skipped duplicates included
                 stats["skipped_duplicate_issue"] += 1
                 published_issues.append(profile)
                 keep(urls)
