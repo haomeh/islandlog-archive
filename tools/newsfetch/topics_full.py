@@ -313,6 +313,11 @@ def spoken_after_colon(key, titles):
     return bool(before) and sum(1 for c in before if c and c in "：:") >= QUOTE_COLON_SHARE * len(before)
 
 
+def new_name_ok(key, titles):
+    """R154: the name tests that only a new topic must pass: the key has no cut edge and is no words of a speaker."""
+    return not cut_edge(key, titles) and not spoken_after_colon(key, titles)
+
+
 def name_quality_ok(key, titles, total_df, window_df, df=None):
     """The name gates of the full run. R112.2: only a place, a disease or a generic object fails. R112.4: a key with a policy
     noun, or a key whose titles name a government body in GOV_NAME_SHARE, skips the word-start and word-end tests of name_ok.
@@ -323,8 +328,7 @@ def name_quality_ok(key, titles, total_df, window_df, df=None):
     policy_titles = sum(1 for t in titles if names_government(t)) >= GOV_NAME_SHARE * max(1, len(titles))
     if not name_ok(key, total_df, window_df, loose=policy_key or policy_titles):
         return False
-    return has_word_boundary(key, titles, df) and not is_quoted_slogan(key, titles) and not cut_edge(key, titles) \
-        and not spoken_after_colon(key, titles)
+    return has_word_boundary(key, titles, df) and not is_quoted_slogan(key, titles)
 
 
 NATIONAL_SYSTEMS = re.compile(r"健保|勞保|勞退|國民年金|國保|公保|軍保|長照|衛福部|衛生福利部|健保署|勞保局|勞動部|國人")  # R84
@@ -1034,7 +1038,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
     name = known["name"] if known else tp.display_name(key, [s["title"] for s in seeds])
     if not noun_phrase_name(name) or generic_name(name):
         return "rejected_name_quality", None
-    if not known and not issue_name(name):
+    if not known and not (issue_name(name) and new_name_ok(key, titles)):
         return "rejected_issue_name", None
     return "ok", {"jids": jids, "actors": actors, "name": name}
 
