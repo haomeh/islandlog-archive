@@ -639,6 +639,9 @@ def private_health_of_official(title):
     return bool(HEALTH.search(title)) and bool(OFFICIAL_PERSON.search(title) or TAIWAN_FIGURE.search(title) or any(n in title for n in _CANDIDATES))
 
 
+NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter")  # R154: the labels of the rules that only a new topic must pass
+
+
 def new_topic_reason(items):
     """R154: the exclusions that only a new topic must pass. Returns a rejected_* label without the prefix, or None.
     candidate_attack: PRD 4.5 item 5. single_accident: PRD 4.5 item 2. official_health: rule 4. private_matter: PRD 4.5 item 1."""
@@ -651,7 +654,7 @@ def new_topic_reason(items):
         return "single_accident"
     if sum(1 for t in titles if private_health_of_official(t)) >= OFFICIAL_HEALTH_SHARE * n:
         return "official_health"
-    if sum(1 for t in titles if names_government(home_text(t)) or PUBLIC_ACT.search(t)) < GOV_ACT_SHARE * n:
+    if sum(1 for t in titles if names_government(t) or PUBLIC_ACT.search(home_text(t))) < GOV_ACT_SHARE * n:
         return "private_matter"
     return None
 
@@ -1029,8 +1032,10 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
     if irrelevant:  # the gate still rejects a topic with no Taiwan term; a later gate above gave the label first
         return "rejected_not_taiwan", None
     name = known["name"] if known else tp.display_name(key, [s["title"] for s in seeds])
-    if not noun_phrase_name(name) or generic_name(name) or (not known and not issue_name(name)):
+    if not noun_phrase_name(name) or generic_name(name):
         return "rejected_name_quality", None
+    if not known and not issue_name(name):
+        return "rejected_issue_name", None
     return "ok", {"jids": jids, "actors": actors, "name": name}
 
 
@@ -1291,7 +1296,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
                 continue
             if outcome != "ok":
                 stats[outcome] += 1
-                fail(outcome, [m["url"] for m in members])
+                if outcome not in NEW_TOPIC_ONLY:  # R155.4: the rules of a new topic do not fail an old topic; its re-gate decides
+                    fail(outcome, [m["url"] for m in members])
                 continue
             jids, actors, name = found["jids"], found["actors"], found["name"]
             local = [j for j in jids if j != "jur-tw"]

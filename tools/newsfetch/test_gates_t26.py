@@ -66,7 +66,7 @@ class IssueNameTest(unittest.TestCase):
     """R154, R155.3: the name of a new topic ends with an issue noun."""
 
     def test_a_bare_object_place_organization_or_person_fails(self):
-        for name in ("苦茶油", "板橋診所", "松山機場", "統促黨", "國家圖書館", "鳳梨酥", "王小明"):  # the last three are outside the judged list
+        for name in ("苦茶油", "板橋診所", "松山機場", "統促黨", "淡江大橋", "國家圖書館", "鳳梨酥", "王小明"):  # the last three are outside the judged list; R155.3 replaces the R112.2 exception for a named facility
             self.assertFalse(tf.issue_name(name), name)
 
     def test_a_verb_phrase_without_a_subject_fails(self):
@@ -82,7 +82,7 @@ class IssueNameTest(unittest.TestCase):
             self.assertFalse(tf.issue_name(name), name)
 
     def test_a_name_with_an_issue_noun_passes(self):
-        for name in ("軍購條例", "追加預算", "三班護病比", "天坑案", "行動網路降速演練", "副署無人載具條例", "食安法", "毒油風暴", "漢光演習"):
+        for name in ("軍購條例", "追加預算", "三班護病比", "天坑案", "行動網路降速演練", "副署無人載具條例", "食安法", "毒油風暴", "漢光演習", "淡江大橋通車"):
             self.assertTrue(tf.issue_name(name), name)
 
     def test_a_motion_or_a_single_case_is_no_issue_noun(self):
@@ -94,7 +94,7 @@ class IssueNameTest(unittest.TestCase):
         members = items(titles)
         corpus = members + [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
         df = tp.document_frequency(corpus)
-        self.assertEqual(tf.gate_topic("苦茶油", members, members[:1], df, corpus)[0], "rejected_name_quality")
+        self.assertEqual(tf.gate_topic("苦茶油", members, members[:1], df, corpus)[0], "rejected_issue_name")
         known = {"name": "苦茶油", "jids": ["jur-tw"], "actors": [], "sensitive": False}
         self.assertEqual(tf.gate_topic("苦茶油", members, members[:1], df, corpus, known=known)[0], "ok")  # R155.4: an old topic keeps the R134 test
 
@@ -280,6 +280,47 @@ class DuplicateIssueTest(unittest.TestCase):
         a = self.profile("老福法", ["老福法修法 社會救助", "老福法三讀"], "2026-04-01")
         b = self.profile("老福法", ["老福法再修 社福團體", "老福法爭議"], "2026-10-22")
         self.assertFalse(tf.same_issue(a, b, self.DF))
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class OldTopicTest(unittest.TestCase):
+    """R155.4: an old topic keeps the R134 name test. A rebuilt candidate that breaks a rule of a new topic does not fail it."""
+
+    EVENT_ID = "ev-20261023-topic-c8f31c28"  # the id of the key 南崁溪, a bare river name
+
+    def run_in(self, root, today):
+        import json
+        from pathlib import Path
+        filler = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        topic = [item("a", "桃園市府會勘南崁溪淤積問題", "2026-10-23"),
+                 item("b", "南崁溪石礫堆積 桃園市府將會勘", "2026-10-24", "聯合新聞網"),
+                 item("c", "【錯誤】南崁溪淤積謠言", "2026-10-24", "MyGoPen", "fact_check")]
+        clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
+        ids = [tp.src_id(t, tp.HOSTS) for t in topic]
+        event = Path(root) / "events/2026" / f"{self.EVENT_ID}.md"
+        if not event.exists():
+            event.parent.mkdir(parents=True)
+            (Path(root) / "sources/2026").mkdir(parents=True)
+            (Path(root) / "actors").mkdir()
+            event.write_text(f"---\nid: {self.EVENT_ID}\nstatus: published\ntitle: 桃園市南崁溪淤積問題\ntimeline:\n- date: '2026-10-23'\n"
+                             f"  source_ids: [{ids[0]}]\n- date: '2026-10-24'\n  source_ids: [{ids[1]}, {ids[2]}]\n"
+                             "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
+                             "  status: draft-review\n---\n\n報導。\n", encoding="utf-8")
+        stats, _, _ = tf.run(filler + topic, clusters, [], root, Path(root) / "report.json", today=today)
+        state = Path(root) / "tools/newsfetch/topic_state.json"
+        return stats, (json.loads(state.read_text(encoding="utf-8")) if state.exists() else {})
+
+    def test_a_bare_candidate_name_is_rejected_and_the_old_topic_gets_no_fail_count(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as root:
+            for today in ("2026-10-25", "2026-10-26"):
+                stats, state = self.run_in(root, today)
+                self.assertEqual(stats["rejected_issue_name"], 1)
+                self.assertEqual(stats["published"], 0)
+                self.assertEqual(stats["regate_checked"], 1)  # the old topic goes to the re-gate with its recorded name
+                self.assertEqual(stats["regate_failed"], 0)
+                self.assertNotIn(self.EVENT_ID, state)
+                self.assertEqual(stats["withdrawn"], 0)
 
 
 if __name__ == "__main__":
