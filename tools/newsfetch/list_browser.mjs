@@ -6,6 +6,7 @@
 //           page_template: "URL with {page}" | "", last_page: 9000, light: true,  (page mode: one page load per step)
 //           stop_probe: "regex on href with groups y, m, d" (page mode: stop when a page is older than stop_before)
 //           row_selector: "css selector of one list row" | "",
+//           title_selector: "css selector of the headline inside the link" | "" (R60: the link text may carry the lead paragraph),
 //           request_cap: 20000 (requests per host per run), request_log: "path of the request log" | "",
 //           deny: ["regex of URL paths that robots.txt disallows"] }
 // The page may load only its own site. A request to another site or to a denied path is aborted and counted.
@@ -21,7 +22,7 @@ if (!url || !userAgent) {
   console.error('usage: node list_browser.mjs <url> <user-agent> <config-json>')
   process.exit(2)
 }
-const config = Object.assign({ link: '', more: '', max_steps: 60, delay_ms: 1200, stop_before: '', deny: [], row_selector: '', request_cap: 20000, request_log: '', partial: '', page_template: '', last_page: 9000, light: false, stop_probe: '' }, JSON.parse(configText || '{}'))
+const config = Object.assign({ link: '', more: '', max_steps: 60, delay_ms: 1200, stop_before: '', deny: [], row_selector: '', title_selector: '', request_cap: 20000, request_log: '', partial: '', page_template: '', last_page: 9000, light: false, stop_probe: '' }, JSON.parse(configText || '{}'))
 const delay = Math.max(1000, config.delay_ms)
 
 const browser = await chromium.launch()
@@ -54,14 +55,16 @@ try {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
   await page.waitForTimeout(delay)
 
-  const collect = () => page.evaluate(([linkSource, rowSelector]) => {
+  const collect = () => page.evaluate(([linkSource, rowSelector, titleSelector]) => {
     const re = new RegExp(linkSource)
     const out = []
     const seen = new Set()
     for (const a of document.querySelectorAll('a[href]')) {
       const href = a.href
       if (!re.test(href) || seen.has(href)) continue
-      const title = (a.getAttribute('title') || a.textContent || '').replace(/\s+/g, ' ').trim()
+      const headline = titleSelector ? a.querySelector(titleSelector) : null
+      if (titleSelector && !headline) continue
+      const title = (headline ? headline.textContent : (a.getAttribute('title') || a.textContent || '')).replace(/\s+/g, ' ').trim()
       if (!title) continue
       seen.add(href)
       // The row is the closest list item or block. Keep 200 characters at most: it carries the time label.
@@ -72,7 +75,7 @@ try {
       out.push({ href, title: title.slice(0, 200), row, hint })
     }
     return out
-  }, [config.link, config.row_selector])
+  }, [config.link, config.row_selector, config.title_selector])
 
   if (config.page_template) {
     const all = new Map()

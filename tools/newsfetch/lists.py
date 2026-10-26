@@ -251,6 +251,7 @@ def fetch_browser_list(route: Dict, crawler: PoliteCrawler, publisher: str, sinc
         "stop_before": since,
         "deny": robots_deny_patterns(crawler, url),
         "row_selector": route.get("row_selector", ""),
+        "title_selector": route.get("title_selector", ""),
         "page_template": route.get("page_template", ""),
         "last_page": route.get("last_page", 9000),
         "light": bool(route.get("page_template")),

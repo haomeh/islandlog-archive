@@ -239,6 +239,7 @@
       "url": "https://www.ftvnews.com.tw/realtime/?page=1",
       "max_pages": 9000,
       "link": "ftvnews\\.com\\.tw/news/detail/",
+      "title_selector": "h2.title",
       "date_where": "url",
       "date_regex": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
       "title_strip": "^\\d{4}/\\d\\d/\\d\\d \\d\\d:\\d\\d(:\\d\\d)?\\s*",

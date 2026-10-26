@@ -107,6 +107,14 @@ class TestFtvListThroughBrowser(unittest.TestCase):
         self.assertTrue(seen["config"]["page_template"].endswith("?page={page}"))
         self.assertGreaterEqual(seen["config"]["delay_ms"], 1000)
 
+    def test_ftv_title_comes_from_the_headline_element(self):
+        self.assertEqual(FTV["route"]["title_selector"], "h2.title")
+        crawler = make_crawler({"status": 200, "body": ROBOTS_BODY})
+        seen = {}
+        lists.fetch_browser_list(FTV["route"], crawler, FTV["publisher"], "2026-04-24", TODAY,
+                                 browser=lambda u, ua, config: seen.update(config) or {"items": []})
+        self.assertEqual(seen["title_selector"], "h2.title")
+
     def test_fetch_source_items_uses_the_browser_route(self):
         crawler = make_crawler({"status": 200, "body": ROBOTS_BODY})
         import unittest.mock as mock
