@@ -258,7 +258,14 @@ def fetch_browser_list(route: Dict, crawler: PoliteCrawler, publisher: str, sinc
     }
     if route.get("partial"):
         config["partial"] = route["partial"]
+    if os.environ.get("NEWSFETCH_REQUEST_LOG"):
+        config["request_log"] = os.environ["NEWSFETCH_REQUEST_LOG"]
+    config["request_cap"] = route.get("request_cap", 20000)
     result = browser(url, crawler.user_agent, config)
+    if result.get("capped"):
+        logger.warning("Browser reached the request cap for %s; min gap %s ms", url, result.get("min_gap_ms"))
+    elif result.get("min_gap_ms") is not None:
+        logger.info("Browser min gap for %s: %s ms", url, result["min_gap_ms"])
     if result.get("denied"):
         logger.warning("Browser aborted %d robots-denied requests: %s", len(result["denied"]), result["denied"][:3])
     items: List[Dict] = []

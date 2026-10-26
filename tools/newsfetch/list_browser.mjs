@@ -6,11 +6,13 @@
 //           page_template: "URL with {page}" | "", last_page: 9000, light: true,  (page mode: one page load per step)
 //           stop_probe: "regex on href with groups y, m, d" (page mode: stop when a page is older than stop_before)
 //           row_selector: "css selector of one list row" | "",
+//           request_cap: 20000 (requests per host per run), request_log: "path of the request log" | "",
 //           deny: ["regex of URL paths that robots.txt disallows"] }
 // The page may load only its own site. A request to another site or to a denied path is aborted and counted.
 // Each scroll or click that loads data waits delay_ms: 1 request per second per host or less.
 import { createRequire } from 'node:module'
 import { writeFileSync } from 'node:fs'
+import { decide, createGate } from './browser_gate.mjs'
 
 const require = createRequire(import.meta.url)
 const { chromium } = require('playwright')
@@ -19,7 +21,7 @@ if (!url || !userAgent) {
   console.error('usage: node list_browser.mjs <url> <user-agent> <config-json>')
   process.exit(2)
 }
-const config = Object.assign({ link: '', more: '', max_steps: 60, delay_ms: 1200, stop_before: '', deny: [], row_selector: '', partial: '', page_template: '', last_page: 9000, light: false, stop_probe: '' }, JSON.parse(configText || '{}'))
+const config = Object.assign({ link: '', more: '', max_steps: 60, delay_ms: 1200, stop_before: '', deny: [], row_selector: '', request_cap: 20000, request_log: '', partial: '', page_template: '', last_page: 9000, light: false, stop_probe: '' }, JSON.parse(configText || '{}'))
 const delay = Math.max(1000, config.delay_ms)
 
 const browser = await chromium.launch()
@@ -29,15 +31,22 @@ try {
   const site = new URL(url).hostname.split('.').slice(-2).join('.')
   const denyRes = config.deny.map((d) => new RegExp(d))
   const denied = new Set()
-  await page.route('**/*', (route) => {
+  // R175: only document, script, xhr and fetch pass; no Next.js data or prefetch; 1 request per 1.1 s per host on every request; a cap per host.
+  const gate = createGate({ cap: config.request_cap, logFile: config.request_log, tag: 'list' })
+  let capped = false
+  await page.route('**/*', async (route) => {
     const req = route.request()
     const u = new URL(req.url())
-    if (['image', 'media', 'font'].includes(req.resourceType())) return route.abort()
-    // Page mode reads server-rendered lists: skip scripts and styles, so one page costs one request.
-    if (config.light && ['stylesheet', 'script'].includes(req.resourceType())) return route.abort()
+    if (decide(req.resourceType(), req.url(), req.headers())) return route.abort()
+    // Page mode reads server-rendered lists: skip scripts, so one page costs one request.
+    if (config.light && req.resourceType() === 'script') return route.abort()
     if (!u.hostname.endsWith(site)) return route.abort()
     if (denyRes.some((re) => re.test(u.pathname + u.search))) {
       denied.add(u.pathname)
+      return route.abort()
+    }
+    if (!(await gate.admit(u.hostname, u.pathname + u.search))) {
+      capped = true
       return route.abort()
     }
     return route.continue()
@@ -94,7 +103,7 @@ try {
       }
       await page.waitForTimeout(delay)
     }
-    process.stdout.write(JSON.stringify({ items: [...all.values()], denied: [...denied] }) + '\n')
+    process.stdout.write(JSON.stringify({ items: [...all.values()], denied: [...denied], capped, min_gap_ms: gate.minGap() }) + '\n')
     await browser.close()
     process.exit(0)
   }
@@ -127,7 +136,7 @@ try {
       writeFileSync(config.partial, JSON.stringify({ items: await collect(), denied: [...denied] }))
     }
   }
-  process.stdout.write(JSON.stringify({ items: await collect(), denied: [...denied] }) + '\n')
+  process.stdout.write(JSON.stringify({ items: await collect(), denied: [...denied], capped, min_gap_ms: gate.minGap() }) + '\n')
 } finally {
   await browser.close()
 }
