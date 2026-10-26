@@ -32,13 +32,15 @@ class ActVerbLeadTest(unittest.TestCase):
         for name in ("國防部提追加預算", "高雄市追加預算", "立法院修憲", "軍購條例", "三班護病比", "炸藥採購案"):
             self.assertFalse(tf.act_verb_lead(name), name)
 
-    def test_the_gate_rejects_it_for_a_new_topic_only(self):
+    def test_the_gate_rejects_it_for_a_new_name_only(self):
         titles = ["長者免健保費 立院三讀 衛福部說明", "免健保費爭議 行政院說明", "免健保費入法 立委推動"]
         members = items(titles)
         corpus = members + [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
         df = tp.document_frequency(corpus)
         self.assertEqual(tf.gate_topic("免健保費", members, members[:1], df, corpus)[0], "rejected_issue_name")
-        self.assertEqual(tf.gate_topic("免健保費", members, members[:1], df, corpus, rebuilds_old=True)[0], "ok")  # R155.4
+        self.assertEqual(tf.gate_topic("免健保費", members, members[:1], df, corpus, rebuilds_old=True)[0], "rejected_issue_name")  # a rebuild gets a new name from its key
+        known = {"name": "長者有條件免健保費", "jids": ["jur-tw"], "actors": [], "sensitive": False}
+        self.assertEqual(tf.gate_topic("免健保費", members, members[:1], df, corpus, known=known)[0], "ok")  # R155.4: an old topic keeps its recorded name
 
 
 class TitleTermTest(unittest.TestCase):
@@ -68,7 +70,7 @@ class TitleTermTest(unittest.TestCase):
         corpus = members + [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
         df = tp.document_frequency(corpus)
         self.assertEqual(tf.gate_topic("財源爭議", members, members[:1], df, corpus)[0], "rejected_issue_name")
-        self.assertEqual(tf.gate_topic("財源爭議", members, members[:1], df, corpus, rebuilds_old=True)[0], "ok")  # R155.4
+        self.assertEqual(tf.gate_topic("財源爭議", members, members[:1], df, corpus, rebuilds_old=True)[0], "rejected_issue_name")
         known = {"name": "財源爭議", "jids": ["jur-tw"], "actors": [], "sensitive": False}
         self.assertEqual(tf.gate_topic("財源爭議", members, members[:1], df, corpus, known=known)[0], "ok")
 

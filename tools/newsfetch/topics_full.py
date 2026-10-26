@@ -1225,7 +1225,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
         return "rejected_issue_name", None
     if not known and mf is not None and theme_word(key, mf.months):
         return "rejected_keyword_bundle", None  # R162: the key is a theme word that joins many cases
-    if new and not t32_name_ok(key, name, titles):  # R196.1, R196.2, R196.3, R196.8
+    if not known and not t32_name_ok(key, name, titles):  # R196.1, R196.2, R196.3, R196.8: a rebuild of an old topic gets a new name from its key, so the name tests apply to it too
         return "rejected_issue_name", None
     return "ok", {"jids": jids, "actors": actors, "name": name, "name_jids": place_scope(titles, jids) if new else jids, "off_level": {members[i]["url"] for i in off}}
 
