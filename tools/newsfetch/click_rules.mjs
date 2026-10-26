@@ -31,10 +31,10 @@ export function labelDate(raw, now = new Date()) {
 //   date: every new row is older than stopBefore.
 //   no_next: the next control is missing or disabled.
 //   max_steps: the step limit is reached.
-export function stopReason({ freshDates, freshCount, empty, emptyLimit = 3, stopBefore, blocked, capped, robotsAborted, hasNext, step, maxSteps }) {
+export function stopReason({ freshDates, freshCount, empty, emptyLimit = 3, stopBefore, blocked, capped, robotsAborted, hasNext, step, maxSteps, enforceRobots = true }) {
   if (blocked) return 'captcha'
   if (capped) return 'cap'
-  if (freshCount === 0 && robotsAborted) return 'disallowed'
+  if (enforceRobots && freshCount === 0 && robotsAborted) return 'disallowed'
   if (empty >= emptyLimit) return 'no_rows'
   const dates = freshDates.filter(Boolean)
   if (stopBefore && dates.length && dates.every((d) => d < stopBefore)) return 'date'
