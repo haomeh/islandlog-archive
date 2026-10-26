@@ -2,32 +2,158 @@
   {
     "id": "pts",
     "publisher": "公視新聞網",
-    "type": "sitemap",
-    "url": "https://news.pts.org.tw/xml/sitemap.xml"
+    "type": "paged_list",
+    "url": "https://news.pts.org.tw/dailynews?page={page}",
+    "publisher_group": "公共電視文化事業基金會",
+    "group_source": "https://zh.wikipedia.org/wiki/%E5%85%AC%E5%85%B1%E9%9B%BB%E8%A6%96%E6%96%87%E5%8C%96%E4%BA%8B%E6%A5%AD%E5%9F%BA%E9%87%91%E6%9C%83",
+    "aliases": [
+      "公視",
+      "公視新聞",
+      "公視新聞網"
+    ],
+    "status": "partial",
+    "route": {
+      "url": "https://news.pts.org.tw/dailynews?page={page}",
+      "max_pages": 100,
+      "link": "news\\.pts\\.org\\.tw/article/\\d+",
+      "date_where": "after",
+      "date_regex": "(?P<y>20\\d\\d)/(?P<m>\\d{1,2})/(?P<d>\\d{1,2}) \\d\\d:\\d\\d",
+      "anchor_before": "<h[12][^>]*>\\s*$"
+    },
+    "latest_sitemap": "https://news.pts.org.tw/xml/sitemap.xml",
+    "route_note": "dailynews?page=N stops at page 100 (about 2026-09-18). Category pages carry no date in the markup and are not used.",
+    "click_route": {
+      "note": "dailynews pager, click the next-page link; the site stops at page 100",
+      "urls": [
+        "https://news.pts.org.tw/dailynews"
+      ],
+      "rows": "li.d-flex",
+      "link": "news\\.pts\\.org\\.tw/article/\\d+",
+      "link_selector": "h2 a",
+      "title_selector": "h2 a",
+      "date_selector": "time",
+      "next": "ul.pages li:last-child a[href]",
+      "no_script": true,
+      "settle_ms": 1500,
+      "max_steps": 120,
+      "empty_limit": 4,
+      "request_cap": 600
+    }
   },
   {
     "id": "cna",
     "publisher": "中央通訊社",
     "type": "sitemap",
-    "url": "https://www.cna.com.tw/GoogleNewsSitemap_fromRemote_cfp.xml"
+    "url": "https://www.cna.com.tw/GoogleNewsSitemap_fromRemote_cfp.xml",
+    "publisher_group": "中央通訊社",
+    "group_source": "https://zh.wikipedia.org/wiki/%E4%B8%AD%E5%A4%AE%E9%80%9A%E8%A8%8A%E7%A4%BE",
+    "aliases": [
+      "中央社"
+    ],
+    "status": "latest_only",
+    "blocked_reason": "Load-more list calls /cna2018api/api/WNewsList, which robots.txt disallows. Static list and sitemap reach about 2 days.",
+    "click_route": {
+      "note": "list page; click the view-more button. The button calls /cna2018api/api/WNewsList, which robots.txt disallows: the route stops there",
+      "urls": [
+        "https://www.cna.com.tw/list/aall.aspx"
+      ],
+      "rows": "#jsMainList li",
+      "link": "cna\\.com\\.tw/news/[a-z]+/\\d+",
+      "title_selector": "h2 span",
+      "date_selector": "time.date",
+      "next": "#SiteContent_uiViewMoreBtn",
+      "settle_ms": 6000,
+      "max_steps": 200,
+      "request_cap": 600,
+      "empty_limit": 6
+    }
   },
   {
     "id": "tvbs",
     "publisher": "TVBS",
     "type": "sitemap",
-    "url": "https://news.tvbs.com.tw/sitemap/news-sitemap"
+    "url": "https://news.tvbs.com.tw/sitemap/news-sitemap",
+    "publisher_group": "聯意製作",
+    "group_source": "https://zh.wikipedia.org/wiki/TVBS",
+    "aliases": [
+      "TVBS新聞網"
+    ],
+    "status": "latest_only",
+    "blocked_reason": "No dated list, no page parameter, no scroll growth. News sitemap reaches about 3 days.",
+    "click_route": {
+      "note": "realtime list; click the 更多即時新聞 button. The button calls api.news.tvbs.app, whose robots.txt disallows all: the route stops there",
+      "urls": [
+        "https://news.tvbs.com.tw/realtime"
+      ],
+      "rows": "a.block",
+      "link": "news\\.tvbs\\.com\\.tw/[a-z]+/\\d{5,}",
+      "title_selector": "h3, h4",
+      "date_selector": "span.caption-12-medium",
+      "next": "button",
+      "next_text": "更多即時新聞",
+      "allow_hosts": [
+        "api.news.tvbs.app"
+      ],
+      "settle_ms": 3000,
+      "max_steps": 40,
+      "request_cap": 600
+    }
   },
   {
     "id": "newtalk",
     "publisher": "Newtalk",
-    "type": "sitemap",
-    "url": "https://newtalk.tw/sitemap/news/1067"
+    "type": "dated_list",
+    "url": "https://newtalk.tw/news/summary/{date}/{page}",
+    "publisher_group": "新頭殼",
+    "group_source": "https://zh.wikipedia.org/wiki/%E6%96%B0%E9%A0%AD%E6%AE%BC",
+    "aliases": [
+      "新頭殼"
+    ],
+    "status": "ok",
+    "route": {
+      "url": "https://newtalk.tw/news/summary/{date}/{page}",
+      "max_pages": 40,
+      "date_format": "%Y-%m-%d",
+      "link": "newtalk\\.tw/news/view/",
+      "date_where": "url",
+      "date_regex": "view/(?P<y>\\d{4})-(?P<m>\\d\\d)-(?P<d>\\d\\d)"
+    },
+    "latest_sitemap": "https://newtalk.tw/sitemap/news/1067"
   },
   {
     "id": "storm",
     "publisher": "風傳媒",
     "type": "sitemap",
-    "url": "https://www.storm.mg/sitemaps/1/article-news-1.xml"
+    "url": "https://www.storm.mg/sitemaps/1/article-news-1.xml",
+    "publisher_group": "風傳媒",
+    "group_source": "https://zh.wikipedia.org/wiki/%E9%A2%A8%E5%82%B3%E5%AA%92",
+    "aliases": [
+      "風傳媒"
+    ],
+    "status": "latest_only",
+    "blocked_reason": "List pages load through /api/, which robots.txt disallows. Monthly archive sitemaps carry URL and time but no title.",
+    "click_route": {
+      "note": "channel lists render on the server. The pager script is under /_nuxt/*.js, which robots.txt disallows, so the route has no next-page control",
+      "urls": [
+        "https://www.storm.mg/channel/all/7",
+        "https://www.storm.mg/channel/all/6",
+        "https://www.storm.mg/channel/all/2",
+        "https://www.storm.mg/channel/all/3",
+        "https://www.storm.mg/channel/all/4",
+        "https://www.storm.mg/channel/all/5",
+        "https://www.storm.mg/channel/all/97"
+      ],
+      "rows": ".ArticleCardWithMeta",
+      "link": "storm\\.mg/article/\\d+",
+      "link_selector": "h2 a",
+      "title_selector": "h2 a",
+      "date_selector": "[class*=\"text-smg-gray-600\"]",
+      "next": "a[rel=next]",
+      "no_script": true,
+      "settle_ms": 2000,
+      "max_steps": 5,
+      "request_cap": 300
+    }
   },
   {
     "id": "ltn",
@@ -75,12 +201,301 @@
       "life",
       "local",
       "world"
-    ]
+    ],
+    "publisher_group": "自由時報系",
+    "group_source": "https://zh.wikipedia.org/wiki/%E8%87%AA%E7%94%B1%E6%99%82%E5%A0%B1",
+    "aliases": [
+      "自由時報電子報"
+    ],
+    "status": "ok"
   },
   {
     "id": "udn",
     "publisher": "聯合新聞網",
     "type": "sitemap",
-    "url": "https://udn.com/sitemap/gnews_contents/2/1"
+    "url": "https://udn.com/sitemap/gnews_contents/2/1",
+    "publisher_group": "聯合報系",
+    "group_source": "https://zh.wikipedia.org/wiki/%E8%81%AF%E5%90%88%E5%A0%B1%E7%B3%BB",
+    "aliases": [
+      "聯合報",
+      "聯合新聞網 udn"
+    ],
+    "status": "latest_only",
+    "blocked_reason": "R61: robots.txt disallows /NEWS/. Weekly archive sitemaps carry URL and time but no title. Only the titled news sitemap (about 3 days) is used.",
+    "click_route": {
+      "note": "breaknews list loads 20 rows per scroll of the end marker (R180: the page script calls the list API, not the crawler)",
+      "urls": [
+        "https://udn.com/news/breaknews/1"
+      ],
+      "rows": ".story-list__news",
+      "link": "udn\\.com/news/story/\\d+/\\d+",
+      "link_selector": "h2 a",
+      "title_selector": "h2 a",
+      "date_selector": ".story-list__time",
+      "scroll_to": "#indicator",
+      "max_steps": 1500,
+      "empty_limit": 4,
+      "request_cap": 6000,
+      "timeout_s": 21600
+    }
+  },
+  {
+    "id": "chinatimes",
+    "publisher": "中時新聞網",
+    "publisher_group": "旺旺中時媒體集團",
+    "group_source": "https://zh.wikipedia.org/wiki/%E6%97%BA%E6%97%BA%E4%B8%AD%E6%99%82%E5%AA%92%E9%AB%94%E9%9B%86%E5%9C%98",
+    "aliases": [
+      "中時",
+      "中時電子報",
+      "中國時報"
+    ],
+    "type": "sitemap",
+    "url": "https://www.chinatimes.com/sitemaps/sitemap_todaynews.xml",
+    "status": "latest_only",
+    "blocked_reason": "Realtime list has 10 pages (about 1 day). Archive sitemaps carry URL and date but no title. Titled news sitemap reaches about 3 days.",
+    "click_route": {
+      "note": "search list pages with the term 台灣 and 警方; click the next-page link; the site script is off, so the route adds the key chdtv that the script adds to its own links",
+      "urls": [
+        "https://www.chinatimes.com/search/%E5%8F%B0%E7%81%A3?chdtv",
+        "https://www.chinatimes.com/search/%E8%AD%A6%E6%96%B9?chdtv"
+      ],
+      "rows": ".articlebox-compact",
+      "link": "chinatimes\\.com/(realtimenews|newspapers)/\\d{14}-\\d+",
+      "title_selector": "h3.title a",
+      "date_selector": "time",
+      "next": "ul.pagination a.page-link",
+      "next_text": "下一頁",
+      "no_script": true,
+      "add_query": "chdtv",
+      "settle_ms": 1500,
+      "max_steps": 2600,
+      "empty_limit": 4,
+      "request_cap": 40000,
+      "timeout_s": 21600
+    }
+  },
+  {
+    "id": "ettoday",
+    "publisher": "ETtoday新聞雲",
+    "publisher_group": "東森媒體集團",
+    "group_source": "https://zh.wikipedia.org/wiki/%E6%9D%B1%E6%A3%AE%E5%AA%92%E9%AB%94%E9%9B%86%E5%9C%98",
+    "aliases": [
+      "ETtoday",
+      "ETtoday新聞雲"
+    ],
+    "type": "dated_list",
+    "url": "https://www.ettoday.net/news/news-list-{date}-{category}.htm",
+    "status": "ok",
+    "route": {
+      "url": "https://www.ettoday.net/news/news-list-{date}-{category}.htm",
+      "date_format": "%Y-%m-%d",
+      "categories": [
+        1,
+        2,
+        5,
+        6,
+        12,
+        17,
+        21,
+        38
+      ],
+      "max_pages": 1,
+      "link": "ettoday\\.net/(news/\\d{8}/\\d+\\.htm|news/\\d+|article/\\d+)",
+      "date_where": "before",
+      "date_regex": "(?P<y>20\\d\\d)/(?P<m>\\d\\d)/(?P<d>\\d\\d) \\d\\d:\\d\\d"
+    }
+  },
+  {
+    "id": "setn",
+    "publisher": "三立新聞網",
+    "publisher_group": "三立電視",
+    "group_source": "https://zh.wikipedia.org/wiki/%E4%B8%89%E7%AB%8B%E9%9B%BB%E8%A6%96",
+    "aliases": [
+      "三立",
+      "三立新聞",
+      "SETN"
+    ],
+    "type": "browser_list",
+    "url": "https://www.setn.com/viewall",
+    "status": "latest_only",
+    "route": {
+      "url": "https://www.setn.com/viewall",
+      "link": "setn\\.com/news/\\d+",
+      "row_selector": ".news_list_item",
+      "date_where": "relative",
+      "date_regex": "x",
+      "max_steps": 2500,
+      "delay_ms": 1200
+    },
+    "latest_sitemap": "https://www.setn.com/sitemapGoogleNews.xml",
+    "blocked_reason": "The viewall list stops at about 600 items (2 days) however far the browser scrolls, and shows relative times only. The route reads the latest 2 days for the daily run.",
+    "click_route": {
+      "note": "viewall list; scroll like a reader. The list shows relative times and stops at about 600 rows",
+      "urls": [
+        "https://www.setn.com/viewall"
+      ],
+      "rows": ".news_list_item",
+      "link": "setn\\.com/news/\\d+",
+      "link_selector": ".title_pc a",
+      "title_selector": ".title_pc a",
+      "date_selector": ".time_box .time",
+      "scroll": true,
+      "settle_ms": 3000,
+      "max_steps": 120,
+      "empty_limit": 6,
+      "request_cap": 1500
+    }
+  },
+  {
+    "id": "ftv",
+    "publisher": "民視新聞網",
+    "publisher_group": "民間全民電視公司",
+    "group_source": "https://zh.wikipedia.org/wiki/%E6%B0%91%E9%96%93%E5%85%A8%E6%B0%91%E9%9B%BB%E8%A6%96%E5%85%AC%E5%8F%B8",
+    "aliases": [
+      "民視",
+      "民視新聞"
+    ],
+    "type": "browser_list",
+    "url": "https://www.ftvnews.com.tw/realtime/?page=1",
+    "status": "ok",
+    "robots_via": "browser",
+    "route": {
+      "url": "https://www.ftvnews.com.tw/realtime/?page=1",
+      "max_pages": 9000,
+      "link": "ftvnews\\.com\\.tw/news/detail/",
+      "title_selector": "h2.title",
+      "date_where": "url",
+      "date_regex": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
+      "title_strip": "^\\d{4}/\\d\\d/\\d\\d \\d\\d:\\d\\d(:\\d\\d)?\\s*",
+      "page_template": "https://www.ftvnews.com.tw/realtime/?page={page}",
+      "stop_probe": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
+      "max_steps": 9000
+    },
+    "click_route": {
+      "note": "realtime list; click the next-page link",
+      "urls": [
+        "https://www.ftvnews.com.tw/realtime/?page=1"
+      ],
+      "rows": ".news-block",
+      "link": "ftvnews\\.com\\.tw/news/detail/",
+      "link_selector": ".content a",
+      "title_selector": "h2.title",
+      "date_selector": ".time",
+      "next": "a.next-link",
+      "no_script": true,
+      "settle_ms": 2000,
+      "max_steps": 150,
+      "empty_limit": 4,
+      "request_cap": 600
+    }
+  },
+  {
+    "id": "ebc",
+    "publisher": "東森新聞",
+    "publisher_group": "東森媒體集團",
+    "group_source": "https://zh.wikipedia.org/wiki/%E6%9D%B1%E6%A3%AE%E5%AA%92%E9%AB%94%E9%9B%86%E5%9C%98",
+    "aliases": [
+      "EBC東森新聞",
+      "東森新聞雲",
+      "EBC 東森新聞",
+      "東森"
+    ],
+    "type": "sitemap",
+    "url": "https://news.ebc.net.tw/sitemap/realtime.xml",
+    "status": "latest_only",
+    "blocked_reason": "No dated list, no page parameter, no scroll growth. Realtime sitemap reaches about 2 days.",
+    "click_route": {
+      "note": "realtime list; scroll like a reader. The site sends no more list request without the disallowed load paths",
+      "urls": [
+        "https://news.ebc.net.tw/realtime"
+      ],
+      "rows": "a.item.row_box",
+      "link": "ebc\\.net\\.tw/news/[a-z]+/\\d+",
+      "title_selector": "h3.item_title",
+      "date_selector": "time",
+      "scroll": true,
+      "settle_ms": 3000,
+      "max_steps": 30,
+      "request_cap": 600
+    }
+  },
+  {
+    "id": "cts",
+    "publisher": "華視新聞",
+    "publisher_group": "公共電視文化事業基金會",
+    "group_source": "https://zh.wikipedia.org/wiki/%E4%B8%AD%E8%8F%AF%E9%9B%BB%E8%A6%96%E5%85%AC%E5%8F%B8",
+    "aliases": [
+      "華視",
+      "華視新聞網",
+      "CTS"
+    ],
+    "type": "sitemap",
+    "url": "https://news.cts.com.tw/sitemap_cts_google.xml",
+    "status": "latest_only",
+    "blocked_reason": "No dated list, no page parameter, no scroll growth. Google news sitemap reaches about 3 days.",
+    "click_route": {
+      "note": "13 category lists (not breaking); click the next-page button; publisher stays cts for cna wire rows",
+      "urls": [
+        "https://news.cts.com.tw/politics/list",
+        "https://news.cts.com.tw/international/list",
+        "https://news.cts.com.tw/society/list",
+        "https://news.cts.com.tw/sports/list",
+        "https://news.cts.com.tw/life/list",
+        "https://news.cts.com.tw/money/list",
+        "https://news.cts.com.tw/taiwanese/list",
+        "https://news.cts.com.tw/local/list",
+        "https://news.cts.com.tw/general/list",
+        "https://news.cts.com.tw/arts/list",
+        "https://news.cts.com.tw/entertain/list",
+        "https://news.cts.com.tw/weather/list",
+        "https://news.cts.com.tw/pr/list"
+      ],
+      "rows": "a.news-list-card",
+      "link": "news\\.cts\\.com\\.tw/(cts|cna)/[a-z]+/\\d{6}/\\d+\\.html",
+      "title_selector": "h2.news-list-title",
+      "date_selector": "time.news-list-date",
+      "next": "button.news-pagination-btn[aria-label=\"下一頁\"]",
+      "max_steps": 2500,
+      "empty_limit": 4,
+      "request_cap": 40000,
+      "timeout_s": 21600
+    }
+  },
+  {
+    "id": "mirror",
+    "publisher": "鏡週刊",
+    "publisher_group": "鏡傳媒",
+    "group_source": "https://zh.wikipedia.org/wiki/%E9%8F%A1%E9%80%B1%E5%88%8A",
+    "aliases": [
+      "鏡新聞",
+      "鏡報",
+      "鏡傳媒"
+    ],
+    "type": "sitemap",
+    "url": "https://www.mirrormedia.mg/rss/posts-news.xml",
+    "status": "ok",
+    "click_route": {
+      "note": "section pages; scroll like a reader. The page holds about 27 rows and sends no more list request (R175 gate)",
+      "urls": [
+        "https://www.mirrormedia.mg/section/news",
+        "https://www.mirrormedia.mg/section/politicsocial",
+        "https://www.mirrormedia.mg/section/entertainment",
+        "https://www.mirrormedia.mg/section/businessmoney",
+        "https://www.mirrormedia.mg/section/people",
+        "https://www.mirrormedia.mg/section/foodtravel",
+        "https://www.mirrormedia.mg/section/life",
+        "https://www.mirrormedia.mg/section/carwatchwine",
+        "https://www.mirrormedia.mg/section/mafalda",
+        "https://www.mirrormedia.mg/section/column"
+      ],
+      "rows": "a[href*=\"/story/\"]",
+      "link": "mirrormedia\\.mg/story/",
+      "title_selector": "h2",
+      "date_selector": "p",
+      "scroll": true,
+      "settle_ms": 4000,
+      "max_steps": 8,
+      "request_cap": 400
+    }
   }
 ]
