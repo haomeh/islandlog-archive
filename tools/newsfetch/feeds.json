@@ -62,9 +62,10 @@
       "title_selector": "h2 span",
       "date_selector": "time.date",
       "next": "#SiteContent_uiViewMoreBtn",
-      "settle_ms": 3000,
+      "settle_ms": 6000,
       "max_steps": 200,
-      "request_cap": 600
+      "request_cap": 600,
+      "empty_limit": 6
     }
   },
   {
