@@ -46,7 +46,7 @@ class TestListParsers(unittest.TestCase):
         self.assertEqual([i["published_on"] for i in items], ["2026-10-25", "2026-10-07"])
 
     def test_ftv_month_letter_and_digit(self):
-        route = FEEDS["ftv"]["disabled_route"]["route"]
+        route = FEEDS["ftv"]["route"]
         items = lists.parse_anchor_list(fixture("list_ftv.html"), route, "https://www.ftvnews.com.tw/realtime/", TODAY, "民視新聞網")
         self.assertEqual([i["published_on"] for i in items], ["2026-10-25", "2026-09-05"])
         self.assertEqual(items[0]["title"], "測試民視標題一")
@@ -189,9 +189,9 @@ class TestPublishers(unittest.TestCase):
             if feed.get("status") in ("blocked", "latest_only"):
                 self.assertTrue(feed.get("blocked_reason"), feed["id"])
 
-    def test_ftv_is_blocked_while_robots_cannot_be_read(self):
-        self.assertEqual(FEEDS["ftv"]["type"], "blocked")
-        self.assertIn("TLS", FEEDS["ftv"]["blocked_reason"])
+    def test_ftv_reads_robots_in_the_browser(self):
+        self.assertEqual(FEEDS["ftv"]["type"], "browser_list")
+        self.assertEqual(FEEDS["ftv"]["robots_via"], "browser")
 
     def test_blocked_feed_returns_no_items(self):
         crawler = make_crawler({})

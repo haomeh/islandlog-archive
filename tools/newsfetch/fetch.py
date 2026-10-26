@@ -300,6 +300,7 @@ def main():
             sys.exit(1)
 
     crawler = PoliteCrawler(cache_dir=args.cache_dir, use_cache=not args.no_cache)
+    crawler.use_browser_robots(feeds)
     now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     record_count = 0

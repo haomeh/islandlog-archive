@@ -231,24 +231,21 @@
       "民視",
       "民視新聞"
     ],
-    "type": "blocked",
-    "status": "blocked",
-    "disabled_route": {
-      "type": "browser_list",
+    "type": "browser_list",
+    "url": "https://www.ftvnews.com.tw/realtime/?page=1",
+    "status": "ok",
+    "robots_via": "browser",
+    "route": {
       "url": "https://www.ftvnews.com.tw/realtime/?page=1",
-      "route": {
-        "url": "https://www.ftvnews.com.tw/realtime/?page=1",
-        "max_pages": 9000,
-        "link": "ftvnews\\.com\\.tw/news/detail/",
-        "date_where": "url",
-        "date_regex": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
-        "title_strip": "^\\d{4}/\\d\\d/\\d\\d \\d\\d:\\d\\d(:\\d\\d)?\\s*",
-        "page_template": "https://www.ftvnews.com.tw/realtime/?page={page}",
-        "stop_probe": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
-        "max_steps": 9000
-      }
-    },
-    "blocked_reason": "robots.txt unreadable: the TLS check fails (Missing Subject Key Identifier) and a TLS error is never bypassed, so the crawler fails closed. A dated list exists (realtime/?page=N, date in the article id). Needs a PM ruling to read robots.txt in the browser."
+      "max_pages": 9000,
+      "link": "ftvnews\\.com\\.tw/news/detail/",
+      "date_where": "url",
+      "date_regex": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
+      "title_strip": "^\\d{4}/\\d\\d/\\d\\d \\d\\d:\\d\\d(:\\d\\d)?\\s*",
+      "page_template": "https://www.ftvnews.com.tw/realtime/?page={page}",
+      "stop_probe": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
+      "max_steps": 9000
+    }
   },
   {
     "id": "ebc",

@@ -126,6 +126,7 @@ def main(argv=None) -> int:
         if feed["id"] not in wanted:
             continue
         crawler = PoliteCrawler(cache_dir=args.cache_dir or args.out_dir / "cache" / feed["id"])
+        crawler.use_browser_robots([feed])
         state_file = args.out_dir / "state" / f"{feed['id']}.done"
         finished = set() if args.no_resume else done_units(state_file)
         for unit in units_for(feed, args.since, args.until):

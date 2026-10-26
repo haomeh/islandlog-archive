@@ -7,13 +7,15 @@ import gzip
 import hashlib
 import json
 import logging
+import os
+import subprocess
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import urllib.robotparser
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Iterable, Optional, Tuple
 
 USER_AGENT = "islandlog-newsfetch/0.1 (+https://github.com/haomeh/islandlog-archive)"
 DEFAULT_CACHE_DIR = Path(__file__).parent / ".cache"
@@ -36,7 +38,21 @@ ERROR_PAGE_MARKERS = (
     "請證明您不是機器人",
 )
 
+ROBOTS_SCRIPT = Path(__file__).parent / "robots_browser.mjs"
+
 logger = logging.getLogger("newsfetch.crawler")
+
+
+def node_robots_browser(url: str, user_agent: str, timeout: int = 90) -> Dict:
+    """Reads one robots.txt in Playwright (R108). Returns {"status": int or None, "body": str}."""
+    env = dict(os.environ)
+    if os.environ.get("NEWSFETCH_NODE_PATH"):
+        env["NODE_PATH"] = os.environ["NEWSFETCH_NODE_PATH"]
+    proc = subprocess.run(["node", str(ROBOTS_SCRIPT), url, user_agent],
+                          capture_output=True, text=True, timeout=timeout, env=env)
+    if proc.returncode != 0:
+        raise RuntimeError(f"robots browser exit {proc.returncode}")
+    return json.loads(proc.stdout.strip().splitlines()[-1])
 
 
 class HostRobots:
@@ -151,7 +167,15 @@ class PoliteCrawler:
         self.robots_map: Dict[str, HostRobots] = {}
         self.host_failures: Dict[str, int] = {}
         self.stopped_hosts: set = set()
+        self.browser_robots_hosts: set = set()
+        self.browser_robots = node_robots_browser
         self._opener = urllib.request.build_opener(_NoRedirect)
+
+    def use_browser_robots(self, feeds: Iterable[Dict]) -> None:
+        """R108: the feeds with robots_via "browser" read robots.txt in the browser."""
+        for feed in feeds:
+            if feed.get("robots_via") == "browser":
+                self.browser_robots_hosts.add(urllib.parse.urlsplit(feed["route"]["url"]).netloc.lower())
 
     def get_host(self, url: str) -> str:
         parts = urllib.parse.urlsplit(url)
@@ -188,7 +212,10 @@ class PoliteCrawler:
             return cached
 
         robots_url = f"{scheme}://{host}/robots.txt"
-        status, data = self._fetch(robots_url, check_robots=False, ttl=ROBOTS_TTL_SECONDS)
+        if host in self.browser_robots_hosts:
+            status, data = self._browser_robots(robots_url, host)
+        else:
+            status, data = self._fetch(robots_url, check_robots=False, ttl=ROBOTS_TTL_SECONDS)
         if status == 200 and data is not None:
             hr = HostRobots(data.decode("utf-8", errors="ignore"), mode="rules")
         elif status in (404, 410):
@@ -199,6 +226,18 @@ class PoliteCrawler:
             hr = HostRobots(mode="disallow_all")
         self.robots_map[host] = hr
         return hr
+
+    def _browser_robots(self, robots_url: str, host: str) -> Tuple[Optional[int], Optional[bytes]]:
+        """R108: reads robots.txt in the browser with our User-Agent. The rules stay the same. Any failure returns no status."""
+        self.rate_limiter.wait(host)
+        try:
+            result = self.browser_robots(robots_url, self.user_agent)
+        except Exception as err:  # fail closed: the caller maps no status to disallow_all
+            logger.warning("Browser could not read %s: %s", robots_url, err)
+            return None, None
+        status = result.get("status")
+        body = result.get("body") or ""
+        return status, (body.encode("utf-8") if status == 200 else None)
 
     def fetch_raw(
         self, url: str, check_robots: bool = True, force_refresh: bool = False
