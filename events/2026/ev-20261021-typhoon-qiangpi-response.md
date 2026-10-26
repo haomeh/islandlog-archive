@@ -4,8 +4,8 @@ id: ev-20261021-typhoon-qiangpi-response
 kind: historical_event
 status: published
 title: 薔琵颱風
-summary: 2026-10-14至2026-10-24，自由時報、中央通訊社、Newtalk等共 66 則報導提及薔琵颱風 [@src-20261014-ltn-dbea5472]。高雄市政府等機關發布 15 則相關說明 [@src-20261019-kcg-2391a97c]。
-start_date: '2026-10-14'
+summary: 2026-10-22至2026-10-25，自由時報、Newtalk、中央通訊社等共 37 則報導提及薔琵颱風 [@src-20261022-ltn-e59c9898]。
+start_date: '2026-10-22'
 start_date_precision: day
 gov_levels:
 - central
@@ -38,507 +38,343 @@ positions:
   stance: not_found
 timeline:
 - id: tl-01
-  date: '2026-10-14'
-  date_precision: day
-  title: 4 則報導
-  source_ids:
-  - src-20261014-ltn-dbea5472
-  - src-20261014-ltn-04c6e1db
-  - src-20261014-ltn-a76894b2
-- id: tl-02
-  date: '2026-10-15'
+  date: '2026-10-22'
   date_precision: day
   title: 7 則報導
   source_ids:
-  - src-20261015-ltn-3bdf6c9e
-  - src-20261015-ltn-8a883525
-  - src-20261015-ltn-736c598c
-- id: tl-03
-  date: '2026-10-19'
-  date_precision: day
-  title: 1 則官方發布
-  attributed_to: ac-kaohsiung-city-government
-  source_ids:
-  - src-20261019-kcg-2391a97c
-- id: tl-04
-  date: '2026-10-21'
-  date_precision: day
-  title: 4 則報導、4 則官方發布
-  attributed_to: ac-executive-yuan
-  source_ids:
-  - src-20261021-ltn-02526dc9
-  - src-20261021-cna-6c705322
-  - src-20261021-cna-d47624d1
-  - src-20261021-ey-a5ea3efc
-- id: tl-05
-  date: '2026-10-22'
-  date_precision: day
-  title: 15 則報導、1 則回應或澄清、10 則官方發布
-  attributed_to: ac-executive-yuan
-  source_ids:
-  - src-20261022-ltn-7f504795
-  - src-20261022-cna-7d6fc977
-  - src-20261022-cna-e67a2f8c
-  - src-20261022-ey-a0c15c57
-  - src-20261022-ey-db1ba710
-- id: tl-06
+  - src-20261022-ltn-e59c9898
+  - src-20261022-newtalk-7aa9b3d3
+  - src-20261022-newtalk-77ecfb0a
+- id: tl-02
   date: '2026-10-23'
   date_precision: day
-  title: 14 則報導、3 則回應或澄清、2 則引述貼文
+  title: 16 則報導
   source_ids:
-  - src-20261023-newtalk-aa3a0807
-  - src-20261023-storm-406ade9e
-  - src-20261023-storm-d422cc0c
-- id: tl-07
+  - src-20261023-ltn-b54de074
+  - src-20261023-ltn-3b08b7ef
+  - src-20261023-ltn-3c522de8
+- id: tl-03
   date: '2026-10-24'
   date_precision: day
-  title: 14 則報導、2 則回應或澄清
+  title: 12 則報導
   source_ids:
-  - src-20261024-udn-3d3eec84
-  - src-20261024-udn-625a198b
   - src-20261024-ltn-26cb55de
+  - src-20261024-ebc-283b8c4a
+  - src-20261024-ltn-2dc5a086
+- id: tl-04
+  date: '2026-10-25'
+  date_precision: day
+  title: 2 則報導
+  source_ids:
+  - src-20261025-newtalk-9d50fb03
+  - src-20261025-udn-ce12055e
 news_groups:
 - id: ng-01
   timeline_id: tl-01
   kind: report
-  title: 「薔琵」將生成恐又大又強！專家：轉向點變數大、不排除影響
-  representative_source_id: src-20261014-ltn-dbea5472
+  title: 薔琵挾強風彰化驚傳婦人落水  消防陸海空搜救
+  representative_source_id: src-20261022-ltn-e59c9898
   source_ids:
-  - src-20261014-ltn-dbea5472
+  - src-20261022-ltn-e59c9898
 - id: ng-02
   timeline_id: tl-01
   kind: report
-  title: 薔琵最快今晚生成！路徑圖曝「天女散花」 粉專：北轉點變數大
-  representative_source_id: src-20261014-ltn-04c6e1db
+  title: 薔琵威力驚人！彰化沿海刮10級強風 鹿港百年磚牆坍塌
+  representative_source_id: src-20261022-newtalk-7aa9b3d3
   source_ids:
-  - src-20261014-ltn-04c6e1db
+  - src-20261022-newtalk-7aa9b3d3
 - id: ng-03
   timeline_id: tl-01
   kind: report
-  title: 薔琵颱風最快今生成！週末增強到中颱上限 估下週一、二北轉
-  representative_source_id: src-20261014-ltn-a76894b2
+  title: 強颱薔琵颳強陣風！彰化累積停電4875戶 台電搶修拚復電
+  representative_source_id: src-20261022-newtalk-77ecfb0a
   source_ids:
-  - src-20261014-ltn-a76894b2
+  - src-20261022-newtalk-77ecfb0a
 - id: ng-04
   timeline_id: tl-01
   kind: report
-  title: 「準薔琵」有可能達強颱！天氣粉專示警：不排除影響台灣
-  representative_source_id: src-20261014-ltn-c242c87a
+  title: 颱風薔琵來襲　彰化選舉號次抽籤可能延至27日
+  representative_source_id: src-20261022-cna-bb3dfba8
   source_ids:
-  - src-20261014-ltn-c242c87a
+  - src-20261022-cna-bb3dfba8
 - id: ng-05
-  timeline_id: tl-02
+  timeline_id: tl-01
   kind: report
-  title: 日夜溫差大秋老虎明報到 薔琵颱風將生成恐升級強颱
-  representative_source_id: src-20261015-ltn-3bdf6c9e
+  title: 薔琵逼近！鹿港老街磚牆驚傳坍塌 彰化沿海刮10級強風
+  representative_source_id: src-20261022-ettoday-fe64ae86
   source_ids:
-  - src-20261015-ltn-3bdf6c9e
+  - src-20261022-ettoday-fe64ae86
 - id: ng-06
-  timeline_id: tl-02
+  timeline_id: tl-01
   kind: report
-  title: 最快下午生成！「薔琵」上看強颱 AI模式大幅西修「近台機率增」
-  representative_source_id: src-20261015-ltn-8a883525
+  title: 薔琵狂掃「天空都是沙子」！彰化、台中、嘉義全有感 網崩潰了
+  representative_source_id: src-20261022-ettoday-9f091dee
   source_ids:
-  - src-20261015-ltn-8a883525
+  - src-20261022-ettoday-9f091dee
 - id: ng-07
-  timeline_id: tl-02
+  timeline_id: tl-01
   kind: report
-  title: 準「薔琵」不排除侵台？最新路徑曝北轉關鍵 颱風論壇：恐成又大又強的強颱
-  representative_source_id: src-20261015-ltn-736c598c
+  title: 快訊／薔琵進逼掀強風！彰化花壇驚傳婦人落水 警消尋獲已死亡
+  representative_source_id: src-20261022-ettoday-830b9528
   source_ids:
-  - src-20261015-ltn-736c598c
+  - src-20261022-ettoday-830b9528
 - id: ng-08
   timeline_id: tl-02
-  kind: report
-  title: 薔琵颱風生成！ 最新路徑曝光
-  representative_source_id: src-20261015-ltn-1b767055
-  source_ids:
-  - src-20261015-ltn-1b767055
-- id: ng-09
-  timeline_id: tl-02
-  kind: report
-  title: 「薔琵」生成下週四最接近！AI模式揭最新路徑
-  representative_source_id: src-20261015-ltn-0a64be66
-  source_ids:
-  - src-20261015-ltn-0a64be66
-- id: ng-10
-  timeline_id: tl-02
-  kind: report
-  title: 颱風「薔琵」生成！氣象粉專：下週四到週六最靠近台灣
-  representative_source_id: src-20261015-ltn-10141f81
-  source_ids:
-  - src-20261015-ltn-10141f81
-- id: ng-11
-  timeline_id: tl-02
-  kind: report
-  title: 薔琵週末增強成中颱！是否靠近台灣 「太平洋高壓」是關鍵
-  representative_source_id: src-20261015-ltn-842b1875
-  source_ids:
-  - src-20261015-ltn-842b1875
-- id: ng-12
-  timeline_id: tl-04
-  kind: report
-  title: 薔琵颱風逼近掀巨浪！蘇澳港工程吊臂車捲入海中 駕駛下落不明
-  representative_source_id: src-20261021-ltn-02526dc9
-  source_ids:
-  - src-20261021-ltn-02526dc9
-- id: ng-13
-  timeline_id: tl-04
-  kind: report
-  title: 颱風薔琵逼近　台水備妥574台緊急發電機
-  representative_source_id: src-20261021-cna-6c705322
-  source_ids:
-  - src-20261021-cna-6c705322
-- id: ng-14
-  timeline_id: tl-04
-  kind: report
-  title: 颱風薔琵進逼　水利署展開防汛整備示警雙北等地加強警戒
-  representative_source_id: src-20261021-cna-d47624d1
-  source_ids:
-  - src-20261021-cna-d47624d1
-- id: ng-15
-  timeline_id: tl-04
-  kind: report
-  title: 颱風薔琵來襲　武陵、福壽山農場22日中午起預警休園
-  representative_source_id: src-20261021-cna-b2460171
-  source_ids:
-  - src-20261021-cna-b2460171
-- id: ng-16
-  timeline_id: tl-05
-  kind: clarification
-  title: 嘉市長、議員候選人抽籤遇薔琵颱風是否延期？市選委會回應了
-  representative_source_id: src-20261022-ltn-7f504795
-  source_ids:
-  - src-20261022-ltn-7f504795
-  note: 報導中的回應或澄清
-- id: ng-17
-  timeline_id: tl-05
-  kind: report
-  title: 颱風薔琵來襲　屏東縣23日停班停課
-  representative_source_id: src-20261022-cna-7d6fc977
-  source_ids:
-  - src-20261022-cna-7d6fc977
-  - src-20261022-cna-58a6fb7f
-  - src-20261022-cna-11624a64
-  - src-20261022-cna-226d952f
-  - src-20261022-cna-470ce83d
-  - src-20261022-cna-1c583860
-- id: ng-18
-  timeline_id: tl-05
-  kind: report
-  title: 颱風薔琵來襲　新竹市23日停止上班上課
-  representative_source_id: src-20261022-cna-e67a2f8c
-  source_ids:
-  - src-20261022-cna-e67a2f8c
-  - src-20261022-cna-b8b41330
-  - src-20261022-cna-58518758
-- id: ng-19
-  timeline_id: tl-05
-  kind: report
-  title: 颱風薔琵來襲防強風豪雨　23日停班停課情況一覽
-  representative_source_id: src-20261022-cna-bb5aefc9
-  source_ids:
-  - src-20261022-cna-bb5aefc9
-  - src-20261023-cna-4b085892
-- id: ng-20
-  timeline_id: tl-05
-  kind: report
-  title: 颱風薔琵來襲　台南市災害應變中心二級開設
-  representative_source_id: src-20261022-cna-b68f2570
-  source_ids:
-  - src-20261022-cna-b68f2570
-  - src-20261023-cna-a9ac3b25
-- id: ng-21
-  timeline_id: tl-05
-  kind: report
-  title: 颱風薔琵侵襲　澎湖23日停班停課
-  representative_source_id: src-20261022-cna-280b941d
-  source_ids:
-  - src-20261022-cna-280b941d
-  - src-20261022-cna-48a8043f
-- id: ng-22
-  timeline_id: tl-06
-  kind: clarification
-  title: 薔琵颱風長浪衝擊台東？多良車站下方路基驚傳掏空 公路局回應了
-  representative_source_id: src-20261023-newtalk-aa3a0807
-  source_ids:
-  - src-20261023-newtalk-aa3a0807
-  note: 報導中的回應或澄清
-- id: ng-23
-  timeline_id: tl-06
-  kind: clarification
-  title: 因應薔琵颱風來襲中市災害應變中心一級開設　盧市長籲非必要勿外出、嚴查AI假訊息
-  representative_source_id: src-20261023-storm-406ade9e
-  source_ids:
-  - src-20261023-storm-406ade9e
-  note: 報導中的回應或澄清
-- id: ng-24
-  timeline_id: tl-06
-  kind: clarification
-  title: 薔琵最新動態/颱風假連放2天？台北市明天10/24會停班停課嗎？蔣萬安回應了
-  representative_source_id: src-20261023-storm-d422cc0c
-  source_ids:
-  - src-20261023-storm-d422cc0c
-  note: 報導中的回應或澄清
-- id: ng-25
-  timeline_id: tl-06
-  kind: post
-  title: 獨家影音／薔琵攪局！　籮筐會延期　涼糕業者「早就做好」　PO文引搶購
-  representative_source_id: src-20261023-tvbs-698c86db
-  source_ids:
-  - src-20261023-tvbs-698c86db
-- id: ng-26
-  timeline_id: tl-06
-  kind: post
-  title: 薔琵颱風最新動態》暴風圈觸陸「逐漸籠罩台灣」！氣象署一鍵查詢最新颱風路徑、24小時直播
-  representative_source_id: src-20261023-storm-613e1fe7
-  source_ids:
-  - src-20261023-storm-613e1fe7
-- id: ng-27
-  timeline_id: tl-06
-  kind: report
-  title: 颱風薔琵影響　南投縣24日停班停課
-  representative_source_id: src-20261023-cna-ebb1a049
-  source_ids:
-  - src-20261023-cna-ebb1a049
-  - src-20261023-cna-19710c63
-  - src-20261023-cna-34a453be
-  - src-20261023-cna-a589c516
-  - src-20261023-cna-45b101a7
-  - src-20261023-cna-85a97464
-- id: ng-28
-  timeline_id: tl-06
-  kind: report
-  title: 中颱薔琵襲台釀1死350傷 全台通報1726件災情
-  representative_source_id: src-20261023-ltn-99f1d231
-  source_ids:
-  - src-20261023-ltn-99f1d231
-  - src-20261024-ltn-0248a456
-- id: ng-29
-  timeline_id: tl-06
   kind: report
   title: 薔琵狂風吹！彰化大型看板倒塌險砸車、棉被捲上天高掛電線桿
   representative_source_id: src-20261023-ltn-b54de074
   source_ids:
   - src-20261023-ltn-b54de074
   - src-20261024-ltn-7d90bde8
-- id: ng-30
-  timeline_id: tl-06
+  - src-20261024-ltn-5597f493
+- id: ng-09
+  timeline_id: tl-02
   kind: report
-  title: 颱風薔琵襲台  北市通報路樹傾倒等44件災情
-  representative_source_id: src-20261023-ltn-1b73a18d
+  title: 薔琵愈晚愈兇！彰化災情上修累計4傷  停電一度飆破1.2萬戶
+  representative_source_id: src-20261023-ltn-3b08b7ef
   source_ids:
-  - src-20261023-ltn-1b73a18d
-  - src-20261024-ltn-6ee6c358
-- id: ng-31
-  timeline_id: tl-06
+  - src-20261023-ltn-3b08b7ef
+- id: ng-10
+  timeline_id: tl-02
   kind: report
-  title: ｢薔琵｣颱風來襲! 全台新光三越及SOGO暫時停業、好市多和萬家福正常營業
-  representative_source_id: src-20261023-newtalk-37582a40
+  title: 薔琵10級強風狂掃彰化縣！電線走火畫面曝 傍晚仍逾6千戶停電
+  representative_source_id: src-20261023-ltn-3c522de8
   source_ids:
-  - src-20261023-newtalk-37582a40
-  - src-20261023-cna-67d2c7e8
-- id: ng-32
-  timeline_id: tl-07
-  kind: clarification
-  title: 薔琵降雨271毫米 網友敲碗石門水庫洩洪 北水分署說明機率低原因
-  representative_source_id: src-20261024-udn-3d3eec84
+  - src-20261023-ltn-3c522de8
+- id: ng-11
+  timeline_id: tl-02
+  kind: report
+  title: 驚險！薔琵狂風肆虐彰化  20公尺巨樹倒塌「重壓救護車」
+  representative_source_id: src-20261023-ltn-114fb205
   source_ids:
-  - src-20261024-udn-3d3eec84
-  note: 報導中的回應或澄清
-- id: ng-33
-  timeline_id: tl-07
-  kind: clarification
-  title: 薔琵釀災！文大宿舍4樓天花板遭吹落傳學生遭砸 校方回應了
-  representative_source_id: src-20261024-udn-625a198b
+  - src-20261023-ltn-114fb205
+- id: ng-12
+  timeline_id: tl-02
+  kind: report
+  title: 薔琵好兇！彰化災情已134件  3騎士受傷就醫
+  representative_source_id: src-20261023-ltn-ef4f6708
   source_ids:
-  - src-20261024-udn-625a198b
-  note: 報導中的回應或澄清
-- id: ng-34
-  timeline_id: tl-07
+  - src-20261023-ltn-ef4f6708
+- id: ng-13
+  timeline_id: tl-02
+  kind: report
+  title: 薔琵颱風重創彰化！1.2萬戶一度停電 339件災情釀4傷
+  representative_source_id: src-20261023-chinatimes-ce5b6bbe
+  source_ids:
+  - src-20261023-chinatimes-ce5b6bbe
+- id: ng-14
+  timeline_id: tl-02
+  kind: report
+  title: 再放颱風假！薔琵風勢強勁 台中、宜蘭、彰化10 ／24續停班課
+  representative_source_id: src-20261023-chinatimes-76801ccc
+  source_ids:
+  - src-20261023-chinatimes-76801ccc
+- id: ng-15
+  timeline_id: tl-02
+  kind: report
+  title: 颱風薔琵來襲　南彰化沿海鄉鎮零星樹倒、遮雨棚掉落
+  representative_source_id: src-20261023-cna-fba11ce3
+  source_ids:
+  - src-20261023-cna-fba11ce3
+- id: ng-16
+  timeline_id: tl-02
+  kind: report
+  title: 薔琵強風吹倒彰化路樹　釀134件災情3人傷
+  representative_source_id: src-20261023-cna-7688126c
+  source_ids:
+  - src-20261023-cna-7688126c
+- id: ng-17
+  timeline_id: tl-02
+  kind: report
+  title: 颱風薔琵影響　彰化晚間尚逾3千戶待復電
+  representative_source_id: src-20261023-cna-819ec209
+  source_ids:
+  - src-20261023-cna-819ec209
+- id: ng-18
+  timeline_id: tl-02
+  kind: report
+  title: 棉被掛電桿「香蕉樹倒了」薔琵肆虐彰化畫面曝 水塔砸落看板倒
+  representative_source_id: src-20261023-ettoday-c189f2e0
+  source_ids:
+  - src-20261023-ettoday-c189f2e0
+- id: ng-19
+  timeline_id: tl-02
+  kind: report
+  title: 薔琵颱風狂掃彰化！6千戶慘斷電 台電出動203人頂強風漏夜搶修
+  representative_source_id: src-20261023-ettoday-90bc786f
+  source_ids:
+  - src-20261023-ettoday-90bc786f
+- id: ng-20
+  timeline_id: tl-02
+  kind: report
+  title: 薔琵發威！6樓巨樹連根倒下「砸中救護車」 彰化已4人受傷
+  representative_source_id: src-20261023-ettoday-90445e84
+  source_ids:
+  - src-20261023-ettoday-90445e84
+- id: ng-21
+  timeline_id: tl-02
+  kind: report
+  title: 薔琵飆12級強風！彰化「1.2萬戶停電」6千戶仍摸黑 台電搶修中
+  representative_source_id: src-20261023-ettoday-ce1c539b
+  source_ids:
+  - src-20261023-ettoday-ce1c539b
+- id: ng-22
+  timeline_id: tl-03
   kind: report
   title: 彰化以南脫離薔琵颱風暴風圈！估傍晚解除陸警
   representative_source_id: src-20261024-ltn-26cb55de
   source_ids:
   - src-20261024-ltn-26cb55de
+  - src-20261024-ltn-042ebae9
   - src-20261024-cna-35443b3a
-- id: ng-35
-  timeline_id: tl-07
+  - src-20261024-ettoday-25b977d5
+- id: ng-23
+  timeline_id: tl-03
   kind: report
-  title: 薔琵眼牆一路掃過宜蘭！氣象粉專估致災強風至少再半天
-  representative_source_id: src-20261024-ltn-ddc9c3d7
+  title: 薔琵害停電！彰化養豬場電線走火 13頭遭電死53頭癱瘓
+  representative_source_id: src-20261024-ebc-283b8c4a
   source_ids:
-  - src-20261024-ltn-ddc9c3d7
-  - src-20261024-udn-1623a6bf
-- id: ng-36
-  timeline_id: tl-07
+  - src-20261024-ebc-283b8c4a
+- id: ng-24
+  timeline_id: tl-03
   kind: report
-  title: 遭颱風薔琵嚴重侵襲！龜山島25日起暫停開放遊客登島
-  representative_source_id: src-20261024-tvbs-0bc4b516
+  title: 薔琵強風灌店吹砸！彰化安全帽店損30萬 110頂打5折清倉
+  representative_source_id: src-20261024-ltn-2dc5a086
   source_ids:
-  - src-20261024-tvbs-0bc4b516
-  - src-20261024-cna-0943024d
-- id: ng-37
-  timeline_id: tl-07
+  - src-20261024-ltn-2dc5a086
+- id: ng-25
+  timeline_id: tl-03
   kind: report
-  title: 颱風薔琵強襲釀新竹逾萬戶停電　台電搶修晚間全數復電
-  representative_source_id: src-20261024-tvbs-9675d588
+  title: 薔琵走了！彰化最高逾2萬戶大停電  日夜搶修復電率已97％
+  representative_source_id: src-20261024-ltn-9fb529cd
   source_ids:
-  - src-20261024-tvbs-9675d588
-  - src-20261024-udn-f4aca2db
-- id: ng-38
-  timeline_id: tl-07
+  - src-20261024-ltn-9fb529cd
+- id: ng-26
+  timeline_id: tl-03
   kind: report
-  title: 颱風薔琵逐漸遠離 氣象署估晚間8時30分解除海警
-  representative_source_id: src-20261024-udn-03b22b03
+  title: 薔琵颱風害慘畜牧場？太陽能板突漏電！彰化「50頭豬遭電死」
+  representative_source_id: src-20261024-tvbs-e3fd31d6
   source_ids:
-  - src-20261024-udn-03b22b03
-  - src-20261024-cna-e5564f61
-- id: ng-39
-  timeline_id: tl-07
+  - src-20261024-tvbs-e3fd31d6
+- id: ng-27
+  timeline_id: tl-03
   kind: report
-  title: 颱風薔琵肆虐 國軍協助新北宜蘭等地災後復原
-  representative_source_id: src-20261024-udn-57c42456
+  title: 彰化以南脫離薔琵暴風圈 氣象署：最快下午解除陸警
+  representative_source_id: src-20261024-chinatimes-88201758
   source_ids:
-  - src-20261024-udn-57c42456
-  - src-20261024-cna-a86f192b
-- id: ng-40
-  timeline_id: tl-07
+  - src-20261024-chinatimes-88201758
+- id: ng-28
+  timeline_id: tl-03
   kind: report
-  title: 薔琵颱風襲澎湖37件災情 「鹽水煙」重創林木、爬蟲類也罕見現身
-  representative_source_id: src-20261024-udn-a259de83
+  title: 薔琵狂颳12級風！彰化近2萬戶停電 騎士勾落線摔傷
+  representative_source_id: src-20261024-chinatimes-138c8aa6
   source_ids:
-  - src-20261024-udn-a259de83
-  - src-20261024-cna-0afb542e
+  - src-20261024-chinatimes-138c8aa6
+- id: ng-29
+  timeline_id: tl-03
+  kind: report
+  title: 薔琵狂風強灌！彰化安全帽店110頂受損 業者霸氣5折拋售
+  representative_source_id: src-20261024-ettoday-f8ba227d
+  source_ids:
+  - src-20261024-ettoday-f8ba227d
+- id: ng-30
+  timeline_id: tl-03
+  kind: report
+  title: 薔琵颱風變弱了　彰化以南脫離暴風圈北部仍防豪雨
+  representative_source_id: src-20261024-mirrormedia-54681949
+  source_ids:
+  - src-20261024-mirrormedia-54681949
+- id: ng-31
+  timeline_id: tl-04
+  kind: report
+  title: 薔琵狂風猛灌！彰化安全帽店110頂受損5折拋售 車友擠爆秒售罄
+  representative_source_id: src-20261025-newtalk-9d50fb03
+  source_ids:
+  - src-20261025-newtalk-9d50fb03
+- id: ng-32
+  timeline_id: tl-04
+  kind: report
+  title: 薔琵強風過境彰化韭菜東倒西歪 縣長交代加速查報農業災情
+  representative_source_id: src-20261025-udn-ce12055e
+  source_ids:
+  - src-20261025-udn-ce12055e
 privacy:
   contains_private_persons: false
   basis_source_ids: []
 review:
-  sensitive: false
+  sensitive: true
   reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'
   status: draft-review
 ---
 
-## 2026-10-14　4 則報導
+## 2026-10-22　7 則報導
 
-自由時報以「「薔琵」將生成恐又大又強！專家：轉向點變數大、不排除影響」為題報導 [@src-20261014-ltn-dbea5472]。
+自由時報以「薔琵挾強風彰化驚傳婦人落水  消防陸海空搜救」為題報導 [@src-20261022-ltn-e59c9898]。
 
-自由時報以「薔琵最快今晚生成！路徑圖曝「天女散花」 粉專：北轉點變數大」為題報導 [@src-20261014-ltn-04c6e1db]。
+Newtalk以「薔琵威力驚人！彰化沿海刮10級強風 鹿港百年磚牆坍塌」為題報導 [@src-20261022-newtalk-7aa9b3d3]。
 
-自由時報以「薔琵颱風最快今生成！週末增強到中颱上限 估下週一、二北轉」為題報導 [@src-20261014-ltn-a76894b2]。
+Newtalk以「強颱薔琵颳強陣風！彰化累積停電4875戶 台電搶修拚復電」為題報導 [@src-20261022-newtalk-77ecfb0a]。
 
-自由時報以「「準薔琵」有可能達強颱！天氣粉專示警：不排除影響台灣」為題報導 [@src-20261014-ltn-c242c87a]。
+中央通訊社以「颱風薔琵來襲　彰化選舉號次抽籤可能延至27日」為題報導 [@src-20261022-cna-bb3dfba8]。
 
-## 2026-10-15　7 則報導
+ETtoday新聞雲以「薔琵逼近！鹿港老街磚牆驚傳坍塌 彰化沿海刮10級強風」為題報導 [@src-20261022-ettoday-fe64ae86]。
 
-自由時報以「日夜溫差大秋老虎明報到 薔琵颱風將生成恐升級強颱」為題報導 [@src-20261015-ltn-3bdf6c9e]。
+ETtoday新聞雲以「薔琵狂掃「天空都是沙子」！彰化、台中、嘉義全有感 網崩潰了」為題報導 [@src-20261022-ettoday-9f091dee]。
 
-自由時報以「最快下午生成！「薔琵」上看強颱 AI模式大幅西修「近台機率增」」為題報導 [@src-20261015-ltn-8a883525]。
+ETtoday新聞雲以「快訊／薔琵進逼掀強風！彰化花壇驚傳婦人落水 警消尋獲已死亡」為題報導 [@src-20261022-ettoday-830b9528]。
 
-自由時報以「準「薔琵」不排除侵台？最新路徑曝北轉關鍵 颱風論壇：恐成又大又強的強颱」為題報導 [@src-20261015-ltn-736c598c]。
-
-自由時報以「薔琵颱風生成！ 最新路徑曝光」為題報導 [@src-20261015-ltn-1b767055]。
-
-自由時報以「「薔琵」生成下週四最接近！AI模式揭最新路徑」為題報導 [@src-20261015-ltn-0a64be66]。
-
-自由時報以「颱風「薔琵」生成！氣象粉專：下週四到週六最靠近台灣」為題報導 [@src-20261015-ltn-10141f81]。
-
-自由時報以「薔琵週末增強成中颱！是否靠近台灣 「太平洋高壓」是關鍵」為題報導 [@src-20261015-ltn-842b1875]。
-
-## 2026-10-19　1 則官方發布
-
-高雄市政府發布「嚴防強颱薔琵來襲 高雄防汛排水設施提前整備就位」 [@src-20261019-kcg-2391a97c]。
-
-## 2026-10-21　4 則報導、4 則官方發布
-
-行政院發布「政院嚴密掌握薔琵颱風動態 慎防強降雨及強風長浪 督促中央地方共同落實防災整備」 [@src-20261021-ey-a5ea3efc]。
-
-行政院發布「薔琵颱風逼近臺灣 農業部啟動防災整備 呼籲農漁民提前防颱」 [@src-20261021-moa-7b354af6]。
-
-行政院發布「薔琵颱風逐步進逼 水利署提前盤點、嚴實布署」 [@src-20261021-moea-b1f20235]。
-
-行政院發布「薔琵颱風逼近 台水啟動防颱機制 維持供水系統穩定運作」 [@src-20261021-moea-1df0f277]。
-
-自由時報以「薔琵颱風逼近掀巨浪！蘇澳港工程吊臂車捲入海中 駕駛下落不明」為題報導 [@src-20261021-ltn-02526dc9]。
-
-中央通訊社以「颱風薔琵逼近　台水備妥574台緊急發電機」為題報導 [@src-20261021-cna-6c705322]。
-
-中央通訊社以「颱風薔琵進逼　水利署展開防汛整備示警雙北等地加強警戒」為題報導 [@src-20261021-cna-d47624d1]。
-
-中央通訊社以「颱風薔琵來襲　武陵、福壽山農場22日中午起預警休園」為題報導 [@src-20261021-cna-b2460171]。
-
-## 2026-10-22　15 則報導、1 則回應或澄清、10 則官方發布
-
-自由時報以「嘉市長、議員候選人抽籤遇薔琵颱風是否延期？市選委會回應了」為題報導 [@src-20261022-ltn-7f504795]。
-
-行政院發布「視導薔琵颱風中央災害應變中心 卓揆：中央地方攜手防災 全力確保民眾安全」 [@src-20261022-ey-a0c15c57]。
-
-行政院發布「卓揆：超前部署因應薔琵颱風 共同守護人民生命財產安全」 [@src-20261022-ey-db1ba710]。
-
-高雄市政府發布「高雄市急救責任醫院與市立醫院薔琵颱風期間門、急診開診情況一覽表」 [@src-20261022-kcg-473b1d12]。
-
-高雄市政府發布「薔琵颱風來襲，颱風警戒區域公告生效」 [@src-20261022-kcg-6ee60cda]。
-
-高雄市政府發布「秋颱薔琵迫近，如遇災害損失，記得先拍照存證再申請租稅減免」 [@src-20261022-kcg-a70507d0]。
-
-高雄市政府發布「奉指揮官指示，本市薔琵颱風災害應變中心於本日（10月22日）14時起一級開設。」 [@src-20261022-kcg-63fe1f84]。
-
-高雄市政府發布「薔琵颱風逼近！ 高市公園處全面強化防颱整備 守護市民安全」 [@src-20261022-kcg-82f1fa43]。
-
-行政院發布「國防部發布新聞稿，針對「召開『薔琵颱風』災害應變中心管制會議」乙情說明。」 [@src-20261022-mnd-7cdc7b81]。
-
-行政院發布「嚴防薔琵颱風影響 農業部召開工作會議嚴陣以待」 [@src-20261022-moa-c1d26c47]。
-
-行政院發布「強颱薔琵進逼 台電動員7千餘人機動戒備」 [@src-20261022-moea-202c8fe6]。
-
-中央通訊社以「颱風薔琵來襲　屏東縣23日停班停課」為題報導 [@src-20261022-cna-7d6fc977]。
-
-中央通訊社以「颱風薔琵來襲　新竹市23日停止上班上課」為題報導 [@src-20261022-cna-e67a2f8c]。
-
-中央通訊社以「颱風薔琵來襲防強風豪雨　23日停班停課情況一覽」為題報導 [@src-20261022-cna-bb5aefc9]。
-
-中央通訊社以「颱風薔琵來襲　台南市災害應變中心二級開設」為題報導 [@src-20261022-cna-b68f2570]。
-
-中央通訊社以「颱風薔琵侵襲　澎湖23日停班停課」為題報導 [@src-20261022-cna-280b941d]。
-
-## 2026-10-23　14 則報導、3 則回應或澄清、2 則引述貼文
-
-Newtalk以「薔琵颱風長浪衝擊台東？多良車站下方路基驚傳掏空 公路局回應了」為題報導 [@src-20261023-newtalk-aa3a0807]。
-
-風傳媒以「因應薔琵颱風來襲中市災害應變中心一級開設　盧市長籲非必要勿外出、嚴查AI假訊息」為題報導 [@src-20261023-storm-406ade9e]。
-
-風傳媒以「薔琵最新動態/颱風假連放2天？台北市明天10/24會停班停課嗎？蔣萬安回應了」為題報導 [@src-20261023-storm-d422cc0c]。
-
-TVBS以「獨家影音／薔琵攪局！　籮筐會延期　涼糕業者「早就做好」　PO文引搶購」為題報導 [@src-20261023-tvbs-698c86db]。
-
-風傳媒以「薔琵颱風最新動態》暴風圈觸陸「逐漸籠罩台灣」！氣象署一鍵查詢最新颱風路徑、24小時直播」為題報導 [@src-20261023-storm-613e1fe7]。
-
-中央通訊社以「颱風薔琵影響　南投縣24日停班停課」為題報導 [@src-20261023-cna-ebb1a049]。
-
-自由時報以「中颱薔琵襲台釀1死350傷 全台通報1726件災情」為題報導 [@src-20261023-ltn-99f1d231]。
+## 2026-10-23　16 則報導
 
 自由時報以「薔琵狂風吹！彰化大型看板倒塌險砸車、棉被捲上天高掛電線桿」為題報導 [@src-20261023-ltn-b54de074]。
 
-自由時報以「颱風薔琵襲台  北市通報路樹傾倒等44件災情」為題報導 [@src-20261023-ltn-1b73a18d]。
+自由時報以「薔琵愈晚愈兇！彰化災情上修累計4傷  停電一度飆破1.2萬戶」為題報導 [@src-20261023-ltn-3b08b7ef]。
 
-Newtalk以「｢薔琵｣颱風來襲! 全台新光三越及SOGO暫時停業、好市多和萬家福正常營業」為題報導 [@src-20261023-newtalk-37582a40]。
+自由時報以「薔琵10級強風狂掃彰化縣！電線走火畫面曝 傍晚仍逾6千戶停電」為題報導 [@src-20261023-ltn-3c522de8]。
 
-## 2026-10-24　14 則報導、2 則回應或澄清
+自由時報以「驚險！薔琵狂風肆虐彰化  20公尺巨樹倒塌「重壓救護車」」為題報導 [@src-20261023-ltn-114fb205]。
 
-聯合新聞網以「薔琵降雨271毫米 網友敲碗石門水庫洩洪 北水分署說明機率低原因」為題報導 [@src-20261024-udn-3d3eec84]。
+自由時報以「薔琵好兇！彰化災情已134件  3騎士受傷就醫」為題報導 [@src-20261023-ltn-ef4f6708]。
 
-聯合新聞網以「薔琵釀災！文大宿舍4樓天花板遭吹落傳學生遭砸 校方回應了」為題報導 [@src-20261024-udn-625a198b]。
+中時新聞網以「薔琵颱風重創彰化！1.2萬戶一度停電 339件災情釀4傷」為題報導 [@src-20261023-chinatimes-ce5b6bbe]。
+
+中時新聞網以「再放颱風假！薔琵風勢強勁 台中、宜蘭、彰化10 ／24續停班課」為題報導 [@src-20261023-chinatimes-76801ccc]。
+
+中央通訊社以「颱風薔琵來襲　南彰化沿海鄉鎮零星樹倒、遮雨棚掉落」為題報導 [@src-20261023-cna-fba11ce3]。
+
+中央通訊社以「薔琵強風吹倒彰化路樹　釀134件災情3人傷」為題報導 [@src-20261023-cna-7688126c]。
+
+中央通訊社以「颱風薔琵影響　彰化晚間尚逾3千戶待復電」為題報導 [@src-20261023-cna-819ec209]。
+
+ETtoday新聞雲以「棉被掛電桿「香蕉樹倒了」薔琵肆虐彰化畫面曝 水塔砸落看板倒」為題報導 [@src-20261023-ettoday-c189f2e0]。
+
+ETtoday新聞雲以「薔琵颱風狂掃彰化！6千戶慘斷電 台電出動203人頂強風漏夜搶修」為題報導 [@src-20261023-ettoday-90bc786f]。
+
+ETtoday新聞雲以「薔琵發威！6樓巨樹連根倒下「砸中救護車」 彰化已4人受傷」為題報導 [@src-20261023-ettoday-90445e84]。
+
+ETtoday新聞雲以「薔琵飆12級強風！彰化「1.2萬戶停電」6千戶仍摸黑 台電搶修中」為題報導 [@src-20261023-ettoday-ce1c539b]。
+
+## 2026-10-24　12 則報導
 
 自由時報以「彰化以南脫離薔琵颱風暴風圈！估傍晚解除陸警」為題報導 [@src-20261024-ltn-26cb55de]。
 
-自由時報以「薔琵眼牆一路掃過宜蘭！氣象粉專估致災強風至少再半天」為題報導 [@src-20261024-ltn-ddc9c3d7]。
+東森新聞以「薔琵害停電！彰化養豬場電線走火 13頭遭電死53頭癱瘓」為題報導 [@src-20261024-ebc-283b8c4a]。
 
-TVBS以「遭颱風薔琵嚴重侵襲！龜山島25日起暫停開放遊客登島」為題報導 [@src-20261024-tvbs-0bc4b516]。
+自由時報以「薔琵強風灌店吹砸！彰化安全帽店損30萬 110頂打5折清倉」為題報導 [@src-20261024-ltn-2dc5a086]。
 
-TVBS以「颱風薔琵強襲釀新竹逾萬戶停電　台電搶修晚間全數復電」為題報導 [@src-20261024-tvbs-9675d588]。
+自由時報以「薔琵走了！彰化最高逾2萬戶大停電  日夜搶修復電率已97％」為題報導 [@src-20261024-ltn-9fb529cd]。
 
-聯合新聞網以「颱風薔琵逐漸遠離 氣象署估晚間8時30分解除海警」為題報導 [@src-20261024-udn-03b22b03]。
+TVBS以「薔琵颱風害慘畜牧場？太陽能板突漏電！彰化「50頭豬遭電死」」為題報導 [@src-20261024-tvbs-e3fd31d6]。
 
-聯合新聞網以「颱風薔琵肆虐 國軍協助新北宜蘭等地災後復原」為題報導 [@src-20261024-udn-57c42456]。
+中時新聞網以「彰化以南脫離薔琵暴風圈 氣象署：最快下午解除陸警」為題報導 [@src-20261024-chinatimes-88201758]。
 
-聯合新聞網以「薔琵颱風襲澎湖37件災情 「鹽水煙」重創林木、爬蟲類也罕見現身」為題報導 [@src-20261024-udn-a259de83]。
+中時新聞網以「薔琵狂颳12級風！彰化近2萬戶停電 騎士勾落線摔傷」為題報導 [@src-20261024-chinatimes-138c8aa6]。
+
+ETtoday新聞雲以「薔琵狂風強灌！彰化安全帽店110頂受損 業者霸氣5折拋售」為題報導 [@src-20261024-ettoday-f8ba227d]。
+
+鏡週刊以「薔琵颱風變弱了　彰化以南脫離暴風圈北部仍防豪雨」為題報導 [@src-20261024-mirrormedia-54681949]。
+
+## 2026-10-25　2 則報導
+
+Newtalk以「薔琵狂風猛灌！彰化安全帽店110頂受損5折拋售 車友擠爆秒售罄」為題報導 [@src-20261025-newtalk-9d50fb03]。
+
+聯合新聞網以「薔琵強風過境彰化韭菜東倒西歪 縣長交代加速查報農業災情」為題報導 [@src-20261025-udn-ce12055e]。
