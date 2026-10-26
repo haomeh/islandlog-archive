@@ -1388,6 +1388,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     stats = Counter()
     published_ids = published_topics(root)
     failed, covered = {}, set()  # R82: published topic id -> first failed gate; ids that another candidate keeps
+    deferred = set()  # R202, R205: old topics that a rebuild left to the re-gate because the rebuild got a name reject for a new topic
 
     def src_ids_of(urls):
         return {tp.src_id(by_url[u], tp.HOSTS) for u in urls if u in by_url}
@@ -1498,6 +1499,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
                 stats[outcome] += 1
                 if outcome not in NEW_TOPIC_ONLY:  # R155.4: the rules of a new topic do not fail an old topic; its re-gate decides
                     fail(outcome, [m["url"] for m in members])
+                elif rebuilds_old:  # R205: no other candidate may fail this old topic either
+                    deferred.update(matching_published(published_ids, src_ids_of([m["url"] for m in members])))
                 continue
             jids, actors, name = found["jids"], found["actors"], found["name"]
             if found["off_level"]:  # R196.6: a title of another government level fails (b)
@@ -1541,6 +1544,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     stats["published"] = len(published)
     covered.update(p["id"] for p in published)
     # R126: every other published system topic with review.status draft-review is checked again with the current gates.
+    for pid in deferred:  # R205: the re-gate decides for a deferred old topic
+        failed.pop(pid, None)
     done = {p["id"] for p in published} | {pid for pid in failed if pid not in covered}  # a topic that a candidate rebuilt or failed has its result
     seed_by_id = {s["event_id"]: s for s in existing_seeds}
     regated, regate_keys = [], {}

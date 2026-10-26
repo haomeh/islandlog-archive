@@ -194,3 +194,36 @@ class GenericClauseTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class RebuildNameRejectTest(unittest.TestCase):
+    """R202, R205 (G1, G3): a rebuild of an old topic that gets a T32 name reject (NEW_TOPIC_ONLY) gives the old topic no fail count,
+    also when another candidate on the same old topic fails the old name test. The re-gate of the old topic decides."""
+
+    def test_two_candidates_on_one_old_topic(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from tools.newsfetch.test_topics_full import RegateTest
+        helper = RegateTest()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            corpus, seed, _ = helper.setup(root)
+            clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [it["url"] for it in corpus if it["url"].startswith("t")]}]}]
+            outcomes = [("rejected_name_quality", None), ("rejected_issue_name", None)]  # candidate A fails the old name test, candidate B the T32 name test
+            real = tf.gate_topic
+            calls = []
+
+            def fake(*args, **kwargs):
+                calls.append(args[0])
+                return outcomes[len(calls) - 1] if len(calls) <= 2 else real(*args, **kwargs)  # the re-gate of the old topic uses the real gate
+            with mock.patch.object(tf, "split_cases", lambda members: [members, members]), \
+                    mock.patch.object(tf, "gate_topic", fake):
+                stats, published, _ = tf.run(corpus, clusters, [], root, root / "report.json", today="2026-10-25")
+            self.assertEqual(stats["rejected_name_quality"], 1)
+            self.assertEqual(stats["rejected_issue_name"], 1)
+            state = json.loads((root / "tools/newsfetch/topic_state.json").read_text(encoding="utf-8"))
+            self.assertNotIn(helper.ID, state)
+            self.assertEqual((stats["withdraw_pending"], stats["regate_passed"]), (0, 1))
