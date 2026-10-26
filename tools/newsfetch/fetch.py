@@ -22,6 +22,13 @@ from typing import Dict, List, Set, Tuple
 from tools.newsfetch.classify import Classifier
 from tools.newsfetch.crawler import PoliteCrawler
 from tools.newsfetch.filter import NewsFilter
+from tools.newsfetch.lists import (
+    canonical_url,
+    fetch_browser_list,
+    fetch_dated_list,
+    fetch_paged_list,
+)
+from tools.newsfetch.publishers import PublisherIndex
 from tools.newsfetch.parser import (
     TZ_TW,
     is_date_in_range,
@@ -119,12 +126,13 @@ def _fetch_ltn_list(
 
 
 def build_record(
-    item: Dict, publisher: str, fetched_on: str, matched: List[str], classifier: Classifier
+    item: Dict, publisher: str, fetched_on: str, matched: List[str], classifier: Classifier,
+    publisher_group: str = "",
 ) -> Dict:
     """Builds one JSONL record with the shared schema. A sensitive item keeps only its title as snippet."""
     flags = classifier.classify(item["title"], item.get("summary", ""))
     snippet = item["title"] if flags["sensitive"] else item["snippet"]
-    return {
+    record = {
         "url": item["url"],
         "title": item["title"],
         "publisher": publisher,
@@ -138,6 +146,9 @@ def build_record(
         "sensitive": flags["sensitive"],
         "source_class": "news",
     }
+    if publisher_group and publisher_group != publisher:
+        record["publisher_group"] = publisher_group
+    return record
 
 
 def fetch_source_items(
@@ -146,12 +157,25 @@ def fetch_source_items(
     since: str = "2026-04-24",
     until: str = "2026-10-24",
 ) -> List[Dict]:
-    url = feed_cfg["url"]
+    url = feed_cfg.get("url", "")
     publisher = feed_cfg["publisher"]
     feed_type = feed_cfg.get("type", "sitemap")
+    today = datetime.datetime.now(TZ_TW).strftime("%Y-%m-%d")
 
     items: List[Dict] = []
-    if feed_type == "rss":
+    if feed_type == "blocked":
+        logger.warning("Skipping %s: blocked (%s)", publisher, feed_cfg.get("blocked_reason", ""))
+        return []
+    if feed_type == "dated_list":
+        logger.info("Fetching %s dated lists %s to %s ...", publisher, since, until)
+        items = fetch_dated_list(feed_cfg["route"], crawler, publisher, since, until, today)
+    elif feed_type == "paged_list":
+        logger.info("Fetching %s paged list ...", publisher)
+        items = fetch_paged_list(feed_cfg["route"], crawler, publisher, since, today)
+    elif feed_type == "browser_list":
+        logger.info("Scrolling %s list in the browser ...", publisher)
+        items = fetch_browser_list(feed_cfg["route"], crawler, publisher, since, today)
+    elif feed_type == "rss":
         logger.info("Fetching %s RSS from %s ...", publisher, url)
         content = crawler.fetch_raw(url)
         if content:
@@ -166,7 +190,6 @@ def fetch_source_items(
                 items.extend(parse_news_sitemap_xml(s_content, publisher=publisher))
 
         # Date lists first: every item of the recent days. The keyword search is the fallback for older days.
-        today = datetime.datetime.now(TZ_TW).strftime("%Y-%m-%d")
         for category in feed_cfg.get("list_categories", []):
             logger.info("Fetching %s breaking-news list %s ...", publisher, category)
             items.extend(_fetch_ltn_list(crawler, category, since, today))
@@ -181,6 +204,13 @@ def fetch_source_items(
         content = crawler.fetch_raw(url)
         if content:
             items = parse_news_sitemap_xml(content, publisher=publisher)
+
+    latest = feed_cfg.get("latest_sitemap")
+    if latest and feed_type in ("dated_list", "paged_list", "browser_list"):
+        # The list routes can lag by a few hours: the news sitemap adds the very latest items.
+        content = crawler.fetch_raw(latest)
+        if content:
+            items.extend(parse_news_sitemap_xml(content, publisher=publisher))
 
     logger.info("Parsed %d items from %s", len(items), publisher)
     return items
@@ -258,6 +288,7 @@ def main():
         sys.exit(1)
 
     feeds = load_feeds(args.feeds)
+    index = PublisherIndex(feeds)
     news_filter = NewsFilter()
     classifier = Classifier()
 
@@ -298,12 +329,14 @@ def main():
             if not keep:
                 continue
 
-            url = item["url"]
+            url = canonical_url(item["url"])
             if url in seen_urls:
                 continue
             seen_urls.add(url)
 
-            record = build_record(item, pub_name, now_iso, matched, classifier)
+            record = build_record(
+                item, index.brand(pub_name), now_iso, matched, classifier, index.group(pub_name)
+            )
             out_f.write(json.dumps(record, ensure_ascii=False) + "\n")
             out_f.flush()
             record_count += 1

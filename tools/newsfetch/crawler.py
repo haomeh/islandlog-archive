@@ -267,6 +267,7 @@ class PoliteCrawler:
         for attempt in range(retries):
             # Rate limit before every request to this host
             self.rate_limiter.wait(host)
+            logger.info("GET %s %s", host, url)
             try:
                 status, headers, data = self._http_get(url)
             except (urllib.error.URLError, TimeoutError, OSError) as err:
