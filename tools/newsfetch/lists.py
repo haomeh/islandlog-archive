@@ -236,29 +236,27 @@ def node_list_browser(url: str, user_agent: str, config: Dict, timeout: Optional
 
 
 def fetch_browser_list(route: Dict, crawler: PoliteCrawler, publisher: str, since: str, today: str,
-                       browser=node_list_browser, enforce_robots: bool = False) -> List[Dict]:
-    """Scrolls one list page slowly in a real browser. Robots check can be enforced if requested."""
+                       browser=node_list_browser) -> List[Dict]:
+    """Scrolls one list page slowly in a real browser. Robots is checked first and fails closed."""
     url = route["url"]
-    if enforce_robots:
-        parts = urllib.parse.urlsplit(url)
-        hr = crawler.load_robots(parts.netloc.lower(), scheme=parts.scheme)
-        if not hr.can_fetch(crawler.user_agent, url):
-            logger.info("Blocked by robots.txt: %s", url)
-            return []
+    parts = urllib.parse.urlsplit(url)
+    hr = crawler.load_robots(parts.netloc.lower(), scheme=parts.scheme)
+    if not hr.can_fetch(crawler.user_agent, url):
+        logger.info("Blocked by robots.txt: %s", url)
+        return []
     config = {
         "link": route["link"],
         "more": route.get("more", ""),
         "max_steps": route.get("max_steps", 80),
         "delay_ms": max(1000, route.get("delay_ms", 1200)),
         "stop_before": since,
-        "deny": robots_deny_patterns(crawler, url) if enforce_robots else [],
+        "deny": robots_deny_patterns(crawler, url),
         "row_selector": route.get("row_selector", ""),
         "title_selector": route.get("title_selector", ""),
         "page_template": route.get("page_template", ""),
         "last_page": route.get("last_page", 9000),
         "light": bool(route.get("page_template")),
         "stop_probe": route.get("stop_probe", ""),
-        "enforce_robots": enforce_robots,
     }
     if route.get("partial"):
         config["partial"] = route["partial"]
@@ -311,11 +309,10 @@ def click_item_date(raw: str, now: datetime.datetime, today: str) -> Optional[st
 
 
 def fetch_click_list(route: Dict, crawler: PoliteCrawler, publisher: str, since: str, today: str,
-                     browser=node_list_browser, sleep=None, reports: Optional[List[Dict]] = None,
-                     enforce_robots: bool = False) -> List[Dict]:
+                     browser=node_list_browser, sleep=None, reports: Optional[List[Dict]] = None) -> List[Dict]:
     """R179: one browser click route. It acts like a reader: open the list, scroll or click, read the DOM rows.
 
-    Each start url runs in its own browser process. If enforce_robots is True, robots.txt is checked.
+    Each start url runs in its own browser process. Robots.txt of the start url is checked first and fails closed.
     The browser checks robots.txt for every request it sends (list_browser.mjs). A report row per start url
     says why the route stopped: date, no_rows, no_next, disallowed, captcha, cap or max_steps.
     """
@@ -327,15 +324,14 @@ def fetch_click_list(route: Dict, crawler: PoliteCrawler, publisher: str, since:
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
     for index, url in enumerate(urls):
         parts = urllib.parse.urlsplit(url)
+        hr = crawler.load_robots(parts.netloc.lower(), scheme=parts.scheme)
         report = {"outlet": publisher, "url": url, "stop": "", "steps": 0, "oldest": "", "items": 0, "robots_aborts": {}, "min_gap_ms": None}
-        if enforce_robots:
-            hr = crawler.load_robots(parts.netloc.lower(), scheme=parts.scheme)
-            if not hr.can_fetch(crawler.user_agent, url):
-                logger.info("Blocked by robots.txt: %s", url)
-                report["stop"] = "disallowed"
-                if reports is not None:
-                    reports.append(report)
-                continue
+        if not hr.can_fetch(crawler.user_agent, url):
+            logger.info("Blocked by robots.txt: %s", url)
+            report["stop"] = "disallowed"
+            if reports is not None:
+                reports.append(report)
+            continue
         if index:
             # Two browser processes for one host: keep 1 request per 1.1 s across them.
             pause(2.0)
@@ -343,10 +339,9 @@ def fetch_click_list(route: Dict, crawler: PoliteCrawler, publisher: str, since:
         config.update({
             "mode": "click",
             "stop_before": since,
-            "deny": robots_deny_patterns(crawler, url) if enforce_robots else [],
+            "deny": robots_deny_patterns(crawler, url),
             "request_cap": route.get("request_cap", 20000),
             "delay_ms": max(1000, route.get("delay_ms", 1200)),
-            "enforce_robots": enforce_robots,
         })
         if os.environ.get("NEWSFETCH_REQUEST_LOG"):
             config["request_log"] = os.environ["NEWSFETCH_REQUEST_LOG"]

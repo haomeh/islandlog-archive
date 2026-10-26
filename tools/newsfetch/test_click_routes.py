@@ -226,7 +226,7 @@ class TestClickRunner(unittest.TestCase):
 
         reports = []
         items = lists.fetch_click_list(self.ROUTE, self.crawler((200, {}, b"User-agent: *\nDisallow: /api/\n")), "測試報", "2026-04-24", TODAY,
-                                       browser=browser, sleep=pauses.append, reports=reports, enforce_robots=True)
+                                       browser=browser, sleep=pauses.append, reports=reports)
         self.assertEqual([c[0] for c in calls], self.ROUTE["urls"])
         self.assertEqual(pauses, [2.0])
         self.assertEqual(len(items), 2)
@@ -241,24 +241,16 @@ class TestClickRunner(unittest.TestCase):
         browser = mock.Mock()
         reports = []
         items = lists.fetch_click_list(self.ROUTE, self.crawler((200, {}, b"User-agent: *\nDisallow: /\n")), "測試報", "2026-04-24", TODAY,
-                                       browser=browser, sleep=lambda s: None, reports=reports, enforce_robots=True)
+                                       browser=browser, sleep=lambda s: None, reports=reports)
         self.assertEqual(items, [])
         browser.assert_not_called()
         self.assertEqual([r["stop"] for r in reports], ["disallowed", "disallowed"])
 
     def test_browser_does_not_start_when_robots_unreadable(self):
         browser = mock.Mock()
-        items = lists.fetch_click_list(self.ROUTE, self.crawler((500, {}, b"")), "測試報", "2026-04-24", TODAY, browser=browser, sleep=lambda s: None, enforce_robots=True)
+        items = lists.fetch_click_list(self.ROUTE, self.crawler((500, {}, b"")), "測試報", "2026-04-24", TODAY, browser=browser, sleep=lambda s: None)
         self.assertEqual(items, [])
         browser.assert_not_called()
-
-    def test_robots_restriction_lifted_by_default(self):
-        browser = mock.Mock()
-        browser.return_value = {"items": [], "stop": "no_next"}
-        reports = []
-        items = lists.fetch_click_list(self.ROUTE, self.crawler((200, {}, b"User-agent: *\nDisallow: /\n")), "測試報", "2026-04-24", TODAY,
-                                       browser=browser, sleep=lambda s: None, reports=reports)
-        browser.assert_called()
 
     def test_rows_without_a_date_and_duplicate_urls_are_dropped(self):
         rows = [{"href": "https://x.test/n/1?utm_source=a", "title": "測試標題數字一", "date": "2026-09-01 10:00"},
@@ -378,7 +370,7 @@ class TestClickEngine(unittest.TestCase):
         self.assertIn("/robots.txt", log)
 
     def test_a_request_that_robots_disallows_is_aborted_and_stops_the_route(self):
-        result, log = self.run_route("/more", next="#more", enforce_robots=True)
+        result, log = self.run_route("/more", next="#more")
         self.assertEqual(result["stop"], "disallowed")
         self.assertEqual(sum(result["robots_aborts"].values()), 1)
         self.assertIn("ROBOTS-ABORT /api/more", log)

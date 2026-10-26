@@ -35,7 +35,7 @@ if (!url || !userAgent) {
   console.error('usage: node list_browser.mjs <url> <user-agent> <config-json>')
   process.exit(2)
 }
-const config = Object.assign({ link: '', more: '', max_steps: 60, delay_ms: 1200, stop_before: '', deny: [], row_selector: '', title_selector: '', request_cap: 20000, request_log: '', partial: '', page_template: '', last_page: 9000, light: false, stop_probe: '', mode: '', rows: '', link_selector: '', date_selector: '', next: '', next_text: '', scroll_to: '', scroll: false, wait_ms: 6000, settle_ms: 5000, no_script: false, add_query: '', empty_limit: 3, allow_hosts: [], enforce_robots: false }, JSON.parse(configText || '{}'))
+const config = Object.assign({ link: '', more: '', max_steps: 60, delay_ms: 1200, stop_before: '', deny: [], row_selector: '', title_selector: '', request_cap: 20000, request_log: '', partial: '', page_template: '', last_page: 9000, light: false, stop_probe: '', mode: '', rows: '', link_selector: '', date_selector: '', next: '', next_text: '', scroll_to: '', scroll: false, wait_ms: 6000, settle_ms: 5000, no_script: false, add_query: '', empty_limit: 3, allow_hosts: [] }, JSON.parse(configText || '{}'))
 const delay = Math.max(1000, config.delay_ms)
 
 const browser = await chromium.launch()
@@ -80,8 +80,7 @@ try {
       u.searchParams.set(config.add_query, '')
       target = u.href.replace(new RegExp(`([?&]${config.add_query})=(&|$)`), '$1$2')
     }
-    const robotsOk = await guard.check(target)
-    if (!robotsOk && config.enforce_robots) {
+    if (!(await guard.check(target))) {
       robotsAborts += 1
       denied.add(u.hostname + u.pathname)
       if (config.request_log) appendFileSync(config.request_log, `${new Date().toISOString()} list ${u.hostname} ROBOTS-ABORT ${u.pathname.slice(0, 120)}\n`)
@@ -190,7 +189,7 @@ try {
       const blocked = looksBlocked(await page.title(), head, step === 0 ? status : 200) && !seen.size
       stop = stopReason({
         freshDates: fresh.map((r) => labelDate(r.date)), freshCount: fresh.length, empty, emptyLimit: config.empty_limit, stopBefore: config.stop_before,
-        blocked, capped, robotsAborted: robotsAborts > abortsBefore, hasNext, step, maxSteps: config.max_steps, enforceRobots: config.enforce_robots,
+        blocked, capped, robotsAborted: robotsAborts > abortsBefore, hasNext, step, maxSteps: config.max_steps,
       })
       if (process.env.LB_DEBUG) console.error(`step ${step} rows ${rows.length} fresh ${fresh.length} empty ${empty} stop=${stop} url=${page.url()}`)
       if (stop) break
