@@ -101,8 +101,8 @@ class IssueNameTest(unittest.TestCase):
 
 class WordBoundaryTest(unittest.TestCase):
     def test_a_letter_continues_the_word_on_the_left(self):
-        self.assertFalse(tf.has_word_boundary("劃界談判", ["日菲海域劃界談判登場", "日菲海域劃界談判再啟", "日菲EEZ劃界談判", "日菲海域劃界談判破局"]))  # judged: 日菲海域劃界談判
-        self.assertFalse(tf.has_word_boundary("實兵演練", ["海軍HX實兵演練", "陸軍AB實兵演練", "空軍XY實兵演練"]))  # outside the judged list
+        self.assertFalse(tf.has_word_boundary("劃界談判", ["日菲海域劃界談判登場", "日菲海域劃界談判再啟", "日菲EEZ劃界談判", "日菲海域劃界談判破局"], new=True))  # judged: 日菲海域劃界談判
+        self.assertFalse(tf.has_word_boundary("實兵演練", ["海軍HX實兵演練", "陸軍AB實兵演練", "空軍XY實兵演練"], new=True))  # outside the judged list
         self.assertTrue(tf.has_word_boundary("劃界談判", ["日菲劃界談判登場", "菲國劃界談判再啟", "雙方劃界談判破局", "新一輪劃界談判", "外長稱劃界談判", "重啟劃界談判", "海巡劃界談判", "漁民劃界談判"]))
 
 
@@ -133,21 +133,21 @@ class ForeignBodyTest(unittest.TestCase):
             "巴西央行": ["巴西央行升息一碼 財長表示支持", "巴西央行會議紀要出爐 通膨預期上修"],  # outside the judged list
         }
         for name, titles in cases.items():
-            self.assertFalse(tf.taiwan_relevant(titles), name)
-            self.assertTrue(tf.names_foreign(titles), name)
-            self.assertEqual(tf.detect_gov_actors(titles, ["jur-tw"]), [], name)
+            self.assertFalse(tf.taiwan_relevant(titles, True), name)
+            self.assertTrue(tf.names_foreign(titles, True), name)
+            self.assertEqual(tf.detect_gov_actors(titles, ["jur-tw"], True), [], name)
 
     def test_a_foreign_quake_with_the_taiwan_weather_agency_as_source_is_not_about_taiwan(self):
         titles = ["萬那杜規模7.2強震 氣象署：海嘯警報", "萬那杜強震 氣象署發布海嘯警報", "土耳其規模7.1強震 氣象署監測餘震"]  # outside the judged list: the last
-        self.assertFalse(tf.taiwan_relevant(titles))
+        self.assertFalse(tf.taiwan_relevant(titles, True))
 
     def test_a_forecast_of_the_weather_agency_is_still_about_taiwan(self):
-        self.assertTrue(tf.taiwan_relevant(["氣象署：明起鋒面接近", "氣象署發布大雨特報", "氣象署：周末降雨趨緩"]))
+        self.assertTrue(tf.taiwan_relevant(["氣象署：明起鋒面接近", "氣象署發布大雨特報", "氣象署：周末降雨趨緩"], True))
 
     def test_a_topic_of_taiwan_that_names_a_foreign_country_passes(self):
         titles = ["外交部：尊重泰方決定 取消60天免簽", "泰國取消60天免簽 外交部協助國人", "外交部提醒赴泰旅客"]
-        self.assertTrue(tf.taiwan_relevant(titles))
-        self.assertIn("ac-ministry-of-foreign-affairs", tf.detect_gov_actors(titles, ["jur-tw"]))
+        self.assertTrue(tf.taiwan_relevant(titles, True))
+        self.assertIn("ac-ministry-of-foreign-affairs", tf.detect_gov_actors(titles, ["jur-tw"], True))
 
 
 class SingleAccidentTest(unittest.TestCase):
@@ -174,15 +174,20 @@ class CriminalCaseTest(unittest.TestCase):
     """R154 (PRD 4.5 item 2): a sentence or an act of one person is a criminal case."""
 
     def test_judged_cases(self):
-        self.assertEqual(tf.exclusion_reason(items(["台南前主委涉貪判2年獲緩刑", "台南前副市長之子吸金1.2億 二審改判2年獲緩刑"])), "criminal_case")
-        self.assertEqual(tf.exclusion_reason(items(["男子持球棒闖台中市府砸電腦 遭警壓制帶回", "男闖中市府球棒狂砸電腦螢幕 遭警壓制帶回"])), "criminal_case")
-        self.assertEqual(tf.exclusion_reason(items(["高雄男大生虐殺倉鼠逾30隻 點火燒", "高雄男大生遭爆虐殺數十隻倉鼠 市府出手了"])), "criminal_case")
+        self.assertEqual(tf.exclusion_reason(items(["台南前主委涉貪判2年獲緩刑", "台南前副市長之子吸金1.2億 二審改判2年獲緩刑"]), new=True), "criminal_case")
+        self.assertEqual(tf.exclusion_reason(items(["男子持球棒闖台中市府砸電腦 遭警壓制帶回", "男闖中市府球棒狂砸電腦螢幕 遭警壓制帶回"]), new=True), "criminal_case")
+        self.assertEqual(tf.exclusion_reason(items(["高雄男大生虐殺倉鼠逾30隻 點火燒", "高雄男大生遭爆虐殺數十隻倉鼠 市府出手了"]), new=True), "criminal_case")
 
     def test_a_case_from_outside_the_judged_list(self):
-        self.assertEqual(tf.exclusion_reason(items(["男子縱火燒機車 警方逮人", "縱火案嫌犯到案 檢方偵辦"])), "criminal_case")
+        self.assertEqual(tf.exclusion_reason(items(["男子縱火燒機車 警方逮人", "縱火案嫌犯到案 檢方偵辦"]), new=True), "criminal_case")
+
+    def test_an_old_topic_does_not_read_the_new_words(self):  # R162 (N1): the new words are for a new topic only
+        titles = items(["男子縱火燒機車 警方逮人", "縱火案嫌犯到案 檢方偵辦"])
+        self.assertEqual(tf.exclusion_reason(titles, new=True), "criminal_case")
+        self.assertEqual(tf.exclusion_reason(items(["男子縱火燒機車 警方處理", "縱火機車 消防局說明"])), None)
 
     def test_a_policy_titles_are_no_criminal_case(self):
-        self.assertIsNone(tf.exclusion_reason(items(["毒駕加嚴 立院三讀道交條例", "毒駕吊銷駕照 交通部說明"])))
+        self.assertIsNone(tf.exclusion_reason(items(["毒駕加嚴 立院三讀道交條例", "毒駕吊銷駕照 交通部說明"]), new=True))
 
 
 class CandidateTalkTest(unittest.TestCase):
@@ -273,7 +278,7 @@ class DuplicateIssueTest(unittest.TestCase):
     def test_a_term_that_many_stories_share_is_no_link(self):
         a = self.profile("空污法", ["藍白立委提空污法修正 逕付二讀", "空污法 藍白立委推動"])
         b = self.profile("民族團結法", ["藍白立委擋民族團結法 逕付二讀", "民族團結法 藍白立委表態"])
-        df = {"藍白立委": 14, "逕付二讀": 34}  # four characters only: under DUPLICATE_TERM_LEN
+        df = {"藍白立委": 300, "逕付二讀": 340}  # four characters only, and common in the corpus
         self.assertFalse(tf.same_issue(a, b, df))
 
     def test_two_topics_far_apart_in_time_are_two_issues(self):
@@ -321,6 +326,225 @@ class OldTopicTest(unittest.TestCase):
                 self.assertEqual(stats["regate_failed"], 0)
                 self.assertNotIn(self.EVENT_ID, state)
                 self.assertEqual(stats["withdrawn"], 0)
+
+
+class SloganNameTest(unittest.TestCase):
+    """R162: a name copied from a quote or a slogan in a source title is no issue name. Judged (T26-P): 白海豚不放假, 零軍購."""
+
+    SLOGAN_TITLES = ["區桂芝主張零軍購 綠委轟內賊：法律應找適當方式重懲背叛國家者", "北一女師喊「零軍購」：承認是中國人就有和平 中國網友也怒了",
+                     "北一女去年才公告禁令！區桂芝又上中媒主張零軍購 校方暫無回應", "區桂芝喊零軍購「承認是中國人就和平」他轟：比第五縱隊有過之無不及！應重懲！",
+                     "北一女教師區桂芝接受中共官媒訪問倡「零軍購」 陸委會：應妥處配合統戰行為"]
+
+    def test_judged_slogan_after_a_slogan_verb_or_inside_quotes(self):
+        self.assertTrue(tf.copied_quote("零軍購", self.SLOGAN_TITLES))
+        self.assertFalse(tf.new_name_ok("零軍購", self.SLOGAN_TITLES))
+
+    def test_judged_clause_with_a_negated_verb(self):
+        self.assertFalse(tf.issue_name("白海豚不放假"))
+
+    def test_a_slogan_from_outside_the_judged_list(self):
+        self.assertTrue(tf.copied_quote("免費早餐", ["議員倡免費早餐", "主張免費早餐 市府回應", "「免費早餐」爭議"]))
+        self.assertFalse(tf.issue_name("市府不給補助"))
+        self.assertFalse(tf.issue_name("學校不發獎金條例"))
+
+    def test_a_name_that_one_title_quotes_is_a_name(self):
+        self.assertFalse(tf.copied_quote("軍購條例", ["軍購條例三讀", "藍白軍購條例爭議", "主張軍購條例", "政院提軍購條例"]))
+        self.assertFalse(tf.copied_quote("零關稅", ["美方談零關稅", "零關稅談判登場", "政院說明零關稅"]))
+        self.assertTrue(tf.issue_name("房屋不動產稅"))  # 不動產 is a noun, not a negated verb
+
+
+class NounStackNameTest(unittest.TestCase):
+    """R162: an object and a weather or disaster noun with no relation between them say nothing. Judged (T26-P): 高雄市月子中心颱風."""
+
+    def test_judged_stack(self):
+        self.assertFalse(tf.issue_name("高雄市月子中心颱風"))
+        self.assertFalse(tf.issue_name("月子中心颱風"))
+
+    def test_stacks_from_outside_the_judged_list(self):
+        for name in ("台北市安養院火災", "新北市幼兒園地震", "彰化縣工廠停電"):
+            self.assertFalse(tf.issue_name(name), name)
+
+    def test_a_place_and_a_disaster_or_a_rule_for_the_object_passes(self):
+        for name in ("薔琵颱風", "台南地震", "月子中心管理辦法", "幼兒園安全事件"):
+            self.assertTrue(tf.issue_name(name), name)
+
+
+class GenericActNameTest(unittest.TestCase):
+    """R162, R161.1: a generic act noun needs a law or an issue before it. A bare event name fails. Judged (T26-P): 修法會議, 數位人權大會."""
+
+    def test_judged_names(self):
+        self.assertFalse(tf.issue_name("修法會議"))
+        self.assertFalse(tf.issue_name("數位人權大會"))
+
+    def test_names_from_outside_the_judged_list(self):
+        for name in ("政府修法", "部長說明", "朝野協商", "亞太經濟峰會", "國際花卉展覽"):
+            self.assertFalse(tf.issue_name(name), name)
+
+    def test_a_law_or_an_issue_before_the_act_passes(self):
+        for name in ("食安法修法會議", "軍購條例協商", "老福法修法", "司法改革大會"):
+            self.assertTrue(tf.issue_name(name), name)
+        self.assertEqual(tf.strip_generic_act("食安法修法會議"), "食安法")
+        self.assertEqual(tf.strip_generic_act("修法會議"), "")
+
+
+class VerbLeadNameTest(unittest.TestCase):
+    """R162: a name that starts with a tax or price verb has no subject. Judged (T26-P): 課重稅."""
+
+    def test_judged_name(self):
+        self.assertFalse(tf.issue_name("課重稅"))
+
+    def test_names_from_outside_the_judged_list(self):
+        for name in ("砍預算", "擋軍購條例", "開徵碳費", "加徵關稅"):
+            self.assertFalse(tf.issue_name(name), name)
+
+    def test_a_name_with_a_subject_passes(self):
+        for name in ("川普晶片關稅", "碳費新制", "晶片課稅爭議"):
+            self.assertTrue(tf.issue_name(name), name)
+
+
+class ThemeWordTest(unittest.TestCase):
+    """R162: a keyword bundle. The key is a theme word that is in use in nearly every month of the corpus with no burst.
+    Judged (T26-P): 政治獻金案, 26 titles of many cases. Only one bundle fail is in the judged list."""
+
+    def months(self, uses):
+        from collections import Counter
+        return {f"2026-{m:02d}": Counter({"鍵": n}) for m, n in enumerate(uses, 4)}
+
+    def test_judged_theme_word(self):
+        self.assertTrue(tf.theme_word("鍵", self.months([4, 7, 3, 16, 6, 28, 9])))  # the use counts of 政治獻金 in 2026-04 to 2026-10
+
+    def test_a_theme_word_from_outside_the_judged_list(self):
+        self.assertTrue(tf.theme_word("鍵", self.months([5, 6, 5, 7, 5, 8, 6])))
+
+    def test_an_issue_with_a_burst_is_no_theme_word(self):
+        self.assertFalse(tf.theme_word("鍵", self.months([0, 7, 79, 3, 0, 0, 0])))  # 三班護病比
+        self.assertFalse(tf.theme_word("鍵", self.months([0, 1, 12, 40, 1, 2, 0])))  # 民族團結法
+        self.assertFalse(tf.theme_word("鍵", self.months([0, 7, 3, 1, 10, 32, 16])))  # 追加預算: 5 months with 2 uses or more
+        self.assertFalse(tf.theme_word("鍵", self.months([0, 0, 0, 0, 0, 0, 0])))
+
+    def test_the_gate_rejects_a_theme_word_of_a_new_topic_and_keeps_an_old_topic(self):
+        titles = ["政治獻金案二審首庭 柯文哲否認", "政治獻金案二審 檢方說明", "政治獻金案 法務部說明"]
+        members = items(titles)
+        corpus = members + [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        df = tp.document_frequency(corpus)
+        mf = tf.MonthFrequency(corpus)
+        for m in range(4, 11):
+            mf.months[f"2026-{m:02d}"].update({"政治獻金案": 5 if m != 9 else 6})
+        self.assertEqual(tf.gate_topic("政治獻金案", members, members[:1], df, corpus, mf=mf)[0], "rejected_keyword_bundle")
+        known = {"name": "政治獻金案", "jids": ["jur-tw"], "actors": ["ac-executive-yuan"], "sensitive": False}
+        self.assertEqual(tf.gate_topic("政治獻金案", members, members[:1], df, corpus, known=known, mf=mf)[0], "ok")
+
+
+class NewTopicScopeTest(unittest.TestCase):
+    """R162 (N1, R155.4): the new CRIME words, the foreign list, home_text and the letter boundary are for a new topic only."""
+
+    def test_an_old_topic_reads_the_old_lists(self):
+        titles = ["伊朗外交部否認 美伊會談", "伊朗外交部：尊重各方"]
+        self.assertTrue(tf.taiwan_relevant(titles))  # the old rule counts 外交部 as a body of Taiwan
+        self.assertFalse(tf.taiwan_relevant(titles, True))
+        self.assertFalse(tf.names_foreign(["埃及央行升息", "埃及央行總裁說明"]))  # 埃及 is not in the old list
+        self.assertTrue(tf.names_foreign(["埃及央行升息", "埃及央行總裁說明"], True))
+        self.assertEqual(tf.detect_gov_actors(titles, ["jur-tw"], True), [])
+        self.assertIn("ac-ministry-of-foreign-affairs", tf.detect_gov_actors(titles, ["jur-tw"]))
+        self.assertTrue(tf.names_government("伊朗外交部否認"))
+        self.assertFalse(tf.names_government("伊朗外交部否認", True))
+        letters = ["日菲海域劃界談判登場", "日菲海域劃界談判再啟", "日菲EEZ劃界談判", "日菲海域劃界談判破局"]
+        self.assertTrue(tf.has_word_boundary("實兵演練", ["海軍HX實兵演練", "陸軍AB實兵演練", "空軍XY實兵演練"]))
+        self.assertFalse(tf.has_word_boundary("實兵演練", ["海軍HX實兵演練", "陸軍AB實兵演練", "空軍XY實兵演練"], new=True))
+        self.assertFalse(tf.has_word_boundary("劃界談判", letters, new=True))
+
+
+class DoNotPassTheWordForMethodTest(unittest.TestCase):
+    """R162 (N2): 做法 and 作法 are no issue head."""
+
+    def test_the_word_for_method_is_no_head(self):
+        for name in ("政府新做法", "學校做法", "地方新作法", "市府新作法"):
+            self.assertFalse(tf.issue_name(name), name)
+
+    def test_a_law_still_is_a_head(self):
+        for name in ("食安法", "勞基法", "電業法"):
+            self.assertTrue(tf.issue_name(name), name)
+
+
+class DuplicateAcrossTopicsTest(unittest.TestCase):
+    """R162, R161.2: the duplicate rule works across 3 topics or more and against old topics."""
+
+    def profile(self, key, titles, day):
+        return tf.issue_profile(key, [item(f"{key}{i}", t, day) for i, t in enumerate(titles)])
+
+    def test_judged_two_names_of_one_vote_one_day_apart(self):  # T26-P: 立院三讀免健保費 and 長者有條件免健保費
+        a = self.profile("立院三讀免健保費", ["400億大紅包！立院三讀免健保費 時力批劫貧濟富", "立院三讀免健保費 時代力量：連財源都沒有交代"], "2026-10-16")
+        b = self.profile("長者有條件免健保費", ["長者有條件免健保費三讀 石崇良憂：絕非健康平權", "長者有條件免健保費三讀 陳昭姿：減輕子女投保負擔", "長者有條件免健保費　陳時中籲修回重啟社會討論"], "2026-10-17")
+        self.assertTrue(tf.same_issue(a, b, {"免健保費": 51}))
+
+    def test_a_four_character_term_that_is_common_is_no_link(self):
+        a = self.profile("軍購條例", ["藍白立委提軍購條例修正", "軍購條例 藍白立委表態"], "2026-10-16")
+        b = self.profile("空污法", ["藍白立委提空污法修正", "空污法 藍白立委表態"], "2026-10-17")
+        self.assertFalse(tf.same_issue(a, b, {"藍白立委": 300}))
+
+    def test_a_four_character_term_outside_the_keys_is_no_link(self):  # T26 dry run: 藍白立委 joined 空污法 and 三班護病比; 支持軍購 joined 軍購條例 and 軍購特別預算
+        a = self.profile("三班護病比", ["藍白立委推三班護病比入法", "三班護病比 藍白立委表態"], "2026-05-05")
+        b = self.profile("空污法", ["藍白立委提空污法修正", "空污法 藍白立委表態"], "2026-05-06")
+        self.assertFalse(tf.same_issue(a, b, {"藍白立委": 14}))
+
+    def test_a_four_character_term_does_not_link_topics_a_month_apart(self):
+        a = self.profile("立院三讀免健保費", ["立院三讀免健保費 時力批", "立院三讀免健保費 財源"], "2026-09-01")
+        b = self.profile("長者有條件免健保費", ["長者免健保費 石崇良", "長者免健保費 陳時中"], "2026-10-17")
+        self.assertFalse(tf.same_issue(a, b, {"免健保費": 51}))
+
+    def test_an_old_topic_with_the_same_key(self):  # T26-P: 老福法 (new) and the old 老福法
+        old = self.profile("老福法", ["藍白惹議！《老福法》修法恐影響弱勢長者醫療補助", "衛福部狂轟老福法修法 吳宗憲：每一點都站不住"], "2026-10-22")
+        new = self.profile("老福法", ["《老福法》強行修正三讀 卓榮泰嗆韓國瑜", "藍白修《老福法》 卓榮泰批韓國瑜"], "2026-10-16")
+        issues = [old]
+        self.assertTrue(tf.is_duplicate_issue(new, issues, {}))
+
+    def test_a_third_topic_that_links_to_a_skipped_duplicate_only(self):
+        a = self.profile("兄弟姊妹特留分", ["兄弟姊妹特留分廢除 立委連署", "兄弟姊妹特留分 法務部說明"], "2026-05-01")
+        b = self.profile("兄弟姊妹", ["兄弟姊妹繼承 民法修正", "刪除兄弟姊妹特留分 法務部研議"], "2026-05-20")
+        c = self.profile("兄弟姊妹繼承", ["兄弟姊妹繼承新制 草案", "兄弟姊妹繼承 院會通過"], "2026-06-25")
+        df = {}
+        self.assertFalse(tf.same_issue(a, c, df))  # 55 days apart is inside the gap, but the key of c holds the key of b only
+        issues = [a]
+        self.assertTrue(tf.is_duplicate_issue(b, issues, df))
+        self.assertFalse(tf.is_duplicate_issue(c, issues, df))  # c links to b only, and the run has not added b yet
+        issues.append(b)  # the run adds the profile of a skipped duplicate
+        self.assertTrue(tf.is_duplicate_issue(c, issues, df))  # it links to b, which was skipped
+
+    def test_a_topic_on_another_issue_is_not_a_duplicate(self):
+        a = self.profile("兄弟姊妹特留分", ["兄弟姊妹特留分廢除 立委連署", "兄弟姊妹特留分 法務部說明"], "2026-05-01")
+        b = self.profile("颱風假", ["高雄颱風假 市府宣布", "颱風假 台中市府"], "2026-05-02")
+        issues = [a]
+        self.assertFalse(tf.is_duplicate_issue(b, issues, {}))
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class DuplicateOfOldTopicRunTest(unittest.TestCase):
+    """R162, R161.2: a new topic on the issue of an old system topic is not published."""
+
+    OLD_ID = "ev-20261022-topic-0ld00001".replace("0ld", "a1d")
+
+    def test_a_new_topic_with_the_key_of_an_old_topic_is_skipped(self):
+        import tempfile
+        from pathlib import Path
+        filler = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        old = [item("o1", "衛福部批老福法修法 立院應補正", "2026-11-25"), item("o2", "政院喊話老福法修法 三思而後行", "2026-11-25", "聯合新聞網")]  # after the window of the candidate
+        new = [item("n1", "老福法修正三讀 行政院院長卓榮泰回應", "2026-10-16"), item("n2", "藍白修老福法 行政院批立法院程序", "2026-10-16", "聯合新聞網"),
+               item("n3", "老福法爭議 衛福部部長石崇良說明", "2026-10-17", "ETtoday新聞雲")]
+        with tempfile.TemporaryDirectory() as root:
+            ids = [tp.src_id(t, tp.HOSTS) for t in old]
+            (Path(root) / "events/2026").mkdir(parents=True)
+            (Path(root) / "sources/2026").mkdir(parents=True)
+            (Path(root) / "actors").mkdir()
+            for t, i in zip(old, ids):
+                (Path(root) / "sources/2026" / f"{i}.yaml").write_text(
+                    f'id: {i}\nurl: "{t["url"]}"\ntitle: "{t["title"]}"\npublished_on: "{t["published_on"]}"\npublisher: "{t["publisher"]}"\nsource_class: news\n', encoding="utf-8")
+            (Path(root) / "events/2026" / f"{self.OLD_ID}.md").write_text(
+                f"---\nid: {self.OLD_ID}\nstatus: published\ntitle: 老福法\njurisdiction_ids: [jur-tw]\ntimeline:\n- date: '2026-11-25'\n  source_ids: [{ids[0]}, {ids[1]}]\n"
+                "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n  status: draft-review\n---\n\n報導。\n", encoding="utf-8")
+            clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in new]}]}]
+            stats, published, _ = tf.run(filler + old + new, clusters, [], root, Path(root) / "report.json", today="2026-10-26")
+            self.assertEqual(stats["skipped_duplicate_issue"], 1)
+            self.assertEqual(stats["published"], 0)
 
 
 if __name__ == "__main__":

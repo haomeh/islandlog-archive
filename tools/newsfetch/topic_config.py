@@ -115,3 +115,11 @@ DUPLICATE_TERM_LEN = 5  # ... and they share a term (a character n-gram) of at l
 DUPLICATE_TERM_MAX_DF = 60  # ... and the term is in at most this many items of the corpus: a rare term names one story. Start (R154); the dry run measures it.
 DUPLICATE_MIN_TITLES = 2  # ... and each topic has the term in at least this many titles. One title can quote another story. Start (R154).
 CANDIDATE_MIN_TITLES = 5  # A name that follows or precedes a campaign word (參選, 候選人, 提名, 競選) in this many titles of the corpus is a candidate of the election. Start (R154); the dry run measures it.
+
+# --- Gate round T26-W2 (R160 to R163): the name classes of the second precision round. ---
+SLOGAN_MAX_LEN = 6  # A key of this length or less that a title only quotes or brings with a slogan verb is a slogan. Sample T26-P: 零軍購 (R162).
+THEME_MIN_USES = 2  # A month counts for the theme test when the key has this many uses in it. One title can be an accident. Start (R162).
+THEME_MIN_MONTHS = 6  # A key is a theme word when it has 2 uses or more in this many months of the corpus ... Sample T26-P: 政治獻金 is in 7 of 7 months; the next key (追加預算) is in 5 (R162).
+THEME_MAX_MONTH_SHARE = 0.5  # ... and no month holds this share of its uses: a case or an issue has a burst. Sample T26-P: 政治獻金 top month 38%, 追加預算 46% (R162).
+DUPLICATE_NEAR_DAYS = 7  # Two new topics, or a new topic and an old one, that are at most this many days apart are one issue when they share a rare term of DUPLICATE_NEAR_TERM_LEN characters. Sample T26-P: 立院三讀免健保費 and 長者有條件免健保費 are 1 day apart (R162).
+DUPLICATE_NEAR_TERM_LEN = 4  # ... which is shorter than DUPLICATE_TERM_LEN because the topics are close in time. Sample T26-P: 免健保費 (R162).
