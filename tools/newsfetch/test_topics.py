@@ -435,5 +435,18 @@ class TopicTest(unittest.TestCase):
         self.assertEqual(event["title"], "臺北市仁愛圓環")
 
 
+class SourceIdTest(unittest.TestCase):
+    PATTERN = r"^src-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*$"
+
+    def test_every_publisher_gets_a_slug(self):
+        import re
+        for publisher, url in (("ETtoday新聞雲", "https://www.ettoday.net/news/20260426/3155604.htm"),
+                               ("中時新聞網", "https://www.chinatimes.com/realtimenews/1.html"),
+                               ("新來源", "https://www.example-news.com.tw/a/1")):
+            item = {"url": url, "publisher": publisher, "published_on": "2026-04-26"}
+            self.assertRegex(topics.src_id(item, topics.HOSTS), self.PATTERN, publisher)
+            self.assertNotIn("--", topics.src_id(item, topics.HOSTS))
+
+
 if __name__ == "__main__":
     unittest.main()

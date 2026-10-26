@@ -187,13 +187,13 @@ class NationalSystemActorTest(unittest.TestCase):
 
 
 class RunHelper:
-    EVENT_ID = "ev-20261023-topic-c8f31c28"
+    EVENT_ID = "ev-20261023-topic-73f036b1"
 
     def corpus(self, second_news_publisher):
         filler = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
         topic = [item("a", "桃園市府會勘南崁溪淤積問題", "2026-10-23"),
-                 item("b", "南崁溪石礫堆積 桃園市府將會勘", "2026-10-24", "聯合新聞網" if second_news_publisher else "自由時報"),
-                 item("c", "【錯誤】南崁溪淤積謠言", "2026-10-24", "MyGoPen", "fact_check")]
+                 item("b", "南崁溪淤積問題 桃園市府將會勘", "2026-10-24", "聯合新聞網" if second_news_publisher else "自由時報"),
+                 item("c", "【錯誤】南崁溪淤積問題謠言", "2026-10-24", "MyGoPen", "fact_check")]
         return filler + topic, topic
 
     def run_in(self, root, second_news_publisher, today="2026-10-25", seed_event=True):
@@ -206,7 +206,7 @@ class RunHelper:
             event.parent.mkdir(parents=True)
             (root / "sources/2026").mkdir(parents=True)
             (root / "actors").mkdir()
-            event.write_text(f"---\nid: {self.EVENT_ID}\nstatus: published\ntitle: 桃園市南崁溪\ntimeline:\n- date: '2026-10-23'\n"
+            event.write_text(f"---\nid: {self.EVENT_ID}\nstatus: published\ntitle: 桃園市南崁溪淤積問題\ntimeline:\n- date: '2026-10-23'\n"
                              f"  source_ids: [{ids[0]}]\n- date: '2026-10-24'\n  source_ids: [{ids[1]}, {ids[2]}]\n"
                              "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
                              "  status: draft-review\n---\n\n報導。\n", encoding="utf-8")

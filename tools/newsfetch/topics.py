@@ -63,7 +63,7 @@ CENTRAL = [  # regex, actor id, name, actor type
     (r"警政署", "ac-national-police-agency", "內政部警政署", "gov_agency"),
     (r"消防署", "ac-national-fire-agency", "內政部消防署", "gov_agency"),
     (r"外交部", "ac-ministry-of-foreign-affairs", "外交部", "gov_agency"),
-    (r"國防部|國軍", "ac-ministry-of-national-defense", "國防部", "gov_agency"),
+    (r"國防部|(?<![中美韓日俄英合])國軍", "ac-ministry-of-national-defense", "國防部", "gov_agency"),
     (r"財政部|國稅局", "ac-ministry-of-finance", "財政部", "gov_agency"),
     (r"教育部", "ac-ministry-of-education", "教育部", "gov_agency"),
     (r"法務部", "ac-ministry-of-justice", "法務部", "gov_agency"),
@@ -93,7 +93,9 @@ CENTRAL = [  # regex, actor id, name, actor type
 ]
 REVIEW_REASON = "draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。"
 PUB_SLUG = {"自由時報": "ltn", "中央通訊社": "cna", "公視新聞網": "pts", "TVBS": "tvbs", "Newtalk": "newtalk",
-            "風傳媒": "storm", "聯合新聞網": "udn", "MyGoPen": "mygopen", "台灣事實查核中心": "tfc"}
+            "風傳媒": "storm", "聯合新聞網": "udn", "MyGoPen": "mygopen", "台灣事實查核中心": "tfc",
+            "ETtoday新聞雲": "ettoday", "中時新聞網": "chinatimes", "三立新聞網": "setn", "東森新聞": "ebc",
+            "華視新聞": "cts", "鏡週刊": "mirrormedia"}
 HOSTS = {
     "www.ey.gov.tw": ("行政院", "ac-executive-yuan", "ey"),
     "www.moi.gov.tw": ("內政部", "ac-ministry-of-the-interior", "moi"),
@@ -458,7 +460,11 @@ def src_slug(it, actors_by_host):
     host = urllib.parse.urlparse(it["url"]).hostname or ""
     if it.get("source_class") in ("official_statement", "official_record") and host in actors_by_host:
         return actors_by_host[host][2]
-    return PUB_SLUG.get(it.get("publisher"), "")
+    slug = PUB_SLUG.get(it.get("publisher"), "")
+    if slug:
+        return slug
+    labels = [x for x in host.split(".") if x not in ("www", "m", "news", "com", "tw", "net", "org", "co", "gov")]
+    return re.sub(r"[^a-z0-9]", "", labels[-1].lower()) if labels else "unknown"
 
 
 def src_id(it, actors_by_host):
