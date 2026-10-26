@@ -21,7 +21,24 @@
       "anchor_before": "<h[12][^>]*>\\s*$"
     },
     "latest_sitemap": "https://news.pts.org.tw/xml/sitemap.xml",
-    "route_note": "dailynews?page=N stops at page 100 (about 2026-09-18). Category pages carry no date in the markup and are not used."
+    "route_note": "dailynews?page=N stops at page 100 (about 2026-09-18). Category pages carry no date in the markup and are not used.",
+    "click_route": {
+      "note": "dailynews pager, click the next-page link; the site stops at page 100",
+      "urls": [
+        "https://news.pts.org.tw/dailynews"
+      ],
+      "rows": "li.d-flex",
+      "link": "news\\.pts\\.org\\.tw/article/\\d+",
+      "link_selector": "h2 a",
+      "title_selector": "h2 a",
+      "date_selector": "time",
+      "next": "ul.pages li:last-child a[href]",
+      "no_script": true,
+      "settle_ms": 1500,
+      "max_steps": 120,
+      "empty_limit": 4,
+      "request_cap": 600
+    }
   },
   {
     "id": "cna",
@@ -34,7 +51,21 @@
       "中央社"
     ],
     "status": "latest_only",
-    "blocked_reason": "Load-more list calls /cna2018api/api/WNewsList, which robots.txt disallows. Static list and sitemap reach about 2 days."
+    "blocked_reason": "Load-more list calls /cna2018api/api/WNewsList, which robots.txt disallows. Static list and sitemap reach about 2 days.",
+    "click_route": {
+      "note": "list page; click the view-more button. The button calls /cna2018api/api/WNewsList, which robots.txt disallows: the route stops there",
+      "urls": [
+        "https://www.cna.com.tw/list/aall.aspx"
+      ],
+      "rows": "#jsMainList li",
+      "link": "cna\\.com\\.tw/news/[a-z]+/\\d+",
+      "title_selector": "h2 span",
+      "date_selector": "time.date",
+      "next": "#SiteContent_uiViewMoreBtn",
+      "settle_ms": 3000,
+      "max_steps": 200,
+      "request_cap": 600
+    }
   },
   {
     "id": "tvbs",
@@ -47,7 +78,25 @@
       "TVBS新聞網"
     ],
     "status": "latest_only",
-    "blocked_reason": "No dated list, no page parameter, no scroll growth. News sitemap reaches about 3 days."
+    "blocked_reason": "No dated list, no page parameter, no scroll growth. News sitemap reaches about 3 days.",
+    "click_route": {
+      "note": "realtime list; click the 更多即時新聞 button. The button calls api.news.tvbs.app, whose robots.txt disallows all: the route stops there",
+      "urls": [
+        "https://news.tvbs.com.tw/realtime"
+      ],
+      "rows": "a.block",
+      "link": "news\\.tvbs\\.com\\.tw/[a-z]+/\\d{5,}",
+      "title_selector": "h3, h4",
+      "date_selector": "span.caption-12-medium",
+      "next": "button",
+      "next_text": "更多即時新聞",
+      "allow_hosts": [
+        "api.news.tvbs.app"
+      ],
+      "settle_ms": 3000,
+      "max_steps": 40,
+      "request_cap": 600
+    }
   },
   {
     "id": "newtalk",
@@ -81,7 +130,29 @@
       "風傳媒"
     ],
     "status": "latest_only",
-    "blocked_reason": "List pages load through /api/, which robots.txt disallows. Monthly archive sitemaps carry URL and time but no title."
+    "blocked_reason": "List pages load through /api/, which robots.txt disallows. Monthly archive sitemaps carry URL and time but no title.",
+    "click_route": {
+      "note": "channel lists render on the server. The pager script is under /_nuxt/*.js, which robots.txt disallows, so the route has no next-page control",
+      "urls": [
+        "https://www.storm.mg/channel/all/7",
+        "https://www.storm.mg/channel/all/6",
+        "https://www.storm.mg/channel/all/2",
+        "https://www.storm.mg/channel/all/3",
+        "https://www.storm.mg/channel/all/4",
+        "https://www.storm.mg/channel/all/5",
+        "https://www.storm.mg/channel/all/97"
+      ],
+      "rows": ".ArticleCardWithMeta",
+      "link": "storm\\.mg/article/\\d+",
+      "link_selector": "h2 a",
+      "title_selector": "h2 a",
+      "date_selector": "[class*=\"text-smg-gray-600\"]",
+      "next": "a[rel=next]",
+      "no_script": true,
+      "settle_ms": 2000,
+      "max_steps": 5,
+      "request_cap": 300
+    }
   },
   {
     "id": "ltn",
@@ -149,7 +220,22 @@
       "聯合新聞網 udn"
     ],
     "status": "latest_only",
-    "blocked_reason": "R61: robots.txt disallows /NEWS/. Weekly archive sitemaps carry URL and time but no title. Only the titled news sitemap (about 3 days) is used."
+    "blocked_reason": "R61: robots.txt disallows /NEWS/. Weekly archive sitemaps carry URL and time but no title. Only the titled news sitemap (about 3 days) is used.",
+    "click_route": {
+      "note": "breaknews list loads 20 rows per scroll of the end marker (R180: the page script calls the list API, not the crawler)",
+      "urls": [
+        "https://udn.com/news/breaknews/1"
+      ],
+      "rows": ".story-list__news",
+      "link": "udn\\.com/news/story/\\d+/\\d+",
+      "link_selector": "h2 a",
+      "title_selector": "h2 a",
+      "date_selector": ".story-list__time",
+      "scroll_to": "#indicator",
+      "max_steps": 1500,
+      "empty_limit": 4,
+      "request_cap": 6000
+    }
   },
   {
     "id": "chinatimes",
@@ -164,7 +250,26 @@
     "type": "sitemap",
     "url": "https://www.chinatimes.com/sitemaps/sitemap_todaynews.xml",
     "status": "latest_only",
-    "blocked_reason": "Realtime list has 10 pages (about 1 day). Archive sitemaps carry URL and date but no title. Titled news sitemap reaches about 3 days."
+    "blocked_reason": "Realtime list has 10 pages (about 1 day). Archive sitemaps carry URL and date but no title. Titled news sitemap reaches about 3 days.",
+    "click_route": {
+      "note": "search list pages with the term 台灣 and 警方; click the next-page link; the site script is off, so the route adds the key chdtv that the script adds to its own links",
+      "urls": [
+        "https://www.chinatimes.com/search/%E5%8F%B0%E7%81%A3?chdtv",
+        "https://www.chinatimes.com/search/%E8%AD%A6%E6%96%B9?chdtv"
+      ],
+      "rows": ".articlebox-compact",
+      "link": "chinatimes\\.com/(realtimenews|newspapers)/\\d{14}-\\d+",
+      "title_selector": "h3.title a",
+      "date_selector": "time",
+      "next": "ul.pagination a.page-link",
+      "next_text": "下一頁",
+      "no_script": true,
+      "add_query": "chdtv",
+      "settle_ms": 1500,
+      "max_steps": 2600,
+      "empty_limit": 4,
+      "request_cap": 40000
+    }
   },
   {
     "id": "ettoday",
@@ -220,7 +325,23 @@
       "delay_ms": 1200
     },
     "latest_sitemap": "https://www.setn.com/sitemapGoogleNews.xml",
-    "blocked_reason": "The viewall list stops at about 600 items (2 days) however far the browser scrolls, and shows relative times only. The route reads the latest 2 days for the daily run."
+    "blocked_reason": "The viewall list stops at about 600 items (2 days) however far the browser scrolls, and shows relative times only. The route reads the latest 2 days for the daily run.",
+    "click_route": {
+      "note": "viewall list; scroll like a reader. The list shows relative times and stops at about 600 rows",
+      "urls": [
+        "https://www.setn.com/viewall"
+      ],
+      "rows": ".news_list_item",
+      "link": "setn\\.com/news/\\d+",
+      "link_selector": ".title_pc a",
+      "title_selector": ".title_pc a",
+      "date_selector": ".time_box .time",
+      "scroll": true,
+      "settle_ms": 3000,
+      "max_steps": 120,
+      "empty_limit": 6,
+      "request_cap": 1500
+    }
   },
   {
     "id": "ftv",
@@ -246,6 +367,23 @@
       "page_template": "https://www.ftvnews.com.tw/realtime/?page={page}",
       "stop_probe": "detail/(?P<y>\\d{4})(?P<m>[1-9A-C])(?P<d>\\d\\d)",
       "max_steps": 9000
+    },
+    "click_route": {
+      "note": "realtime list; click the next-page link",
+      "urls": [
+        "https://www.ftvnews.com.tw/realtime/?page=1"
+      ],
+      "rows": ".news-block",
+      "link": "ftvnews\\.com\\.tw/news/detail/",
+      "link_selector": ".content a",
+      "title_selector": "h2.title",
+      "date_selector": ".time",
+      "next": "a.next-link",
+      "no_script": true,
+      "settle_ms": 2000,
+      "max_steps": 150,
+      "empty_limit": 4,
+      "request_cap": 600
     }
   },
   {
@@ -262,7 +400,21 @@
     "type": "sitemap",
     "url": "https://news.ebc.net.tw/sitemap/realtime.xml",
     "status": "latest_only",
-    "blocked_reason": "No dated list, no page parameter, no scroll growth. Realtime sitemap reaches about 2 days."
+    "blocked_reason": "No dated list, no page parameter, no scroll growth. Realtime sitemap reaches about 2 days.",
+    "click_route": {
+      "note": "realtime list; scroll like a reader. The site sends no more list request without the disallowed load paths",
+      "urls": [
+        "https://news.ebc.net.tw/realtime"
+      ],
+      "rows": "a.item.row_box",
+      "link": "ebc\\.net\\.tw/news/[a-z]+/\\d+",
+      "title_selector": "h3.item_title",
+      "date_selector": "time",
+      "scroll": true,
+      "settle_ms": 3000,
+      "max_steps": 30,
+      "request_cap": 600
+    }
   },
   {
     "id": "cts",
@@ -277,7 +429,33 @@
     "type": "sitemap",
     "url": "https://news.cts.com.tw/sitemap_cts_google.xml",
     "status": "latest_only",
-    "blocked_reason": "No dated list, no page parameter, no scroll growth. Google news sitemap reaches about 3 days."
+    "blocked_reason": "No dated list, no page parameter, no scroll growth. Google news sitemap reaches about 3 days.",
+    "click_route": {
+      "note": "13 category lists (not breaking); click the next-page button; publisher stays cts for cna wire rows",
+      "urls": [
+        "https://news.cts.com.tw/politics/list",
+        "https://news.cts.com.tw/international/list",
+        "https://news.cts.com.tw/society/list",
+        "https://news.cts.com.tw/sports/list",
+        "https://news.cts.com.tw/life/list",
+        "https://news.cts.com.tw/money/list",
+        "https://news.cts.com.tw/taiwanese/list",
+        "https://news.cts.com.tw/local/list",
+        "https://news.cts.com.tw/general/list",
+        "https://news.cts.com.tw/arts/list",
+        "https://news.cts.com.tw/entertain/list",
+        "https://news.cts.com.tw/weather/list",
+        "https://news.cts.com.tw/pr/list"
+      ],
+      "rows": "a.news-list-card",
+      "link": "news\\.cts\\.com\\.tw/(cts|cna)/[a-z]+/\\d{6}/\\d+\\.html",
+      "title_selector": "h2.news-list-title",
+      "date_selector": "time.news-list-date",
+      "next": "button.news-pagination-btn[aria-label=\"下一頁\"]",
+      "max_steps": 2500,
+      "empty_limit": 4,
+      "request_cap": 40000
+    }
   },
   {
     "id": "mirror",
@@ -291,6 +469,29 @@
     ],
     "type": "sitemap",
     "url": "https://www.mirrormedia.mg/rss/posts-news.xml",
-    "status": "ok"
+    "status": "ok",
+    "click_route": {
+      "note": "section pages; scroll like a reader. The page holds about 27 rows and sends no more list request (R175 gate)",
+      "urls": [
+        "https://www.mirrormedia.mg/section/news",
+        "https://www.mirrormedia.mg/section/politicsocial",
+        "https://www.mirrormedia.mg/section/entertainment",
+        "https://www.mirrormedia.mg/section/businessmoney",
+        "https://www.mirrormedia.mg/section/people",
+        "https://www.mirrormedia.mg/section/foodtravel",
+        "https://www.mirrormedia.mg/section/life",
+        "https://www.mirrormedia.mg/section/carwatchwine",
+        "https://www.mirrormedia.mg/section/mafalda",
+        "https://www.mirrormedia.mg/section/column"
+      ],
+      "rows": "a[href*=\"/story/\"]",
+      "link": "mirrormedia\\.mg/story/",
+      "title_selector": "h2",
+      "date_selector": "p",
+      "scroll": true,
+      "settle_ms": 4000,
+      "max_steps": 8,
+      "request_cap": 400
+    }
   }
 ]

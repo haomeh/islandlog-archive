@@ -25,6 +25,7 @@ from tools.newsfetch.filter import NewsFilter
 from tools.newsfetch.lists import (
     canonical_url,
     fetch_browser_list,
+    fetch_click_list,
     fetch_dated_list,
     fetch_paged_list,
 )
@@ -156,6 +157,7 @@ def fetch_source_items(
     crawler: PoliteCrawler,
     since: str = "2026-04-24",
     until: str = "2026-10-24",
+    route_mode: str = "auto",
 ) -> List[Dict]:
     url = feed_cfg.get("url", "")
     publisher = feed_cfg["publisher"]
@@ -163,6 +165,15 @@ def fetch_source_items(
     today = datetime.datetime.now(TZ_TW).strftime("%Y-%m-%d")
 
     items: List[Dict] = []
+    if route_mode == "click":
+        # R179: the browser click route only. The sitemap and list routes of earlier runs are not repeated.
+        if not feed_cfg.get("click_route"):
+            logger.warning("Skipping %s: no click route", publisher)
+            return []
+        logger.info("Clicking through %s lists in the browser ...", publisher)
+        if not hasattr(crawler, "click_reports"):
+            crawler.click_reports = []
+        return fetch_click_list(feed_cfg["click_route"], crawler, publisher, since, today, reports=crawler.click_reports)
     if feed_type == "blocked":
         logger.warning("Skipping %s: blocked (%s)", publisher, feed_cfg.get("blocked_reason", ""))
         return []

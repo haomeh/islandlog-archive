@@ -44,8 +44,8 @@ class TestBrowserGate(unittest.TestCase):
     def test_list_browser_uses_the_gate(self):
         self.assertIn("from './browser_gate.mjs'", LIST_BROWSER)
         self.assertIn("gate.admit(", LIST_BROWSER)
-        self.assertEqual(LIST_BROWSER.count("route.continue()"), 1)
-        self.assertLess(LIST_BROWSER.index("gate.admit("), LIST_BROWSER.index("route.continue()"))
+        self.assertEqual(LIST_BROWSER.count("route.continue("), 1)
+        self.assertLess(LIST_BROWSER.index("gate.admit("), LIST_BROWSER.index("route.continue("))
 
     def test_stop_probe_accepts_python_group_names(self):
         self.assertIn("replace(/\\(\\?P</g", LIST_BROWSER)

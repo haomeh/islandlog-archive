@@ -292,3 +292,78 @@ def fetch_browser_list(route: Dict, crawler: PoliteCrawler, publisher: str, sinc
                 seen.add(item["url"])
                 items.append(item)
     return items
+
+
+CLICK_DATE_RE = re.compile(r"(?P<y>20\d\d)[-/.](?P<m>\d{1,2})[-/.](?P<d>\d{1,2})")
+CLICK_KEYS = ("rows", "link", "link_selector", "title_selector", "date_selector", "next", "next_text", "scroll_to", "scroll",
+              "wait_ms", "settle_ms", "no_script", "add_query", "empty_limit", "allow_hosts", "max_steps", "request_cap")
+
+
+def click_item_date(raw: str, now: datetime.datetime, today: str) -> Optional[str]:
+    """Reads the date text of a click-route row: an ISO-like date first, then a label such as 3小時前."""
+    m = CLICK_DATE_RE.search(raw or "")
+    if m:
+        return date_from_match(m, today)
+    return relative_date(raw or "", now)
+
+
+def fetch_click_list(route: Dict, crawler: PoliteCrawler, publisher: str, since: str, today: str,
+                     browser=node_list_browser, sleep=None, reports: Optional[List[Dict]] = None) -> List[Dict]:
+    """R179: one browser click route. It acts like a reader: open the list, scroll or click, read the DOM rows.
+
+    Each start url runs in its own browser process. Robots.txt of the start url is checked first and fails closed.
+    The browser checks robots.txt for every request it sends (list_browser.mjs). A report row per start url
+    says why the route stopped: date, no_rows, no_next, disallowed, captcha, cap or max_steps.
+    """
+    import time as _time
+    pause = sleep or _time.sleep
+    urls = route.get("urls") or [route["url"]]
+    items: List[Dict] = []
+    seen = set()
+    now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
+    for index, url in enumerate(urls):
+        parts = urllib.parse.urlsplit(url)
+        hr = crawler.load_robots(parts.netloc.lower(), scheme=parts.scheme)
+        report = {"outlet": publisher, "url": url, "stop": "", "steps": 0, "oldest": "", "items": 0, "robots_aborts": {}, "min_gap_ms": None}
+        if not hr.can_fetch(crawler.user_agent, url):
+            logger.info("Blocked by robots.txt: %s", url)
+            report["stop"] = "disallowed"
+            if reports is not None:
+                reports.append(report)
+            continue
+        if index:
+            # Two browser processes for one host: keep 1 request per 1.1 s across them.
+            pause(2.0)
+        config = {key: route[key] for key in CLICK_KEYS if key in route}
+        config.update({
+            "mode": "click",
+            "stop_before": since,
+            "deny": robots_deny_patterns(crawler, url),
+            "request_cap": route.get("request_cap", 20000),
+            "delay_ms": max(1000, route.get("delay_ms", 1200)),
+        })
+        if os.environ.get("NEWSFETCH_REQUEST_LOG"):
+            config["request_log"] = os.environ["NEWSFETCH_REQUEST_LOG"]
+        result = browser(url, crawler.user_agent, config)
+        report.update({"stop": result.get("stop", ""), "steps": result.get("steps", 0), "oldest": result.get("oldest", ""),
+                       "robots_aborts": result.get("robots_aborts", {}), "min_gap_ms": result.get("min_gap_ms"),
+                       "capped": bool(result.get("capped"))})
+        logger.info("CLICK-STOP %s stop=%s steps=%s oldest=%s rows=%d robots_aborts=%s min_gap_ms=%s", url, report["stop"], report["steps"],
+                    report["oldest"], len(result.get("items", [])), report["robots_aborts"], report["min_gap_ms"])
+        if result.get("capped"):
+            logger.warning("Browser reached the request cap for %s", url)
+        count = 0
+        for row in result.get("items", []):
+            published = click_item_date(row.get("date", ""), now, today)
+            if not published:
+                continue
+            item = make_item(canonical_url(row["href"]), row["title"], published, publisher)
+            if item["url"] in seen:
+                continue
+            seen.add(item["url"])
+            items.append(item)
+            count += 1
+        report["items"] = count
+        if reports is not None:
+            reports.append(report)
+    return items

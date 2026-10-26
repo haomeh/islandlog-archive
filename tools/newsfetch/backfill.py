@@ -39,8 +39,11 @@ from tools.newsfetch.publishers import PublisherIndex
 logger = logging.getLogger("newsfetch.backfill")
 
 
-def units_for(feed: Dict, since: str, until: str) -> List[Dict]:
+def units_for(feed: Dict, since: str, until: str, route_mode: str = "auto") -> List[Dict]:
     """Splits one outlet into resumable units."""
+    if route_mode == "click":
+        # One click run per outlet: the browser walks the whole list in one go (R179).
+        return [{"name": "click", "since": since, "until": until}]
     if feed.get("type") == "dated_list":
         return [
             {"name": f"{a}_{b}", "since": f"{a[:4]}-{a[4:6]}-{a[6:]}", "until": f"{b[:4]}-{b[4:6]}-{b[6:]}"}
@@ -55,8 +58,8 @@ def done_units(state_file: Path) -> set:
     return {line.strip() for line in state_file.read_text(encoding="utf-8").splitlines() if line.strip()}
 
 
-def run_unit(feed: Dict, unit: Dict, crawler, news_filter, classifier, index, parts_dir: Path) -> int:
-    items = fetch_source_items(feed, crawler, since=unit["since"], until=unit["until"])
+def run_unit(feed: Dict, unit: Dict, crawler, news_filter, classifier, index, parts_dir: Path, route_mode: str = "auto") -> int:
+    items = fetch_source_items(feed, crawler, since=unit["since"], until=unit["until"], route_mode=route_mode)
     now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     seen = set()
     count = 0
@@ -108,6 +111,8 @@ def main(argv=None) -> int:
     ap.add_argument("--source", action="append", help="outlet id; repeat for several")
     ap.add_argument("--feeds", type=Path, default=DEFAULT_FEEDS_PATH)
     ap.add_argument("--cache-dir", type=Path, default=None)
+    ap.add_argument("--route", choices=("auto", "click"), default="auto",
+                    help="click: run the browser click route of each outlet only (R179); auto: the earlier routes")
     ap.add_argument("--no-resume", action="store_true", help="ignore the done list (daily timer runs)")
     args = ap.parse_args(argv)
 
@@ -129,14 +134,17 @@ def main(argv=None) -> int:
         crawler.use_browser_robots([feed])
         state_file = args.out_dir / "state" / f"{feed['id']}.done"
         finished = set() if args.no_resume else done_units(state_file)
-        for unit in units_for(feed, args.since, args.until):
+        for unit in units_for(feed, args.since, args.until, args.route):
             if unit["name"] in finished:
                 logger.info("%s %s already done", feed["id"], unit["name"])
                 continue
-            count = run_unit(feed, unit, crawler, news_filter, classifier, index, args.out_dir / "parts" / feed["id"])
+            count = run_unit(feed, unit, crawler, news_filter, classifier, index, args.out_dir / "parts" / feed["id"], args.route)
             with open(state_file, "a", encoding="utf-8") as f:
                 f.write(unit["name"] + "\n")
             logger.info("%s %s done: %d records", feed["id"], unit["name"], count)
+        reports = getattr(crawler, "click_reports", None)
+        if reports:
+            (args.out_dir / "state" / f"{feed['id']}.click-report.json").write_text(json.dumps(reports, ensure_ascii=False, indent=1), encoding="utf-8")
         result = merge_source(args.out_dir, feed["id"])
         summary.append(result)
         logger.info("%s merged: %s", feed["id"], result)
