@@ -101,3 +101,17 @@ OFFICIAL_MIN_TITLES = 3  # A name that follows an office word (部長, 署長, �
 BARE_PERSON_MIN_LEN = 2  # A name of at least this many characters can be a bare person name (R147.3).
 BARE_PERSON_MAX_LEN = 4  # ... and of at most this many characters (a Chinese name with a title word before it). Case: 薛楷莉, 朱安雄 (R147.3).
 BARE_PERSON_SHARE = 0.5  # A name that follows a role word (前主播, 議長) in this share of its uses names only a person. Case: 薛楷莉, 朱安雄 (R147.3).
+
+# --- Gate round T26 (R154 to R157): precision over recall. A class that no general rule can stop is rejected. ---
+NUMBER_CUT_SHARE = 0.5  # A key that follows a digit, a Latin letter or a percent sign in this share of its uses lost its first part (42號演習 -> 號演習, C肝群聚 -> 肝群聚), or lost its last part when a digit follows it. Sample T25-P: 42號演習, 60天免簽, C肝群聚 (R154).
+QUOTE_COLON_SHARE = 0.5  # A key that follows a colon in this share of its uses is the words of a speaker (沈伯洋：底線一直被踩), not a name. Sample T25-P: 不因威脅放棄民主, 底線一直被踩 (R154).
+GOV_ACT_SHARE = 0.1  # A topic needs this share of its titles to name a government body of Taiwan or a public act: a topic with none is a private matter (PRD 4.5 item 1). Sample T25-P: 鍘美藝術節, 台商捐款, 美光回應工會訴求 (R154).
+ACCIDENT_SHARE = 0.5  # A topic is a single accident when this share of its titles has an accident word ... Sample T25-P: 新加坡婦 (R154).
+ACCIDENT_POLICY_SHARE = 0.3  # ... and fewer than this share of its titles has a policy word (rules, review, law). A road-safety rule topic names an accident too (R154).
+CANDIDATE_SHARE = 0.3  # A topic is a candidate attack or election banter when this share of its titles names two figures and an attack word, or names a campaign act (PRD 4.5 item 5). Sample T25-P: 往臉上貼金, 東泉辣椒醬, 臺北市電視辯論 (R154).
+OFFICIAL_HEALTH_SHARE = 0.3  # A topic is the health of a named official when this share of its titles has an official and a health word (rule 4). Sample T25-P: 基隆市住進北榮 (R154).
+DUPLICATE_GAP_DAYS = 60  # Two new topics are one issue only when their days are at most this many days apart. Sample T25-P: 兄弟姊妹 and 兄弟姊妹特留分 are 46 days apart (R154).
+DUPLICATE_TERM_LEN = 5  # ... and they share a term (a character n-gram) of at least this many characters, or one key holds the other. A 4-character term (藍白立委, 立院三讀) is common in many stories. Sample T25-P: 賴清德出訪, 副署無人載具條例, 行動網路降速演練 (R154).
+DUPLICATE_TERM_MAX_DF = 60  # ... and the term is in at most this many items of the corpus: a rare term names one story. Start (R154); the dry run measures it.
+DUPLICATE_MIN_TITLES = 2  # ... and each topic has the term in at least this many titles. One title can quote another story. Start (R154).
+CANDIDATE_MIN_TITLES = 5  # A name that follows or precedes a campaign word (參選, 候選人, 提名, 競選) in this many titles of the corpus is a candidate of the election. Start (R154); the dry run measures it.

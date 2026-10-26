@@ -63,7 +63,7 @@ CENTRAL = [  # regex, actor id, name, actor type
     (r"警政署", "ac-national-police-agency", "內政部警政署", "gov_agency"),
     (r"消防署", "ac-national-fire-agency", "內政部消防署", "gov_agency"),
     (r"外交部", "ac-ministry-of-foreign-affairs", "外交部", "gov_agency"),
-    (r"國防部|國軍", "ac-ministry-of-national-defense", "國防部", "gov_agency"),
+    (r"國防部|(?<![中美韓日俄英合])國軍", "ac-ministry-of-national-defense", "國防部", "gov_agency"),
     (r"財政部|國稅局", "ac-ministry-of-finance", "財政部", "gov_agency"),
     (r"教育部", "ac-ministry-of-education", "教育部", "gov_agency"),
     (r"法務部", "ac-ministry-of-justice", "法務部", "gov_agency"),
