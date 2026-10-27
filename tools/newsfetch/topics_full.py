@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Full topic run (R68): form topics from all clusters and write only those that meet PRD 4.4.
 
-Usage: python3 -m tools.newsfetch.topics_full corpus.jsonl clusters.json topic_seeds.json archive_root report.json [--today YYYY-MM-DD]
+Usage: python3 -m tools.newsfetch.topics_full corpus.jsonl clusters.json topic_seeds.json archive_root report.json [--today YYYY-MM-DD] [--approve-withdraw approve.txt]
 
 Steps:
 1. Seeds: clusters with 2 or more items, or with an official or fact-check item. One-item news
@@ -1423,7 +1423,7 @@ def source_urls_by_id(root):
     return urls
 
 
-def run(corpus, clusters, existing_seeds, root, report_path, today=None):
+def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve_withdraw=None):
     set_officials(office_holders(corpus))  # R141.5
     set_candidates(candidate_names(corpus))  # R154
     df = tp.document_frequency(corpus)
@@ -1617,7 +1617,12 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     day = today or taipei_day()
     old_state = read_topic_state(root)
     state, withdrawn, pending = apply_hysteresis(old_state, {p: g for p, g in failing.items() if p not in kept_withdrawn}, day)
-    withdrawn, blocked = limit_withdrawals(withdrawn, len(old_system_topics(root)))  # R133
+    allowed_ids = set(approve_withdraw or ())  # R218, R221: a due topic is withdrawn only when its id is in the approval list
+    approval_ignored = sorted(allowed_ids - set(withdrawn))
+    unapproved = {p: g for p, g in withdrawn.items() if p not in allowed_ids}
+    withdrawn, limited = limit_withdrawals({p: g for p, g in withdrawn.items() if p in allowed_ids}, len(old_system_topics(root)))  # R133
+    blocked = {**unapproved, **limited}
+    blocked_reason = {**{p: "needs_user_approval" for p in unapproved}, **{p: "withdraw_limit" for p in limited}}
     for pid, gate in blocked.items():  # the fail count stays; the PM decides
         prior = old_state.get(pid, {})
         state[pid] = {"fails": prior.get("fails", 0) + (0 if prior.get("day") == day else 1), "gate": gate, "day": day}
@@ -1634,7 +1639,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None):
     links = apply_subtopic_links(root, keys)
     stats["part_of_links"] = len(links)
     stats["sensitive_from_sources"] = len(refresh_sensitive(root))
-    Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links, "withdrawn": withdrawn, "withdraw_blocked": blocked, "regate": regated}, ensure_ascii=False, indent=1),
+    Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links, "withdrawn": withdrawn, "withdraw_blocked": blocked, "regate": regated,
+                                "withdraw_blocked_reason": blocked_reason, "approval_ignored": approval_ignored}, ensure_ascii=False, indent=1),
                                  encoding="utf-8")
     return stats, published, out_seeds
 
@@ -1721,9 +1727,25 @@ def parse_today(args):
     return args[:i] + args[i + 2:], day
 
 
+def parse_approve_withdraw(args):
+    """R221: (args without the option, the approval file). The file is None without the option. Raises ValueError for a missing file name."""
+    if "--approve-withdraw" not in args:
+        return args, None
+    i = args.index("--approve-withdraw")
+    if i + 1 >= len(args):
+        raise ValueError("--approve-withdraw needs a file")
+    return args[:i] + args[i + 2:], args[i + 1]
+
+
+def read_approval_file(path):
+    """R221: the set of event ids in the file, one id per line. Empty lines are ignored."""
+    return {line.strip() for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()}
+
+
 def main(argv):
     try:
         args, today = parse_today(list(argv[1:]))
+        args, approve_file = parse_approve_withdraw(args)
     except ValueError as err:
         print(err, file=sys.stderr)
         return 2
@@ -1733,7 +1755,8 @@ def main(argv):
     corpus = tp.read_jsonl(args[0])
     clusters = json.load(open(args[1], encoding="utf-8"))
     existing = json.load(open(args[2], encoding="utf-8"))
-    stats, published, _ = run(corpus, clusters, existing, args[3], args[4], today=today)
+    stats, published, _ = run(corpus, clusters, existing, args[3], args[4], today=today,
+                              approve_withdraw=read_approval_file(approve_file) if approve_file else None)
     print(json.dumps(stats, ensure_ascii=False))
     return 0
 
