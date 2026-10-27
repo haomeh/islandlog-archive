@@ -136,3 +136,7 @@ ACT_MATCH_LEN = 2  # Two names have the same act when their act parts share this
 MINISTRY_MIN_TITLES = 2  # A central ministry counts for the mixed-ministry test when this many titles name it. One title can cite another body (R215.3).
 MINISTRY_MAX_SHARE = 0.6  # A fee or budget name is a mixed cluster when two ministries count and none is in this share of the titles. Sample T31-P: 媒宣費 names 外交部, 文化部 and 陸委會 (R207, R215.3).
 MINISTRY_MIN_COUNT = 2  # A fee or budget name is a mixed cluster when this many ministries count (R215.3).
+
+# --- Gate round T37 (R225, R229): natural phenomena and ceremonies are no topic. ---
+PHENOMENON_SHARE = 0.5  # A cluster is a natural phenomenon or a ceremony when this share of its titles has a word of that class (R229.2). Start (R229); the A/B run lists what it removes.
+ACT_MIN_TITLES = 1  # ... and it fails when fewer than this many titles name a public-power act (decision, budget, law, ruling, penalty, subsidy, emergency order). One act title makes the cluster an issue (R229.2c).

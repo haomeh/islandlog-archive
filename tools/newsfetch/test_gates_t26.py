@@ -248,7 +248,7 @@ class PrivateMatterTest(unittest.TestCase):
 
     def test_a_law_a_budget_or_a_public_service_passes(self):
         self.assertIsNone(tf.new_topic_reason(items(["軍購條例三讀 藍白通過", "朝野協商軍購條例", "軍購條例送院會"])))
-        self.assertIsNone(tf.new_topic_reason(items(["捷運三鶯線通車 民眾搭乘", "三鶯線通車首日人潮", "捷運三鶯線試乘"])))
+        self.assertIsNone(tf.new_topic_reason(items(["捷運三鶯線通車 民眾搭乘", "三鶯線通車首日人潮 交通部公告票價", "捷運三鶯線試乘"])))
 
 
 class DuplicateIssueTest(unittest.TestCase):
