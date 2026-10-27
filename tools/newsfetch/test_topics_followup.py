@@ -309,7 +309,7 @@ class TodayOptionTest(unittest.TestCase):
     def call(self, extra):
         seen = {}
 
-        def fake_run(corpus, clusters, seeds, root, report, today=None):
+        def fake_run(corpus, clusters, seeds, root, report, today=None, approve_withdraw=None):
             seen["today"] = today
             return {}, [], []
         with tempfile.TemporaryDirectory() as tmp:

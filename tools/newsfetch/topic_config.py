@@ -131,3 +131,8 @@ SCOPE_MIN_TITLES = 2  # A government level is a big group of a topic when this m
 SCOPE_MIN_SHARE = 0.25  # ... and they are this share of the titles. Two big groups of two levels are a mixed cluster. A smaller group is off topic title by title: 媒宣費 has 2 city titles in 34 (R196.4, R196.6).
 ACTOR_SHARE = 0.5  # A body is the actor of a topic when this share of its titles names it. The duplicate test compares the actors (R196.7).
 ACT_MATCH_LEN = 2  # Two names have the same act when their act parts share this many characters (人事同意權 and 人事) (R196.7).
+
+# --- Gate round T34 (R214, R215): recall fixes and the mixed-ministry rule. ---
+MINISTRY_MIN_TITLES = 2  # A central ministry counts for the mixed-ministry test when this many titles name it. One title can cite another body (R215.3).
+MINISTRY_MAX_SHARE = 0.6  # A fee or budget name is a mixed cluster when two ministries count and none is in this share of the titles. Sample T31-P: 媒宣費 names 外交部, 文化部 and 陸委會 (R207, R215.3).
+MINISTRY_MIN_COUNT = 2  # A fee or budget name is a mixed cluster when this many ministries count (R215.3).

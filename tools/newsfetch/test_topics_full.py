@@ -196,7 +196,7 @@ class RunHelper:
                  item("c", "【錯誤】南崁溪淤積問題謠言", "2026-10-24", "MyGoPen", "fact_check")]
         return filler + topic, topic
 
-    def run_in(self, root, second_news_publisher, today="2026-10-25", seed_event=True):
+    def run_in(self, root, second_news_publisher, today="2026-10-25", seed_event=True, approved=None):
         from tools.newsfetch import topics as tp
         corpus, topic = self.corpus(second_news_publisher)
         clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
@@ -210,7 +210,7 @@ class RunHelper:
                              f"  source_ids: [{ids[0]}]\n- date: '2026-10-24'\n  source_ids: [{ids[1]}, {ids[2]}]\n"
                              "review:\n  sensitive: false\n  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'\n"
                              "  status: draft-review\n---\n\n報導。\n", encoding="utf-8")
-        stats, _, _ = tf.run(corpus, clusters, [], root, root / "report.json", today=today)
+        stats, _, _ = tf.run(corpus, clusters, [], root, root / "report.json", today=today, approve_withdraw=approved)
         return stats, event.read_text(encoding="utf-8")
 
     def records(self, root):
@@ -221,10 +221,10 @@ class RunHelper:
         import yaml
         return yaml.safe_load((root / "events/2026" / f"{self.EVENT_ID}.md").read_text(encoding="utf-8").split("---\n")[1])
 
-    def fail_twice(self, root, first="2026-10-25", second="2026-10-26"):
-        """R107b: a published topic needs 2 failing runs in a row to be withdrawn."""
+    def fail_twice(self, root, first="2026-10-25", second="2026-10-26", approved=None):
+        """R107b: a published topic needs 2 failing runs in a row to be due. R221: it is withdrawn only when its id is approved."""
         self.run_in(root, second_news_publisher=False, today=first)
-        return self.run_in(root, second_news_publisher=False, today=second)
+        return self.run_in(root, second_news_publisher=False, today=second, approved={self.EVENT_ID} if approved is None else approved)
 
 
 @unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
@@ -548,7 +548,7 @@ class FailCountPerDayTest(RunHelper, unittest.TestCase):
             self.assertEqual(self.state(root)[self.EVENT_ID]["fails"], 1)
             self.assertEqual(stats["withdrawn"], 0)
             self.assertIn("status: published", text)
-            stats, text = self.run_in(root, second_news_publisher=False, today="2026-10-26")
+            stats, text = self.run_in(root, second_news_publisher=False, today="2026-10-26", approved={self.EVENT_ID})
             self.assertEqual(stats["withdrawn"], 1)
 
     def test_the_default_day_is_the_taipei_day(self):

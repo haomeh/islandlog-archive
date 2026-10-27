@@ -192,8 +192,104 @@ class GenericClauseTest(unittest.TestCase):
             self.assertFalse(tf.generic_clause(name), name)
 
 
-if __name__ == "__main__":
-    unittest.main()
+class DuplicateTwoBodiesTest(unittest.TestCase):
+    """R203, R215.1: two keys that share a 4-character term are not one issue when they name two different government bodies."""
+
+    def profile(self, key, titles, day="2026-10-20"):
+        return tf.issue_profile(key, [item(f"{key}{i}", t, day) for i, t in enumerate(titles)])
+
+    def test_two_ministries_are_two_issues(self):  # judged class: 國防部人事案 and 教育部人事案
+        a = self.profile("國防部人事案", ["國防部人事案爭議 立委關切", "國防部人事案 國防部回應", "國防部人事案 朝野協商"])
+        b = self.profile("教育部人事案", ["教育部人事案爭議 立委關切", "教育部人事案 教育部回應", "教育部人事案 朝野協商"])
+        self.assertFalse(tf.same_issue(a, b, {}))
+
+    def test_two_bodies_from_outside_the_judged_list(self):
+        a = self.profile("財政部採購案", ["財政部採購案爭議 立委關切", "財政部採購案 財政部說明", "財政部採購案 審計部查核"])
+        b = self.profile("交通部採購案", ["交通部採購案爭議 立委關切", "交通部採購案 交通部說明", "交通部採購案 審計部查核"])
+        self.assertFalse(tf.same_issue(a, b, {}))
+
+    def test_two_cities_are_two_issues(self):
+        a = self.profile("高雄市停車費案", ["高雄市停車費案爭議 議員質詢", "高雄市停車費案 市府說明", "高雄市停車費案 議會審查"])
+        b = self.profile("臺南市停車費案", ["臺南市停車費案爭議 議員質詢", "臺南市停車費案 市府說明", "臺南市停車費案 議會審查"])
+        self.assertFalse(tf.same_issue(a, b, {}))
+
+    def test_one_body_under_two_names_is_one_issue(self):  # 監委 and 監察院 are one body
+        a = self.profile("監察院人事案", ["監察院人事案爭議 立委關切", "監察院人事案 監院回應", "監察院人事案 朝野協商"])
+        b = self.profile("監委人事案", ["監委人事案爭議 立委關切", "監委人事案 監院回應", "監委人事案 朝野協商"])
+        self.assertTrue(tf.same_issue(a, b, {}))
+
+    def test_one_body_and_a_key_with_no_body_is_one_issue(self):
+        a = self.profile("國防部軍官人事案", ["國防部軍官人事案爭議 立委關切", "國防部軍官人事案 國防部回應", "國防部軍官人事案 朝野協商"])
+        b = self.profile("軍官人事案", ["軍官人事案爭議 立委關切", "軍官人事案 國防部回應", "軍官人事案 朝野協商"])
+        self.assertTrue(tf.same_issue(a, b, {}))
+
+
+class ActVerbLeadIssueNounTest(unittest.TestCase):
+    """R206, R215.2: an act-verb name passes when a head noun that names the thing (案, 政策, 條例) ends it and an object comes between.
+    A money noun (費, 預算, 補助) or no head noun leaves the name a bare verb phrase."""
+
+    def test_pass_cases_from_outside_the_judged_list(self):
+        for name in ("修憲案", "提名案", "減碳政策", "修停車管理辦法", "降低酒駕罰則方案", "擴大招生新制"):
+            self.assertTrue(tf.act_verb_lead(name), name)
+            self.assertFalse(tf.act_verb_lead_fails(name), name)
+
+    def test_fail_cases(self):
+        for name in ("免健保費", "提追加預算", "聲請釋憲", "刪商圈補助預算", "減徵房屋稅", "補發春節津貼", "追加防疫經費"):
+            self.assertTrue(tf.act_verb_lead_fails(name), name)
+
+    def test_a_bare_head_noun_after_the_verb_fails(self):
+        for name in ("提案", "修法", "提法案"):
+            self.assertTrue(tf.act_verb_lead_fails(name), name)
+
+    def test_a_money_object_before_the_head_fails(self):
+        for name in ("刪預算案", "提追加經費案"):
+            self.assertTrue(tf.act_verb_lead_fails(name), name)
+
+    def test_a_name_with_no_act_verb_lead_does_not_fail(self):
+        for name in ("國防部提追加預算", "軍購條例", "三班護病比"):
+            self.assertFalse(tf.act_verb_lead_fails(name), name)
+
+    def test_the_gate_lets_it_in(self):
+        titles = ["行政院修憲案 立院審查", "修憲案三讀 朝野協商", "修憲案公投 中選會說明", "修憲案爭議 憲法法庭"]
+        self.assertTrue(tf.t32_name_ok("修憲案", "修憲案", titles))
+        self.assertFalse(tf.t32_name_ok("免健保費", "免健保費", ["長者免健保費 立院三讀"]))
+
+
+class MixedMinistryTest(unittest.TestCase):
+    """R207, R215.3: a fee or budget name whose titles name 2 or more central ministries, with none in 60% of the titles, is a mixed cluster."""
+
+    FEE = ["外交部今年媒宣費 藍委又要砍逾億", "外交部媒宣費藍委刪1億保留協商", "藍提案砍外交部「媒宣費」1億 馬文君：保留送協商",
+           "吳思瑤控刪外交部1億媒宣費 徐巧芯打臉", "翁曉玲刪光文化部媒宣費 王婉諭：不能為政黨惡鬥癱瘓行政機關", "立院審查文化部預算 媒宣費最終凍結800萬元",
+           "陸委會媒宣費恐遭全砍！梁文傑嗆「剩一張嘴也要戰鬥」", "翁曉玲刪陸委會媒宣費更嗆梁文傑"]
+
+    def test_judged_fee_name(self):  # 媒宣費
+        self.assertTrue(tf.mixed_ministry("媒宣費", self.FEE))
+
+    def test_a_fee_name_from_outside_the_judged_list(self):
+        titles = ["教育部國際交流經費遭刪 立委質疑", "教育部國際交流經費 部長說明", "經濟部國際交流經費遭刪 立院審查", "經濟部國際交流經費凍結 立委要求報告",
+                  "農業部國際交流經費減列 立委關切"]
+        self.assertTrue(tf.mixed_ministry("國際交流經費", titles))
+
+    def test_one_ministry_in_60_percent_of_the_titles_passes(self):
+        titles = ["外交部媒宣費遭刪 立委質疑", "外交部媒宣費 部長說明", "外交部媒宣費凍結 立院審查", "外交部媒宣費爭議 藍綠交鋒", "文化部媒宣費減列 立委關切"]
+        self.assertFalse(tf.mixed_ministry("媒宣費", titles))
+
+    def test_one_stray_ministry_title_passes(self):
+        titles = ["教育部補助款遭刪 立委質疑", "教育部補助款 部長說明", "教育部補助款凍結 立院審查", "經濟部補助款減列 立委關切"]
+        self.assertFalse(tf.mixed_ministry("補助款", titles))
+
+    def test_a_name_that_is_no_fee_or_budget_passes(self):
+        titles = ["外交部人事案 立委質疑", "外交部人事案 部長說明", "文化部人事案 立院審查", "文化部人事案 藍綠交鋒"]
+        self.assertFalse(tf.mixed_ministry("人事案", titles))
+
+    def test_the_gate_rejects_it_for_a_new_topic_only(self):
+        members = items(self.FEE)
+        corpus = members + [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        df = tp.document_frequency(corpus)
+        self.assertEqual(tf.gate_topic("媒宣費", members, members[:1], df, corpus)[0], "rejected_mixed_ministry")
+        known = {"name": "媒宣費", "jids": ["jur-tw"], "actors": [], "sensitive": False}
+        self.assertEqual(tf.gate_topic("媒宣費", members, members[:1], df, corpus, known=known)[0], "ok")
+
 
 
 @unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
@@ -227,3 +323,7 @@ class RebuildNameRejectTest(unittest.TestCase):
             state = json.loads((root / "tools/newsfetch/topic_state.json").read_text(encoding="utf-8"))
             self.assertNotIn(helper.ID, state)
             self.assertEqual((stats["withdraw_pending"], stats["regate_passed"]), (0, 1))
+
+
+if __name__ == "__main__":
+    unittest.main()
