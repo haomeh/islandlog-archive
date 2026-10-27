@@ -38,7 +38,8 @@ from tools.newsfetch.topic_config import (
     DUPLICATE_TERM_LEN, DUPLICATE_TERM_MAX_DF, GOV_ACT_SHARE,
     NUMBER_CUT_SHARE, OFFICIAL_HEALTH_SHARE, QUOTE_COLON_SHARE, SLOGAN_MAX_LEN, THEME_MAX_MONTH_SHARE, THEME_MIN_MONTHS, THEME_MIN_USES,
     DUPLICATE_NEAR_DAYS, DUPLICATE_NEAR_TERM_LEN,
-    ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE)
+    ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE,
+    MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES)
 
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票|對手陣營|競辦|競總")  # R106: the last 3 name a campaign without an election word
@@ -384,6 +385,24 @@ def act_verb_lead(name):
     return bool(ACT_VERB_LEAD.search(name))
 
 
+ACT_HEAD = re.compile(r"(?:法案|草案|條例|政策|制度|新制|辦法|規定|機制|方案|計畫|專案|改革|案)$")  # R215.2: a noun that names the thing, not a payment (修憲案, 減碳政策)
+MONEY_END = re.compile(r"(?:費|預算|決算|經費|補助|津貼|補貼|款|稅|金)$")  # R215.2: a money object stays a bare verb phrase (免健保費, 刪預算案)
+
+
+def act_verb_lead_fails(name):
+    """R206, R215.2: the name starts with an act verb and no head noun saves it. A head noun (案, 政策, 條例) at the end, with an object
+    between the verb and the head that is no money noun, names the thing (修憲案, 提名案, 減碳政策). A money noun (免健保費, 提追加預算),
+    a bare head (提案) and a name with no head (聲請釋憲) have no subject and no issue."""
+    m = ACT_VERB_LEAD.search(name)
+    if not m:
+        return False
+    head = ACT_HEAD.search(name)
+    if not head:
+        return True
+    obj = name[m.end():head.start()]
+    return not obj or bool(MONEY_END.search(obj))
+
+
 def title_term(key, titles):
     """R196.2: the key sits inside a quote (「」), or after a colon or 稱, in TITLE_TERM_MIN_TITLES titles or more and in
     TITLE_TERM_SHARE of the titles that hold it. A name that a source quotes is words of a speaker (大不過憲法), not an issue."""
@@ -442,9 +461,24 @@ def place_scope(titles, jids):
     return kept or ["jur-tw"]
 
 
+FEE_NAME = re.compile(r"(?:費|預算|經費|補助|補貼|津貼|款)$")
+MINISTRY_ACTORS = [(p, aid) for p, aid, _, kind in CENTRAL if kind == "gov_agency" and aid != "ac-executive-yuan"]  # R215.3: the ministries and agencies; the Executive Yuan, the legislature and the courts sit above or beside them
+
+
+def mixed_ministry(name, titles):
+    """R207, R215.3: a fee or budget name whose titles name MINISTRY_MIN_TITLES titles each of MINISTRY_MIN_COUNT central ministries or more, with no
+    ministry in MINISTRY_MAX_SHARE of the titles, joins one fee name over several ministries (媒宣費). Such a cluster is no one issue."""
+    if not FEE_NAME.search(name):
+        return False
+    homes = [home_text(t) for t in titles]
+    counts = [sum(1 for h in homes if re.search(p, h)) for p, _ in MINISTRY_ACTORS]
+    big = [c for c in counts if c >= MINISTRY_MIN_TITLES]
+    return len(big) >= MINISTRY_MIN_COUNT and max(counts) < MINISTRY_MAX_SHARE * max(1, len(titles))
+
+
 def t32_name_ok(key, name, titles):
-    """R196.1, R196.2, R196.3, R196.8: the name tests that only a new topic must pass."""
-    return not (act_verb_lead(name) or generic_clause(name) or bare_entity(name) or any(title_term(k, titles) for k in {key, name}))
+    """R196.1, R196.2, R196.3, R196.8, R206: the name tests that only a new topic must pass."""
+    return not (act_verb_lead_fails(name) or generic_clause(name) or bare_entity(name) or any(title_term(k, titles) for k in {key, name}))
 
 
 def name_quality_ok(key, titles, total_df, window_df, df=None, new=False):
@@ -780,7 +814,7 @@ def private_health_of_official(title):
     return bool(HEALTH.search(title)) and bool(OFFICIAL_PERSON.search(title) or TAIWAN_FIGURE.search(title) or any(n in title for n in _CANDIDATES))
 
 
-NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_keyword_bundle", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter", "rejected_mixed_cluster", "rejected_government_scope")  # R154, R196: the labels of the rules that only a new topic must pass
+NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_keyword_bundle", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter", "rejected_mixed_cluster", "rejected_government_scope", "rejected_mixed_ministry")  # R154, R196, R215.3: the labels of the rules that only a new topic must pass
 
 
 def new_topic_reason(items):
@@ -855,6 +889,11 @@ def same_actor_act(a, b):
     return len(x) >= ACT_MATCH_LEN and len(y) >= ACT_MATCH_LEN and any(x[i:i + ACT_MATCH_LEN] in y for i in range(len(x) - ACT_MATCH_LEN + 1))
 
 
+def key_bodies(key):
+    """R203, R215.1: the central bodies (one actor id per body: 監委 and 監察院 are one) and the places that a key names."""
+    return {aid for pattern, aid, _, _ in CENTRAL if re.search(pattern, key)} | _title_jurisdictions(key)
+
+
 def same_issue(a, b, df):
     """R154, R162: two topics (new or old) are one issue when their days are at most DUPLICATE_GAP_DAYS apart and one key holds the
     other (兄弟姊妹 and 兄弟姊妹特留分), or they share a rare term that DUPLICATE_MIN_TITLES titles of each hold: a term of
@@ -862,6 +901,9 @@ def same_issue(a, b, df):
     topics are at most DUPLICATE_NEAR_DAYS days apart (立院三讀免健保費 and 長者有條件免健保費)."""
     gap = max((a["first"] - b["last"]).days, (b["first"] - a["last"]).days)
     if gap > DUPLICATE_GAP_DAYS:
+        return False
+    bodies_a, bodies_b = key_bodies(a["key"]), key_bodies(b["key"])
+    if bodies_a and bodies_b and not bodies_a & bodies_b:  # R203, R215.1: two government bodies are two issues, also when the keys share a term (部人事案)
         return False
     if a["key"] in b["key"] or b["key"] in a["key"]:
         return True
@@ -1225,6 +1267,8 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
         return "rejected_issue_name", None
     if not known and mf is not None and theme_word(key, mf.months):
         return "rejected_keyword_bundle", None  # R162: the key is a theme word that joins many cases
+    if new and mixed_ministry(name, titles):  # R207, R215.3
+        return "rejected_mixed_ministry", None
     if not known and not t32_name_ok(key, name, titles):  # R196.1, R196.2, R196.3, R196.8: a rebuild of an old topic gets a new name from its key, so the name tests apply to it too
         return "rejected_issue_name", None
     return "ok", {"jids": jids, "actors": actors, "name": name, "name_jids": place_scope(titles, jids) if new else jids, "off_level": {members[i]["url"] for i in off}}
