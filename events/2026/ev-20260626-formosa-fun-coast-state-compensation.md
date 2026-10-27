@@ -4,7 +4,7 @@ id: ev-20260626-formosa-fun-coast-state-compensation
 kind: historical_event
 status: published
 title: 八仙塵爆
-summary: 2026-06-26，自由時報、Newtalk、ETtoday新聞雲共 7 則報導提及八仙塵爆 [@src-20260626-ltn-f8d3ea75]。
+summary: 2026-06-26，自由時報、華視新聞、ETtoday新聞雲共 8 則報導提及八仙塵爆 [@src-20260626-ltn-f8d3ea75]。
 start_date: '2026-06-26'
 start_date_precision: day
 gov_levels:
@@ -36,11 +36,11 @@ timeline:
 - id: tl-01
   date: '2026-06-26'
   date_precision: day
-  title: 5 則報導、2 則回應或澄清
+  title: 6 則報導、2 則回應或澄清
   source_ids:
   - src-20260626-ltn-f8d3ea75
   - src-20260626-ltn-00b5bcd8
-  - src-20260626-ltn-d993c202
+  - src-20260626-cts-f4363581
 news_groups:
 - id: ng-01
   timeline_id: tl-01
@@ -61,26 +61,33 @@ news_groups:
 - id: ng-03
   timeline_id: tl-01
   kind: report
-  title: 八仙塵爆11週年前夕 家屬獲賠2100萬確定！最高法院判觀光署、新北市府敗訴
-  representative_source_id: src-20260626-ltn-d993c202
+  title: 八仙塵爆國賠案 觀光署、新北市府判賠2100萬元確定
+  representative_source_id: src-20260626-cts-f4363581
   source_ids:
-  - src-20260626-ltn-d993c202
+  - src-20260626-cts-f4363581
   - src-20260627-ltn-e50cf766
 - id: ng-04
   timeline_id: tl-01
   kind: report
-  title: 八仙塵爆國賠案 觀光署、新北市府判賠2100萬元確定
-  representative_source_id: src-20260626-newtalk-8fd97ce8
+  title: 八仙塵爆國賠 觀光署、新北市府：收判決書後辦理
+  representative_source_id: src-20260626-cts-e40d8e2e
   source_ids:
-  - src-20260626-newtalk-8fd97ce8
+  - src-20260626-cts-e40d8e2e
 - id: ng-05
+  timeline_id: tl-01
+  kind: report
+  title: 八仙塵爆11週年前夕 家屬獲賠2100萬確定！最高法院判觀光署、新北市府敗訴
+  representative_source_id: src-20260626-ltn-d993c202
+  source_ids:
+  - src-20260626-ltn-d993c202
+- id: ng-06
   timeline_id: tl-01
   kind: report
   title: 八仙塵爆11周年！觀光署、新北市府有過失 最高院判國賠2100萬確定
   representative_source_id: src-20260626-ettoday-891d6a6e
   source_ids:
   - src-20260626-ettoday-891d6a6e
-- id: ng-06
+- id: ng-07
   timeline_id: tl-01
   kind: report
   title: 八仙塵爆國賠確定 觀光署：收到判決後依法妥辦
@@ -96,15 +103,17 @@ review:
   status: draft-review
 ---
 
-## 2026-06-26　5 則報導、2 則回應或澄清
+## 2026-06-26　6 則報導、2 則回應或澄清
 
 自由時報以「最高法院駁回八仙塵爆7受害者親屬國賠上訴  新北市府回應了」為題報導 [@src-20260626-ltn-f8d3ea75]。
 
 自由時報以「八仙塵爆11週年前夕 最高法院判敗訴須賠2100萬 觀光署回應了」為題報導 [@src-20260626-ltn-00b5bcd8]。
 
-自由時報以「八仙塵爆11週年前夕 家屬獲賠2100萬確定！最高法院判觀光署、新北市府敗訴」為題報導 [@src-20260626-ltn-d993c202]。
+華視新聞以「八仙塵爆國賠案 觀光署、新北市府判賠2100萬元確定」為題報導 [@src-20260626-cts-f4363581]。
 
-Newtalk以「八仙塵爆國賠案 觀光署、新北市府判賠2100萬元確定」為題報導 [@src-20260626-newtalk-8fd97ce8]。
+華視新聞以「八仙塵爆國賠 觀光署、新北市府：收判決書後辦理」為題報導 [@src-20260626-cts-e40d8e2e]。
+
+自由時報以「八仙塵爆11週年前夕 家屬獲賠2100萬確定！最高法院判觀光署、新北市府敗訴」為題報導 [@src-20260626-ltn-d993c202]。
 
 ETtoday新聞雲以「八仙塵爆11周年！觀光署、新北市府有過失 最高院判國賠2100萬確定」為題報導 [@src-20260626-ettoday-891d6a6e]。
 

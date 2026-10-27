@@ -4,7 +4,7 @@ id: ev-20260513-taichung-social-housing-site-fire
 kind: historical_event
 status: published
 title: 臺中市社宅工地
-summary: 2026-05-13至2026-05-16，自由時報、ETtoday新聞雲共 13 則報導提及社宅工地 [@src-20260513-ltn-aa193479]。
+summary: 2026-05-13至2026-05-16，自由時報、ETtoday新聞雲、華視新聞等共 15 則報導提及社宅工地 [@src-20260513-ltn-aa193479]。
 start_date: '2026-05-13'
 start_date_precision: day
 gov_levels:
@@ -42,24 +42,24 @@ timeline:
 - id: tl-02
   date: '2026-05-14'
   date_precision: day
-  title: 6 則報導
+  title: 8 則報導
   source_ids:
+  - src-20260514-cts-00b46dae
   - src-20260514-ltn-88268032
   - src-20260514-ltn-7eccd017
-  - src-20260514-ltn-b5427858
 - id: tl-03
   date: '2026-05-15'
   date_precision: day
-  title: 2 則報導
+  title: 1 則報導
   source_ids:
   - src-20260515-ltn-72595a27
-  - src-20260515-ltn-d5fe8315
 - id: tl-04
   date: '2026-05-16'
   date_precision: day
-  title: 1 則回應或澄清
+  title: 2 則回應或澄清
   source_ids:
   - src-20260516-ltn-95fd8121
+  - src-20260516-chinatimes-7160e365
 news_groups:
 - id: ng-01
   timeline_id: tl-01
@@ -92,59 +92,60 @@ news_groups:
 - id: ng-05
   timeline_id: tl-02
   kind: report
+  title: 社宅工地火警釀空污 中市府勒令停工重罰500萬
+  representative_source_id: src-20260514-cts-00b46dae
+  source_ids:
+  - src-20260514-cts-00b46dae
+  - src-20260515-ltn-d5fe8315
+- id: ng-06
+  timeline_id: tl-02
+  kind: report
   title: 狂燒逾14小時！台中社宅工地大火 地下支撐柱變形、車道崩塌
   representative_source_id: src-20260514-ltn-88268032
   source_ids:
   - src-20260514-ltn-88268032
-- id: ng-06
+- id: ng-07
   timeline_id: tl-02
   kind: report
   title: 台中社宅工地惡火狂燒14小時！ 地下恐怖高溫破千度 排煙注水警戒畫面曝
   representative_source_id: src-20260514-ltn-7eccd017
   source_ids:
   - src-20260514-ltn-7eccd017
-- id: ng-07
+- id: ng-08
   timeline_id: tl-02
   kind: report
   title: 社宅工地大火燒14小時嚴重影響空氣品質 台中將開罰最高500萬元
   representative_source_id: src-20260514-ltn-b5427858
   source_ids:
   - src-20260514-ltn-b5427858
-- id: ng-08
+- id: ng-09
   timeline_id: tl-02
   kind: report
   title: 中央社宅工地大火「悶燒14hrs臭翻」 盧秀燕嗆內政部：不太好
   representative_source_id: src-20260514-ettoday-abaf2ec9
   source_ids:
   - src-20260514-ettoday-abaf2ec9
-- id: ng-09
+- id: ng-10
   timeline_id: tl-02
   kind: report
   title: 快訊／內政部社宅工地起火空污臭爆 台中環保局祭最重500萬罰鍰
   representative_source_id: src-20260514-ettoday-6c5f2dce
   source_ids:
   - src-20260514-ettoday-6c5f2dce
-- id: ng-10
+- id: ng-11
   timeline_id: tl-02
   kind: report
   title: 社宅工地上午大火 台中市府下午才空污警報
   representative_source_id: src-20260514-ltn-586f0281
   source_ids:
   - src-20260514-ltn-586f0281
-- id: ng-11
+- id: ng-12
   timeline_id: tl-03
   kind: report
   title: 台中社宅工地悶燒14小時撲滅  附近烤鴨店再傳火警
   representative_source_id: src-20260515-ltn-72595a27
   source_ids:
   - src-20260515-ltn-72595a27
-- id: ng-12
-  timeline_id: tl-03
-  kind: report
-  title: 台中北屯社宅工地火警空污 重罰500萬
-  representative_source_id: src-20260515-ltn-d5fe8315
-  source_ids:
-  - src-20260515-ltn-d5fe8315
 - id: ng-13
   timeline_id: tl-04
   kind: clarification
@@ -152,6 +153,14 @@ news_groups:
   representative_source_id: src-20260516-ltn-95fd8121
   source_ids:
   - src-20260516-ltn-95fd8121
+  note: 報導中的回應或澄清
+- id: ng-14
+  timeline_id: tl-04
+  kind: clarification
+  title: 台中社宅工地大火啟動國賠？ 劉世芳回應了
+  representative_source_id: src-20260516-chinatimes-7160e365
+  source_ids:
+  - src-20260516-chinatimes-7160e365
   note: 報導中的回應或澄清
 privacy:
   contains_private_persons: false
@@ -172,7 +181,9 @@ ETtoday新聞雲以「快訊／台中社宅工地大火！工人「火花掉模�
 
 ETtoday新聞雲以「還在燒！台中社宅工地大火逾7hrs 黑煙蔽天「空品亮紅燈」」為題報導 [@src-20260513-ettoday-44a8717b]。
 
-## 2026-05-14　6 則報導
+## 2026-05-14　8 則報導
+
+華視新聞以「社宅工地火警釀空污 中市府勒令停工重罰500萬」為題報導 [@src-20260514-cts-00b46dae]。
 
 自由時報以「狂燒逾14小時！台中社宅工地大火 地下支撐柱變形、車道崩塌」為題報導 [@src-20260514-ltn-88268032]。
 
@@ -186,12 +197,12 @@ ETtoday新聞雲以「快訊／內政部社宅工地起火空污臭爆 台中環
 
 自由時報以「社宅工地上午大火 台中市府下午才空污警報」為題報導 [@src-20260514-ltn-586f0281]。
 
-## 2026-05-15　2 則報導
+## 2026-05-15　1 則報導
 
 自由時報以「台中社宅工地悶燒14小時撲滅  附近烤鴨店再傳火警」為題報導 [@src-20260515-ltn-72595a27]。
 
-自由時報以「台中北屯社宅工地火警空污 重罰500萬」為題報導 [@src-20260515-ltn-d5fe8315]。
-
-## 2026-05-16　1 則回應或澄清
+## 2026-05-16　2 則回應或澄清
 
 自由時報以「台中社宅工地火警悶燒14小時挨罰500萬 劉世芳回應了」為題報導 [@src-20260516-ltn-95fd8121]。
+
+中時新聞網以「台中社宅工地大火啟動國賠？ 劉世芳回應了」為題報導 [@src-20260516-chinatimes-7160e365]。
