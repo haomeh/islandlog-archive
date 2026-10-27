@@ -4,7 +4,7 @@ id: ev-20261021-typhoon-qiangpi-response
 kind: historical_event
 status: published
 title: 薔琵颱風
-summary: 2026-10-22至2026-10-25，華視新聞、自由時報、Newtalk等共 38 則報導提及薔琵颱風 [@src-20261022-cts-769bb53a]。
+summary: 2026-10-22至2026-10-25，華視新聞、自由時報、Newtalk等共 37 則報導提及薔琵颱風 [@src-20261022-cts-769bb53a]。
 start_date: '2026-10-22'
 start_date_precision: day
 gov_levels:
@@ -48,7 +48,7 @@ timeline:
 - id: tl-02
   date: '2026-10-23'
   date_precision: day
-  title: 16 則報導
+  title: 15 則報導
   source_ids:
   - src-20261023-ltn-b54de074
   - src-20261023-cts-49f5598a
@@ -169,13 +169,6 @@ news_groups:
   representative_source_id: src-20261023-ltn-114fb205
   source_ids:
   - src-20261023-ltn-114fb205
-- id: ng-15
-  timeline_id: tl-02
-  kind: report
-  title: 薔琵好兇！彰化災情已134件  3騎士受傷就醫
-  representative_source_id: src-20261023-ltn-ef4f6708
-  source_ids:
-  - src-20261023-ltn-ef4f6708
 - id: ng-16
   timeline_id: tl-02
   kind: report
@@ -330,7 +323,7 @@ ETtoday新聞雲以「薔琵狂掃「天空都是沙子」！彰化、台中、�
 
 ETtoday新聞雲以「快訊／薔琵進逼掀強風！彰化花壇驚傳婦人落水 警消尋獲已死亡」為題報導 [@src-20261022-ettoday-830b9528]。
 
-## 2026-10-23　16 則報導
+## 2026-10-23　15 則報導
 
 自由時報以「薔琵狂風吹！彰化大型看板倒塌險砸車、棉被捲上天高掛電線桿」為題報導 [@src-20261023-ltn-b54de074]。
 
@@ -345,8 +338,6 @@ ETtoday新聞雲以「快訊／薔琵進逼掀強風！彰化花壇驚傳婦人�
 自由時報以「薔琵10級強風狂掃彰化縣！電線走火畫面曝 傍晚仍逾6千戶停電」為題報導 [@src-20261023-ltn-3c522de8]。
 
 自由時報以「驚險！薔琵狂風肆虐彰化  20公尺巨樹倒塌「重壓救護車」」為題報導 [@src-20261023-ltn-114fb205]。
-
-自由時報以「薔琵好兇！彰化災情已134件  3騎士受傷就醫」為題報導 [@src-20261023-ltn-ef4f6708]。
 
 中時新聞網以「薔琵颱風重創彰化！1.2萬戶一度停電 339件災情釀4傷」為題報導 [@src-20261023-chinatimes-ce5b6bbe]。
 
