@@ -7,6 +7,8 @@ Pattern lists (ELECTION, CRIME, NATIONAL_SYSTEMS and others) stay in the module 
 Display limits (MAX_STATIONS, MAX_GROUPS and others) stay in topics.py: they do not decide membership.
 """
 
+import re
+
 # --- Key choice (topics.pick_key, topics.topic_keys, topics.display_name) ---
 GENERIC_DF_SHARE = 0.02  # A phrase in more than this share of all items is generic and never a key. Start (R63).
 GENERIC_DF_MIN = 50  # Floor of the generic limit in items, so a small corpus has no tiny limit. Start (R63).
@@ -140,3 +142,9 @@ MINISTRY_MIN_COUNT = 2  # A fee or budget name is a mixed cluster when this many
 # --- Gate round T37 (R225, R229): natural phenomena and ceremonies are no topic. ---
 PHENOMENON_SHARE = 0.5  # A cluster is a natural phenomenon or a ceremony when this share of its titles has a word of that class (R229.2). Start (R229); the A/B run lists what it removes.
 ACT_MIN_TITLES = 1  # ... and it fails when fewer than this many titles name a public-power act (decision, budget, law, ruling, penalty, subsidy, emergency order). One act title makes the cluster an issue (R229.2c).
+
+# --- Gate round T37b (R247.3): widen the recall of rejected_no_public_act. ---
+PUBLIC_WORKS_ACT = re.compile(r"開工|動工|發包|決標|工期|竣工|通車時程|通車日期|通車進度|通車目標|雙線通車|完工通車|完工期程|重建|改建|興建|擴建|核可|獲准")  # R234.3a, R251.2: a public body starts or tenders a work, sets a completion or 通車 schedule, plans a rebuild, or approves (核可, 獲准). It counts only with a public body in the title: a board, a bank or a foreign agency approval is no public act.
+AD_HOC_ACT = re.compile(r"延期|順延|延後|延至|改期|改至|派遣|出動|調派|馳援")  # R234.3c: a public body postpones an exam or an event, or sends help after a disaster. It counts only with a public body in the title.
+PUBLIC_BODY = re.compile(r"(?:鐵道|公路|港務|水利|營建|國土|消防|警政|警察|環保|衛生|教育|工務|交通|地政|稅務|民政|文化|農業|觀光|移民|海巡|林業|漁業|工商|建管|都發|新聞|人事|主計|財政|經發|勞工|社會|體育|動保|產業|客家)(?:局|署|處)(?![部面勢限理分置境方罰事])")  # R234.4, R251.1: an agency is a function noun with an agency suffix (局, 署, 處). It counts as a government actor for the act gate only (public_act_title), not for the private gate or the name gate. The next-character test drops 局部, 局面 and 處理. A word like 結局 or 部署 has no function noun, so it does not match.
+NATIONAL_BODY = re.compile(r"國震中心|國家地震工程研究中心|大學招聯會|大考中心")  # R234.4, R251.1: a national body for research or entrance exams. It has no agency suffix, so it is a short list. Act gate only, like PUBLIC_BODY.
