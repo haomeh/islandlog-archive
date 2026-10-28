@@ -636,7 +636,27 @@ def _source_doc(it, enrich, actors_by_host):
     return d
 
 
+REMOVED_SOURCES = Path(__file__).with_name("removed_sources.json")
+
+
+def load_removed_sources(path=None):
+    """{source id: entry} of the sources that a ruling removed (R256). Each entry has id, ruling and reason.
+    Every path that reads or writes sources/ uses this loader (R261.2c)."""
+    entries = {}
+    for e in json.loads(Path(path or REMOVED_SOURCES).read_text(encoding="utf-8"))["sources"]:
+        if not all(str(e.get(k, "")).strip() for k in ("id", "ruling", "reason")):
+            raise ValueError(f"removed source entry needs id, ruling and reason: {e}")
+        if e["id"] in entries:
+            raise ValueError(f"removed source id is listed twice: {e['id']}")
+        entries[e["id"]] = e
+    return entries
+
+
 def write_event(ev, seed, root, enrich, actors_by_host=HOSTS, overwrite_sources=True):
+    removed = load_removed_sources()  # R261.2b: a removed source gets no file and no link
+    cited = sorted(i for i in (src_id(it, actors_by_host) for it in ev["used"].values()) if i in removed)
+    if cited:
+        raise ValueError(f"the event cites a source that a ruling removed (R256): {cited}")
     sid = lambda u: src_id(ev["used"][u], actors_by_host)
     timeline = []
     for t in ev["timeline"]:
@@ -689,7 +709,8 @@ def main(argv):
     if len(argv) not in (4, 5):
         print("usage: python3 -m tools.newsfetch.topics corpus.jsonl topic_seeds.json archive_root [enrich.jsonl]", file=sys.stderr)
         return 2
-    corpus = read_jsonl(argv[1])
+    removed = load_removed_sources()
+    corpus = [it for it in read_jsonl(argv[1]) if src_id(it, HOSTS) not in removed]  # R256: a removed source never comes back
     seeds = json.load(open(argv[2], encoding="utf-8"))
     enrich = {e["url"]: e for e in read_jsonl(argv[4]) if e.get("status") == "ok"} if len(argv) == 5 else {}
     df = document_frequency(corpus)
