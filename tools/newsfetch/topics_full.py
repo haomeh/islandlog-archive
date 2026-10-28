@@ -268,8 +268,13 @@ def names_central(title, new=False):
 
 
 def names_government(title, new=False):
-    text = home_text(title) if new else title
-    return bool(LOCAL_GOV.search(text) or names_central(title, new) or PUBLIC_BODY.search(text) or NATIONAL_BODY.search(text))  # R247.3: a body by kind (PUBLIC_BODY) and a national body by name
+    return bool(LOCAL_GOV.search(home_text(title) if new else title) or names_central(title, new))
+
+
+def names_public_body(title):
+    """R247.3, R251.1: a body by kind (PUBLIC_BODY) or a national body by name. Only the act gate reads it (public_act_title)."""
+    text = home_text(title)
+    return bool(PUBLIC_BODY.search(text) or NATIONAL_BODY.search(text))
 
 
 def names_foreign(titles, new=False):
@@ -818,13 +823,13 @@ def private_health_of_official(title):
 
 NATURAL_PHENOMENON = re.compile(r"地震|餘震|震度|海嘯|颱風|豪雨|大雨|暴雨|寒流|低溫|高溫|熱浪|降雪|下雪|霧霾|日蝕|月蝕|日食|月食|流星|彗星|極光|天象|超級月亮|彩虹|候鳥|黑面琵鷺|賞鳥|賞花|花季|櫻花|螢火蟲|蝴蝶|鯨豚|白海豚|鯨魚|鯊魚|野生動物")  # R229.2a: the words of an earthquake, weather, astronomy, animal or plant record
 CEREMONY = re.compile(r"剪綵|剪彩|啟用|通車|揭牌|動土|開幕|閉幕|典禮|儀式|遊行|遶境|繞境|嘉年華|慶典|燈會|煙火|跨年|音樂節|藝術節|文化節|花火|園遊會")  # R229.2b: the words of a ribbon-cutting, an opening, a parade or a festival
-PUBLIC_POWER_ACT = re.compile(r"停班|停課|放假|颱風假|應變中心|疏散|撤離|避難|救助|救災|慰助|履勘|驗收|勘查|查驗|環評|下令|搶修|搶通|搶險|賑災|罰單|處罰|開鍘|懲處|預算|經費|補助|補貼|津貼|三讀|修法|立法|條例|草案|法案|法規|新制|新規|規定|辦法|政策|函釋|裁罰|罰鍰|罰款|開罰|處分|稽查|查核|核定|核准|核可|獲准|判決|裁定|釋憲|公告|決議|決定|禁令|管制|禁止|徵收|招標|採購|補償|賠償")  # R229.2c: a decision, a budget, a law or rule change, a ruling, a penalty, a subsidy or an emergency order; a remark (表示, 說明, 呼籲) is not an act
+PUBLIC_POWER_ACT = re.compile(r"停班|停課|放假|颱風假|應變中心|疏散|撤離|避難|救助|救災|慰助|履勘|驗收|勘查|查驗|環評|下令|搶修|搶通|搶險|賑災|罰單|處罰|開鍘|懲處|預算|經費|補助|補貼|津貼|三讀|修法|立法|條例|草案|法案|法規|新制|新規|規定|辦法|政策|函釋|裁罰|罰鍰|罰款|開罰|處分|稽查|查核|核定|核准|判決|裁定|釋憲|公告|決議|決定|禁令|管制|禁止|徵收|招標|採購|補償|賠償")  # R229.2c: a decision, a budget, a law or rule change, a ruling, a penalty, a subsidy or an emergency order; a remark (表示, 說明, 呼籲) is not an act
 
 def public_act_title(text):
     """R229.2c, R234.3: a title names a public-power act. The works and ad hoc words need a public body, so a private firm does not count (R234.5)."""
     if PUBLIC_POWER_ACT.search(text):
         return True
-    return bool((PUBLIC_WORKS_ACT.search(text) or AD_HOC_ACT.search(text)) and names_government(text, True))
+    return bool((PUBLIC_WORKS_ACT.search(text) or AD_HOC_ACT.search(text)) and (names_government(text, True) or names_public_body(text)))
 
 
 def no_public_act(titles):
