@@ -1360,9 +1360,10 @@ def regate_seed(doc, text, seed, urls_by_id, by_url):
 def file_items(root, ids):
     """R132: the items that the source files of a topic record (url, title, date, publisher, class)."""
     import yaml
+    removed = load_removed_sources(REMOVED_SOURCES)  # R261.2a: a removed source on disk is no member and no extra
     out = []
     for p in sorted((Path(root) / "sources").glob("*/*.yaml")):
-        if p.stem in ids:
+        if p.stem in ids and p.stem not in removed:
             d = yaml.safe_load(p.read_text(encoding="utf-8"))
             out.append({"url": d["url"], "title": d["title"], "published_on": str(d["published_on"]), "publisher": d["publisher"],
                         "source_class": d["source_class"], "quote": d.get("quote")})
@@ -1453,23 +1454,12 @@ def source_urls_by_id(root):
     return urls
 
 
-REMOVED_SOURCES = Path(__file__).with_name("removed_sources.json")
-
-
-def load_removed_sources(path=None):
-    """{source id: entry} of the sources that a ruling removed. Each entry has id, ruling and reason."""
-    entries = {}
-    for e in json.loads(Path(path or REMOVED_SOURCES).read_text(encoding="utf-8"))["sources"]:
-        if not all(str(e.get(k, "")).strip() for k in ("id", "ruling", "reason")):
-            raise ValueError(f"removed source entry needs id, ruling and reason: {e}")
-        if e["id"] in entries:
-            raise ValueError(f"removed source id is listed twice: {e['id']}")
-        entries[e["id"]] = e
-    return entries
+REMOVED_SOURCES = tp.REMOVED_SOURCES
+load_removed_sources = tp.load_removed_sources  # R261.2c: one loader, in topics.py
 
 
 def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve_withdraw=None):
-    removed = load_removed_sources()  # R256: a source that a ruling removed never comes back; it is dropped before clustering
+    removed = load_removed_sources(REMOVED_SOURCES)  # R256: a source that a ruling removed never comes back; it is dropped before clustering
     kept = [it for it in corpus if tp.src_id(it, tp.HOSTS) not in removed]
     dropped = len(corpus) - len(kept)
     corpus = kept
