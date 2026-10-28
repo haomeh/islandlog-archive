@@ -1453,13 +1453,33 @@ def source_urls_by_id(root):
     return urls
 
 
+REMOVED_SOURCES = Path(__file__).with_name("removed_sources.json")
+
+
+def load_removed_sources(path=None):
+    """{source id: entry} of the sources that a ruling removed. Each entry has id, ruling and reason."""
+    entries = {}
+    for e in json.loads(Path(path or REMOVED_SOURCES).read_text(encoding="utf-8"))["sources"]:
+        if not all(str(e.get(k, "")).strip() for k in ("id", "ruling", "reason")):
+            raise ValueError(f"removed source entry needs id, ruling and reason: {e}")
+        if e["id"] in entries:
+            raise ValueError(f"removed source id is listed twice: {e['id']}")
+        entries[e["id"]] = e
+    return entries
+
+
 def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve_withdraw=None):
+    removed = load_removed_sources()  # R256: a source that a ruling removed never comes back; it is dropped before clustering
+    kept = [it for it in corpus if tp.src_id(it, tp.HOSTS) not in removed]
+    dropped = len(corpus) - len(kept)
+    corpus = kept
     set_officials(office_holders(corpus))  # R141.5
     set_candidates(candidate_names(corpus))  # R154
     df = tp.document_frequency(corpus)
     mf = MonthFrequency(corpus)
     by_url = {it["url"]: it for it in corpus}
     stats = Counter()
+    stats["dropped_removed_sources"] = dropped
     published_ids = published_topics(root)
     failed, covered = {}, set()  # R82: published topic id -> first failed gate; ids that another candidate keeps
     deferred = set()  # R202, R205: old topics that a rebuild left to the re-gate because the rebuild got a name reject for a new topic

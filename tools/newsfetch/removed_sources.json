@@ -1,0 +1,9 @@
+{
+  "sources": [
+    {
+      "id": "src-20261023-ltn-ef4f6708",
+      "ruling": "R217, R225, R226, R256",
+      "reason": "Injury text with no public issue and no policy cause. It fails the R225.2 test."
+    }
+  ]
+}
