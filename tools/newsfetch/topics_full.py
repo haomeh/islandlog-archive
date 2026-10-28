@@ -39,7 +39,8 @@ from tools.newsfetch.topic_config import (
     NUMBER_CUT_SHARE, OFFICIAL_HEALTH_SHARE, QUOTE_COLON_SHARE, SLOGAN_MAX_LEN, THEME_MAX_MONTH_SHARE, THEME_MIN_MONTHS, THEME_MIN_USES,
     DUPLICATE_NEAR_DAYS, DUPLICATE_NEAR_TERM_LEN,
     ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE,
-    MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES)
+    MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES,
+    ACT_MIN_TITLES, PHENOMENON_SHARE)
 
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票|對手陣營|競辦|競總")  # R106: the last 3 name a campaign without an election word
@@ -814,7 +815,33 @@ def private_health_of_official(title):
     return bool(HEALTH.search(title)) and bool(OFFICIAL_PERSON.search(title) or TAIWAN_FIGURE.search(title) or any(n in title for n in _CANDIDATES))
 
 
-NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_keyword_bundle", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter", "rejected_mixed_cluster", "rejected_government_scope", "rejected_mixed_ministry")  # R154, R196, R215.3: the labels of the rules that only a new topic must pass
+NATURAL_PHENOMENON = re.compile(r"地震|餘震|震度|海嘯|颱風|豪雨|大雨|暴雨|寒流|低溫|高溫|熱浪|降雪|下雪|霧霾|日蝕|月蝕|日食|月食|流星|彗星|極光|天象|超級月亮|彩虹|候鳥|黑面琵鷺|賞鳥|賞花|花季|櫻花|螢火蟲|蝴蝶|鯨豚|白海豚|鯨魚|鯊魚|野生動物")  # R229.2a: the words of an earthquake, weather, astronomy, animal or plant record
+CEREMONY = re.compile(r"剪綵|剪彩|啟用|通車|揭牌|動土|開幕|閉幕|典禮|儀式|遊行|遶境|繞境|嘉年華|慶典|燈會|煙火|跨年|音樂節|藝術節|文化節|花火|園遊會")  # R229.2b: the words of a ribbon-cutting, an opening, a parade or a festival
+PUBLIC_POWER_ACT = re.compile(r"停班|停課|放假|颱風假|應變中心|疏散|撤離|避難|救助|救災|慰助|履勘|驗收|勘查|查驗|環評|下令|搶修|搶通|罰單|處罰|預算|經費|補助|補貼|津貼|三讀|修法|立法|條例|草案|法案|法規|新制|新規|規定|辦法|政策|函釋|裁罰|罰鍰|罰款|開罰|處分|稽查|查核|核定|核准|判決|裁定|釋憲|公告|決議|決定|禁令|管制|禁止|徵收|招標|採購|補償|賠償")  # R229.2c: a decision, a budget, a law or rule change, a ruling, a penalty, a subsidy or an emergency order; a remark (表示, 說明, 呼籲) is not an act
+
+PUBLIC_WORKS_ACT = re.compile(r"開工|動工|發包|決標|工期|通車時程|通車日期|完工期程|重建|改建|興建|擴建")  # R234.3a: a public body starts, tenders, sets a completion or 通車 schedule, or plans a rebuild. It counts only with a public body in the title.
+AD_HOC_ACT = re.compile(r"延期|順延|延後|改期|派遣|出動|調派|馳援")  # R234.3c: a public body postpones an exam or an event, or sends help after a disaster. It counts only with a public body in the title.
+
+
+def public_act_title(text):
+    """R229.2c, R234.3: a title names a public-power act. The works and ad hoc words need a public body, so a private firm does not count (R234.5)."""
+    if PUBLIC_POWER_ACT.search(text):
+        return True
+    return bool((PUBLIC_WORKS_ACT.search(text) or AD_HOC_ACT.search(text)) and names_government(text, True))
+
+
+
+def no_public_act(titles):
+    """R225.1, R229.2: a cluster of natural phenomena (earthquake, weather, astronomy, animal or plant records) or of ceremonies
+    (ribbon-cutting, opening, parade, festival) with no title that names a public-power act. The cluster is a record or an event, not an issue."""
+    n = max(1, len(titles))
+    texts = [home_text(t) for t in titles]
+    if sum(1 for t in texts if NATURAL_PHENOMENON.search(t) or CEREMONY.search(t)) < PHENOMENON_SHARE * n:
+        return False
+    return sum(1 for t in texts if public_act_title(t)) < ACT_MIN_TITLES
+
+
+NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_keyword_bundle", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter", "rejected_mixed_cluster", "rejected_government_scope", "rejected_mixed_ministry", "rejected_no_public_act")  # R154, R196, R215.3, R229: the labels of the rules that only a new topic must pass
 
 
 def new_topic_reason(items):
@@ -831,6 +858,8 @@ def new_topic_reason(items):
         return "official_health"
     if sum(1 for t in titles if names_government(t, True) or PUBLIC_ACT.search(home_text(t))) < GOV_ACT_SHARE * n:
         return "private_matter"
+    if no_public_act(titles):  # R229.2
+        return "no_public_act"
     return None
 
 
