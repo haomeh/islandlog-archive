@@ -652,7 +652,43 @@ def load_removed_sources(path=None):
     return entries
 
 
+ENRICHED_TOPICS = Path(__file__).with_name("enriched_topics.json")
+ENRICHED_SKIPPED = set()  # R324.2: ids that a guard skipped in this run
+
+
+def load_enriched_topics(path=None):
+    """{event id: entry} of the events that an editor enriched by hand (R324.2). Each entry has id, ruling and reason.
+    A missing file is an empty list. A file that cannot be read stops the run (fail closed)."""
+    p = Path(path or ENRICHED_TOPICS)
+    if not p.exists():
+        return {}
+    try:
+        listed = json.loads(p.read_text(encoding="utf-8"))["events"]
+        if not isinstance(listed, list):
+            raise TypeError("events must be a list")
+        entries = {}
+        for e in listed:
+            if not isinstance(e, dict) or not all(str(e.get(k, "")).strip() for k in ("id", "ruling", "reason")):
+                raise ValueError(f"enriched event entry needs id, ruling and reason: {e}")
+            if e["id"] in entries:
+                raise ValueError(f"enriched event id is listed twice: {e['id']}")
+            entries[e["id"]] = e
+    except (OSError, KeyError, TypeError, ValueError) as err:  # JSONDecodeError is a ValueError
+        raise ValueError(f"enriched events list {p} is not valid: {err}") from err
+    return entries
+
+
+def is_enriched(event_id, entries=None):
+    """True when the event is on the list. A hit is recorded in ENRICHED_SKIPPED for the run count."""
+    hit = event_id in (load_enriched_topics() if entries is None else entries)
+    if hit:
+        ENRICHED_SKIPPED.add(event_id)
+    return hit
+
+
 def write_event(ev, seed, root, enrich, actors_by_host=HOSTS, overwrite_sources=True):
+    if is_enriched(ev["id"]):
+        return  # R324.2: a listed event is never rewritten
     removed = load_removed_sources()  # R261.2b: a removed source gets no file and no link
     cited = sorted(i for i in (src_id(it, actors_by_host) for it in ev["used"].values()) if i in removed)
     if cited:
