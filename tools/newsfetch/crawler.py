@@ -90,9 +90,9 @@ class HostRobots:
 
 
 class RateLimiter:
-    """Limits requests to maximum 1 request per second per host."""
+    """Limits requests to one request per netguard.MIN_HOST_GAP seconds per host (R179)."""
 
-    def __init__(self, min_interval: float = 1.0):
+    def __init__(self, min_interval: float = netguard.MIN_HOST_GAP):
         self.min_interval = min_interval
         self._last_request_time: Dict[str, float] = {}
 
@@ -159,7 +159,7 @@ class PoliteCrawler:
         self,
         user_agent: str = USER_AGENT,
         cache_dir: Optional[Path] = None,
-        rate_limit_interval: float = 1.0,
+        rate_limit_interval: float = netguard.MIN_HOST_GAP,
         use_cache: bool = True,
     ):
         self.user_agent = user_agent

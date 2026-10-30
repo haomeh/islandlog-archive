@@ -11,6 +11,7 @@ import urllib.parse
 import zlib
 
 MAX_BODY_BYTES = 10 * 1024 * 1024
+MIN_HOST_GAP = 1.1  # R179, R324.4: seconds between two requests to one host. Every HTTP route uses this value.
 
 
 class BodyTooLarge(OSError):
