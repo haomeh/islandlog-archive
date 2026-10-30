@@ -22,6 +22,7 @@ Steps:
 
 import hashlib
 import json
+import logging
 import re
 import sys
 from collections import Counter, defaultdict
@@ -41,6 +42,8 @@ from tools.newsfetch.topic_config import (
     ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE,
     MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES,
     ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY)
+
+logger = logging.getLogger(__name__)
 
 EVENT_ID = re.compile(r"^ev-(\d{4})\d{4}-[a-z0-9]+(?:-[a-z0-9]+)*$")  # T64 F-11: no dot and no slash, so an ID never leaves events/
 
@@ -641,6 +644,8 @@ def _read_event(path):
 
 def _write_event(path, doc, body):
     import yaml
+    if tp.is_enriched(doc.get("id")):
+        return  # R324.2: the last stop for every write of an event file
     path.write_text("---\n" + yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000) + "---\n" + body,
                     encoding="utf-8")
 
@@ -1108,8 +1113,10 @@ def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
     git ref first. A topic that is withdrawn already stays as it is and writes no new record (R105). An editor-approved topic stays as it is too (R141.1).
     Returns the file path."""
     root = Path(root)
-    year = event_id.split("-")[1][:4]
+    year = event_year(event_id)  # fail closed on an id that is not an event id
     path = root / "events" / year / f"{event_id}.md"
+    if tp.is_enriched(event_id):
+        return path  # R324.2: no restore, no status change, no record
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_event_text(root, event_id, ref), encoding="utf-8")
@@ -1331,6 +1338,8 @@ def build_checked(seed, corpus, df, members):
 
 def write_topic(root, ev, seed, today):
     """Writes a topic that passed. Restores its correction ids (R105). Returns the republication record id or None."""
+    if tp.is_enriched(ev["id"]):
+        return None  # R324.2: a candidate that would rebuild a listed event is skipped
     used = list(ev["used"].values())
     ev["review"]["sensitive"] = "misconduct" in seed["controversy_types"] or has_sensitive_term([it["title"] for it in used])
     ensure_actor_files(root, [a for a, _ in ev["actors"]])
@@ -1342,13 +1351,17 @@ def write_topic(root, ev, seed, today):
 JUR_NAME = {jid: name[:-2] for jid, _, name, _ in JURS}
 
 
-def old_system_topics(root):
+def old_system_topics(root, include_enriched=False):
     """R126: (path, front matter, text) of each published system topic with review.status draft-review. A topic with
-    another review status (editor-approved) is not in the list."""
+    another review status (editor-approved) is not in the list. A listed event (R324.2) is not in the list either,
+    unless include_enriched is true. The duplicate test and the withdraw limit use include_enriched."""
     out = []
+    enriched = {} if include_enriched else tp.load_enriched_topics()
     for p in sorted((Path(root) / "events").glob("*/ev-*.md")):
         text = p.read_text(encoding="utf-8")
         doc, _ = _read_event(p)
+        if tp.is_enriched(doc.get("id"), enriched):
+            continue
         review = doc.get("review") or {}
         if doc.get("status") == "published" and review.get("status") == "draft-review" and str(review.get("reason", "")).startswith(SYSTEM_REASON):
             out.append((p, doc, text))
@@ -1399,6 +1412,8 @@ def second_anchor_members(members, core, keys, df, total):
 def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
     """R126: checks one old topic with the current gates. The members are built again (R112.1) and the ID stays.
     Returns the record of the check: id, gate (None when it passes), the source ids before and after, the titles."""
+    if tp.is_enriched(doc["id"]):  # R324.2
+        return {"id": doc["id"], "gate": None, "title_before": doc["title"], "title_after": doc["title"], "removed": [], "before": 0, "after": 0, "enriched": True}
     seed, before = regate_seed(doc, text, seed, urls_by_id, by_url)
     record = {"id": doc["id"], "gate": None, "title_before": doc["title"], "title_after": doc["title"], "removed": [], "before": len(before), "after": len(before)}
     if not seed["seed_urls"]:
@@ -1473,6 +1488,8 @@ load_removed_sources = tp.load_removed_sources  # R261.2c: one loader, in topics
 
 
 def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve_withdraw=None):
+    enriched = tp.load_enriched_topics()  # R324.2: a list that cannot be read stops the run before any write
+    tp.ENRICHED_SKIPPED.clear()
     removed = load_removed_sources(REMOVED_SOURCES)  # R256: a source that a ruling removed never comes back; it is dropped before clustering
     kept = [it for it in corpus if tp.src_id(it, tp.HOSTS) not in removed]
     dropped = len(corpus) - len(kept)
@@ -1495,6 +1512,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
 
     def fail(gate, urls):
         for pid in matching_published(published_ids, src_ids_of(urls)):
+            if tp.is_enriched(pid, enriched):  # R324.2: a listed event never fails
+                continue
             if pid not in approved:
                 failed.setdefault(pid, gate)
 
@@ -1550,7 +1569,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             days = sorted(_day(i["published_on"]) for i in seed_items)
             existing_keys += [(k, days[0] - timedelta(days=tp.WINDOW_BEFORE), days[-1] + timedelta(days=tp.WINDOW_AFTER)) for k in ks]
     urls_by_id = source_urls_by_id(root)
-    for _, doc, text in old_system_topics(root):  # R162: the old system topics count for the duplicate test too
+    for _, doc, text in old_system_topics(root, include_enriched=True):  # R162: the old system topics count for the duplicate test too
         cited = [by_url[urls_by_id[c]] for c in dict.fromkeys(re.findall(r"src-[0-9a-z-]+", text)) if c in urls_by_id and urls_by_id[c] in by_url]
         if cited:
             old_issues.append((issue_profile(PLACE_PREFIX.sub("", doc["title"], count=1), cited), {it["url"] for it in cited}))
@@ -1616,6 +1635,10 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                     "sensitive": False, "_keys": [key],
                     "_name": name, "_generic": False}
             urls = {m["url"] for m in members}
+            if tp.is_enriched(event_id, enriched):  # R324.2: the candidate would rebuild a listed event
+                stats["skipped_enriched_candidate"] += 1
+                keep(urls)
+                continue
             if any(len(urls & other) >= MERGE_OVERLAP * min(len(urls), len(other)) for other in published_sets):
                 stats["skipped_duplicate_topic"] += 1
                 keep(urls)
@@ -1674,7 +1697,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
     allowed_ids = set(approve_withdraw or ())  # R218, R221: a due topic is withdrawn only when its id is in the approval list
     approval_ignored = sorted(allowed_ids - set(withdrawn))
     unapproved = {p: g for p, g in withdrawn.items() if p not in allowed_ids}
-    withdrawn, limited = limit_withdrawals({p: g for p, g in withdrawn.items() if p in allowed_ids}, len(old_system_topics(root)))  # R133
+    withdrawn, limited = limit_withdrawals({p: g for p, g in withdrawn.items() if p in allowed_ids}, len(old_system_topics(root, include_enriched=True)))  # R133
     blocked = {**unapproved, **limited}
     blocked_reason = {**{p: "needs_user_approval" for p in unapproved}, **{p: "withdraw_limit" for p in limited}}
     for pid, gate in blocked.items():  # the fail count stays; the PM decides
@@ -1687,6 +1710,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
     stats["withdraw_blocked"] = len(blocked)
     stats["withdraw_pending"] = len(pending)
     stats["withdrawn_kept"] = len(kept_withdrawn)
+    stats["skipped_enriched"] = len(tp.ENRICHED_SKIPPED)  # R324.2: listed events that a guard left as they are
+    logger.info("Enriched events skipped: %d of %d listed", stats["skipped_enriched"], len(enriched))
     keys = {k[0]: k[1] for k in existing_key_by_id}
     keys.update({p["id"]: p["key"] for p in published})
     keys.update(regate_keys)
