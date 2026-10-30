@@ -25,8 +25,10 @@ def listed(path):
 
 
 class LoaderTest(unittest.TestCase):
-    def test_the_list_file_in_this_branch_loads_and_is_empty(self):
-        self.assertEqual(tp.load_enriched_topics(LIST), {})
+    def test_the_list_file_in_this_branch_loads_the_five_r325_ids(self):
+        self.assertEqual(set(tp.load_enriched_topics(LIST)), {
+            "ev-20260912-topic-54fa35c7", "ev-20260729-topic-fec46013", "ev-20260625-topic-6ac76a2a",
+            "ev-20260708-topic-d8105c51", "ev-20260829-topic-97f2fc8b"})
 
     def test_a_missing_file_is_an_empty_list(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -162,6 +164,15 @@ class GuardTest(base.RunHelper, unittest.TestCase):
                 path.unlink()
                 tf.withdraw_topic(root, self.EVENT_ID, "rejected_news_rule", today="2026-10-26")
                 self.assertFalse(path.exists())  # no restore from git either
+
+    def test_withdraw_topic_rejects_an_id_that_is_not_an_event_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            root.mkdir()
+            for bad in ["EV-20260912-topic-54FA35C7", "ev-2026-x", "", None]:
+                with self.assertRaises(ValueError, msg=repr(bad)):
+                    tf.withdraw_topic(root, bad, "rejected_news_rule", today="2026-10-26")
+            self.assertEqual(list(root.rglob("*.md")), [])
 
     def test_write_topic_and_write_event_skip_a_listed_id(self):
         with tempfile.TemporaryDirectory() as tmp:

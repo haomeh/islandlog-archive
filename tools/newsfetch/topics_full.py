@@ -1113,7 +1113,7 @@ def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
     git ref first. A topic that is withdrawn already stays as it is and writes no new record (R105). An editor-approved topic stays as it is too (R141.1).
     Returns the file path."""
     root = Path(root)
-    year = event_id.split("-")[1][:4]
+    year = event_year(event_id)  # fail closed on an id that is not an event id
     path = root / "events" / year / f"{event_id}.md"
     if tp.is_enriched(event_id):
         return path  # R324.2: no restore, no status change, no record
