@@ -13,3 +13,8 @@ Environment=PYTHONUNBUFFERED=1
 ExecStart=/bin/sh -c 'python3 -m tools.newsfetch.backfill --no-resume --since "$(date -d "3 days ago" +%%F)" --until "$(date +%%F)" --out-dir %h/islandlog-news/out --log-dir %h/islandlog-news/logs'
 Nice=10
 TimeoutStartSec=4h
+# Sandbox (T64 F-08). The run writes only to the out folder, the log folder and the cache folder.
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+ReadWritePaths=%h/islandlog-news -%h/islandlog/archive/tools/newsfetch/.cache

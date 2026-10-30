@@ -27,7 +27,7 @@ jobs:
     container:
       image: registry.gitlab.com/howmay/islandlog/server:v0.0.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
       - run: islandlog validate .
@@ -47,7 +47,7 @@ jobs:
       ISLANDLOG_PR_DESCRIPTION: ${{ github.event.pull_request.body }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
       - name: Validate in PR mode

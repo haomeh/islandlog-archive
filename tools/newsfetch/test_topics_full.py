@@ -927,3 +927,24 @@ class RegateTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EventIdPathTest(unittest.TestCase):
+    """T64 F-11: an event_id with .. or / never builds a path."""
+
+    def test_event_year_accepts_a_real_id_only(self):
+        self.assertEqual(tf.event_year("ev-20261023-topic-365f0f47"), "2026")
+        for bad in ("ev-../../x-y", "ev-20261023/../../x", "ev-2026..-x", "../ev-20261023-a", "ev-20261023-a/b", "", "ev-"):
+            with self.assertRaises(ValueError, msg=bad):
+                tf.event_year(bad)
+
+    def test_event_text_refuses_a_bad_id_even_when_the_file_exists(self):
+        import tempfile
+        from pathlib import Path
+        root = Path(tempfile.mkdtemp())
+        (root / "events" / "2026").mkdir(parents=True)
+        (root / "events" / "2026" / "ev-20261023-topic-365f0f47.md").write_text("ok", encoding="utf-8")
+        (root / "secret-x.md").write_text("secret", encoding="utf-8")
+        self.assertEqual(tf._event_text(root, "ev-20261023-topic-365f0f47", "HEAD"), "ok")
+        self.assertIsNone(tf._event_text(root, "ev-../../secret-x", "HEAD"))
+        self.assertIsNone(tf._event_text(root, "ev-20261023-../../../secret-x", "HEAD"))

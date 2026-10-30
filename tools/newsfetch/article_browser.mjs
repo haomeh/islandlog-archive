@@ -2,6 +2,7 @@
 // The page is parsed inside the browser. Only byline, section, published_at and a short
 // quote leave the page. The body is never printed, written or cached (the context is ephemeral).
 import { createRequire } from 'node:module'
+import { isHttpUrl, isPrivateHostLiteral, registrableDomain, sameSite } from './url_guard.mjs'
 
 const require = createRequire(import.meta.url)
 const { chromium } = require('playwright')
@@ -10,6 +11,12 @@ if (!url || !userAgent) {
   console.error('usage: node article_browser.mjs <url> <user-agent>')
   process.exit(2)
 }
+// T64 F-04: the start URL and every request must be http or https and must not name a private address.
+if (!isHttpUrl(url) || isPrivateHostLiteral(new URL(url).hostname)) {
+  console.error('refused url')
+  process.exit(3)
+}
+const site = registrableDomain(new URL(url).hostname)
 
 const browser = await chromium.launch()
 try {
@@ -17,7 +24,12 @@ try {
   const page = await context.newPage()
   // Do not load images, media or fonts: they are never stored and they add requests.
   await page.route('**/*', (route) => {
-    const type = route.request().resourceType()
+    const req = route.request()
+    const type = req.resourceType()
+    const u = new URL(req.url())
+    if (!isHttpUrl(req.url()) || isPrivateHostLiteral(u.hostname)) return route.abort()
+    // A page (document) may load only the item site. A redirect to another site is aborted.
+    if (type === 'document' && !sameSite(u.hostname, site)) return route.abort()
     return ['image', 'media', 'font'].includes(type) ? route.abort() : route.continue()
   })
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })

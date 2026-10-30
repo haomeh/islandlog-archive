@@ -3,6 +3,10 @@
 
 *                                  @haomeh/editors
 
+# CI and crawler code: an editor must not be the only gate for a change that weakens CI or the privacy filters.
+/.github/                          @haomeh/maintainers
+/tools/                            @haomeh/maintainers
+
 # Schemas and taxonomy: maintainers merge, editors review.
 /schemas/                          @haomeh/maintainers
 /taxonomy/                         @haomeh/maintainers

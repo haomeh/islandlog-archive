@@ -162,7 +162,7 @@ class TestBrowserList(unittest.TestCase):
 
     def test_helper_script_aborts_other_sites_and_denied_paths(self):
         script = (BASE / "list_browser.mjs").read_text(encoding="utf-8")
-        self.assertIn("hostname.endsWith(site)", script)
+        self.assertIn("sameSite(u.hostname, site)", script)
         self.assertIn("denyRes.some", script)
         self.assertIn("Math.max(1000", script)
 

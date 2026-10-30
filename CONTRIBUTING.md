@@ -7,6 +7,7 @@ Read this file before your first PR. The full rules are in the PRD (sections 5 a
 
 1. Create a branch. Add or change files. Use `islandlog new event` for a skeleton.
 2. Run `islandlog validate .` on your machine. Fix every failure.
+   Note: the CI privacy checks need the server image. Until the first server release exists, CI cannot run them. Reviewers run `islandlog validate .` by hand on the PR branch before they approve.
 3. Open a PR. Pick the template: `event`, `correction` or `takedown`.
 4. Fill in `review_sensitive`, `review_reason` and the verification steps.
 5. An editor approves. A sensitive PR needs two approvals, one from a senior editor. You cannot approve your own PR.

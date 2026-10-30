@@ -19,6 +19,7 @@ import time
 import urllib.parse
 from pathlib import Path
 
+from tools.newsfetch import netguard
 from tools.newsfetch.crawler import USER_AGENT, PoliteCrawler, RateLimiter
 
 ROBOTS_TOKEN = "islandlog-newsfetch"
@@ -86,6 +87,10 @@ class ArticleStep:
     def extract(self, url):
         parts = urllib.parse.urlparse(url)
         host = (parts.hostname or "").lower()
+        try:
+            netguard.check_public_url(url)  # T64 F-04: before robots, before the browser
+        except netguard.UnsafeUrl:
+            return {"url": url, "status": "url_refused"}
         for denied_host, pattern in DENIED_PATHS.items():
             if (host == denied_host or host.endswith("." + denied_host)) and pattern.search(parts.path):
                 return {"url": url, "status": "host_rule_denied"}
