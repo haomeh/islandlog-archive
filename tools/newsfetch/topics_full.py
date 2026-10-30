@@ -1487,6 +1487,9 @@ REMOVED_SOURCES = tp.REMOVED_SOURCES
 load_removed_sources = tp.load_removed_sources  # R261.2c: one loader, in topics.py
 
 
+FRAGMENT_DEFER = ("rejected_name_quality", "rejected_foreign")  # R329.1: a fragment of an old topic fails these on its own titles; the re-gate of the old topic decides
+
+
 def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve_withdraw=None):
     enriched = tp.load_enriched_topics()  # R324.2: a list that cannot be read stops the run before any write
     tp.ENRICHED_SKIPPED.clear()
@@ -1614,9 +1617,9 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                 continue
             if outcome != "ok":
                 stats[outcome] += 1
-                if outcome not in NEW_TOPIC_ONLY:  # R155.4: the rules of a new topic do not fail an old topic; its re-gate decides
+                if outcome not in NEW_TOPIC_ONLY and not (rebuilds_old and outcome in FRAGMENT_DEFER):  # R155.4: the rules of a new topic do not fail an old topic; its re-gate decides
                     fail(outcome, [m["url"] for m in members])
-                elif rebuilds_old:  # R205: no other candidate may fail this old topic either
+                elif rebuilds_old:  # R205, R329.1: no other candidate may fail this old topic either
                     deferred.update(matching_published(published_ids, src_ids_of([m["url"] for m in members])))
                 continue
             jids, actors, name = found["jids"], found["actors"], found["name"]
