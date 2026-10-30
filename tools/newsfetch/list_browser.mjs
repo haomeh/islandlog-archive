@@ -26,6 +26,7 @@ import { createRequire } from 'node:module'
 import { writeFileSync, appendFileSync } from 'node:fs'
 import { decide, createGate } from './browser_gate.mjs'
 import { createRobotsGuard } from './robots_rules.mjs'
+import { registrableDomain, sameSite } from './url_guard.mjs'
 import { labelDate, stopReason, looksBlocked, readRowsOnPage } from './click_rules.mjs'
 
 const require = createRequire(import.meta.url)
@@ -42,7 +43,7 @@ const browser = await chromium.launch()
 try {
   const context = await browser.newContext({ userAgent, javaScriptEnabled: true })
   const page = await context.newPage()
-  const site = new URL(url).hostname.split('.').slice(-2).join('.')
+  const site = registrableDomain(new URL(url).hostname)
   const denyRes = config.deny.map((d) => new RegExp(d))
   const denied = new Set()
   // R175: only document, script, xhr and fetch pass; no Next.js data or prefetch; 1 request per 1.1 s per host on every request; a cap per host.
@@ -66,7 +67,7 @@ try {
     // Page mode reads server-rendered lists: skip scripts, so one page costs one request.
     if ((config.light || config.no_script) && req.resourceType() === 'script') return route.abort()
     // Another site is blocked, unless the route names it in allow_hosts (an API that the list needs). Then robots.txt of that host decides.
-    if (!u.hostname.endsWith(site) && !config.allow_hosts.some((h) => u.hostname === h || u.hostname.endsWith('.' + h))) {
+    if (!sameSite(u.hostname, site) && !config.allow_hosts.some((h) => sameSite(u.hostname, h))) {
       offsite += 1
       return route.abort()
     }
