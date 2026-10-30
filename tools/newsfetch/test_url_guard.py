@@ -7,6 +7,9 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from unittest import mock
+
+from tools.newsfetch import crawler as crawler_mod
 from tools.newsfetch import netguard
 
 BASE = Path(__file__).parent
@@ -88,6 +91,77 @@ class NetguardTest(unittest.TestCase):
 
         with self.assertRaises(netguard.UnsafeUrl):
             netguard.check_public_url("https://a.example/", resolve=resolver)
+
+
+class FakeResp:
+    def __init__(self, body, headers=None, status=200):
+        self.fp = io.BytesIO(body)
+        self.headers = headers or {}
+        self.status = status
+
+    def read(self, n=-1):
+        return self.fp.read(n)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+class CrawlerWiringTest(unittest.TestCase):
+    def make(self, resp, public=True):
+        crawler = crawler_mod.PoliteCrawler(cache_dir=Path(__import__("tempfile").mkdtemp()), rate_limit_interval=0)
+        crawler._opener = mock.Mock()
+        crawler._opener.open.return_value = resp
+        check = mock.patch.object(netguard, "check_public_url", side_effect=None if public else netguard.UnsafeUrl("x"))
+        check.start()
+        self.addCleanup(check.stop)
+        return crawler
+
+    def test_http_get_refuses_a_body_over_the_cap(self):
+        with mock.patch.object(netguard, "MAX_BODY_BYTES", 100), mock.patch.object(crawler_mod.netguard, "MAX_BODY_BYTES", 100):
+            crawler = self.make(FakeResp(b"x" * 101))
+            with self.assertRaises(netguard.BodyTooLarge):
+                crawler._http_get("https://a.example/x")
+
+    def test_http_get_refuses_a_gzip_bomb(self):
+        with mock.patch.object(crawler_mod.netguard, "MAX_BODY_BYTES", 1000):
+            crawler = self.make(FakeResp(gzip.compress(b"\0" * 5000), {"Content-Encoding": "gzip"}))
+            with self.assertRaises(netguard.BodyTooLarge):
+                crawler._http_get("https://a.example/x")
+
+    def test_http_get_refuses_a_private_address_before_the_request(self):
+        crawler = self.make(FakeResp(b"ok"), public=False)
+        with self.assertRaises(netguard.UnsafeUrl):
+            crawler._http_get("http://127.0.0.1/x")
+        crawler._opener.open.assert_not_called()
+
+    def test_a_refused_url_is_not_retried(self):
+        crawler = self.make(FakeResp(b"ok"), public=False)
+        with mock.patch("tools.newsfetch.crawler.time.sleep") as sleep:
+            self.assertEqual(crawler._request_with_retry("http://127.0.0.1/x", "127.0.0.1"), (None, {}, b""))
+        sleep.assert_not_called()
+        self.assertEqual(crawler._opener.open.call_count, 0)
+
+    def test_a_normal_body_passes(self):
+        crawler = self.make(FakeResp(gzip.compress(b"hello"), {"Content-Encoding": "gzip"}))
+        self.assertEqual(crawler._http_get("https://a.example/x")[2], b"hello")
+
+
+class ArticleStepGuardTest(unittest.TestCase):
+    def test_extract_refuses_a_private_url_before_the_browser(self):
+        from tools.newsfetch import article
+
+        class C:
+            def load_robots(self, host, scheme="https"):
+                raise AssertionError("robots must not load")
+
+        calls = []
+        step = article.ArticleStep(C(), browser=lambda u, ua: calls.append(u) or {})
+        for url in ("file:///etc/passwd", "http://127.0.0.1/a", "http://169.254.169.254/latest"):
+            self.assertEqual(step.extract(url)["status"], "url_refused", url)
+        self.assertEqual(calls, [])
 
 
 if __name__ == "__main__":

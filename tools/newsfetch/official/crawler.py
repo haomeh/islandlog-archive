@@ -7,6 +7,7 @@ import gzip
 import hashlib
 import json
 import logging
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -14,6 +15,10 @@ import urllib.request
 import urllib.robotparser
 from pathlib import Path
 from typing import Dict, Optional, Tuple
+
+# This module also runs on its own (see test_official.py), so it finds netguard.py in the parent folder.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import netguard  # noqa: E402
 
 USER_AGENT = "islandlog-newsfetch/0.1 (+https://github.com/haomeh/islandlog-archive)"
 DEFAULT_CACHE_DIR = Path(__file__).parent / ".cache"
@@ -162,17 +167,18 @@ class PoliteCrawler:
 
         Raises URLError, TimeoutError or OSError on network failure.
         """
+        netguard.check_public_url(url)  # T64 F-04: http(s) only, no private, loopback or link-local address
         req = urllib.request.Request(url, headers={"User-Agent": self.user_agent})
         try:
             with self._opener.open(req, timeout=REQUEST_TIMEOUT) as resp:
-                data = resp.read()
+                data = netguard.read_capped(resp)
                 headers = {k.lower(): v for k, v in resp.headers.items()}
                 status = resp.status
         except urllib.error.HTTPError as err:
             headers = {k.lower(): v for k, v in err.headers.items()} if err.headers else {}
             return err.code, headers, b""
         if headers.get("content-encoding") == "gzip" or data[:2] == b"\x1f\x8b":
-            data = gzip.decompress(data)
+            data = netguard.gunzip_capped(data)
         return status, headers, data
 
     def _record_failure(self, host: str) -> None:
@@ -269,6 +275,9 @@ class PoliteCrawler:
             self.rate_limiter.wait(host)
             try:
                 status, headers, data = self._http_get(url)
+            except netguard.UnsafeUrl as err:
+                logger.warning("Refused %s: %s", url, err)
+                return None, {}, b""
             except (urllib.error.URLError, TimeoutError, OSError) as err:
                 logger.warning("Fetch attempt %d failed for %s: %s", attempt + 1, url, err)
                 status = None

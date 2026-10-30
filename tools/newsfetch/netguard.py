@@ -21,15 +21,17 @@ class UnsafeUrl(OSError):
     """The URL scheme or the resolved address is not allowed."""
 
 
-def read_capped(fp, cap=MAX_BODY_BYTES):
+def read_capped(fp, cap=None):
+    cap = MAX_BODY_BYTES if cap is None else cap
     data = fp.read(cap + 1)
     if len(data) > cap:
         raise BodyTooLarge(f"body is larger than {cap} bytes")
     return data
 
 
-def gunzip_capped(data, cap=MAX_BODY_BYTES):
+def gunzip_capped(data, cap=None):
     """Decompress gzip data. Raise BodyTooLarge when the result is larger than cap."""
+    cap = MAX_BODY_BYTES if cap is None else cap
     inflater = zlib.decompressobj(16 + zlib.MAX_WBITS)
     out = inflater.decompress(data, cap + 1)
     if len(out) > cap or inflater.unconsumed_tail:

@@ -318,3 +318,55 @@ class RssPagingTests(unittest.TestCase):
         items = fetch_official.fetch_feed(feed, fake, "2026-01-01")
         self.assertEqual(len(items), 2)
         self.assertTrue(fake.urls[1].endswith("start-index=101"))
+
+
+class FetchGuardTests(unittest.TestCase):
+    """T64: body cap, gzip cap and address check in the official crawler."""
+
+    def make(self, body, headers=None, public=True):
+        import gzip as _gzip  # noqa: F401
+        import io
+        from unittest import mock
+
+        class Resp:
+            def __init__(self):
+                self.fp = io.BytesIO(body)
+                self.headers = headers or {}
+                self.status = 200
+
+            def read(self, n=-1):
+                return self.fp.read(n)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        c = crawler_mod.PoliteCrawler(cache_dir=Path(tempfile.mkdtemp()), rate_limit_interval=0)
+        c._opener = mock.Mock()
+        c._opener.open.return_value = Resp()
+        check = mock.patch.object(crawler_mod.netguard, "check_public_url",
+                                  side_effect=None if public else crawler_mod.netguard.UnsafeUrl("x"))
+        check.start()
+        self.addCleanup(check.stop)
+        return c
+
+    def test_body_over_the_cap_is_refused(self):
+        from unittest import mock
+        with mock.patch.object(crawler_mod.netguard, "MAX_BODY_BYTES", 100):
+            with self.assertRaises(crawler_mod.netguard.BodyTooLarge):
+                self.make(b"x" * 101)._http_get("https://a.example/x")
+
+    def test_gzip_bomb_is_refused(self):
+        import gzip
+        from unittest import mock
+        with mock.patch.object(crawler_mod.netguard, "MAX_BODY_BYTES", 1000):
+            with self.assertRaises(crawler_mod.netguard.BodyTooLarge):
+                self.make(gzip.compress(b"\0" * 5000), {"Content-Encoding": "gzip"})._http_get("https://a.example/x")
+
+    def test_private_address_is_refused_without_a_request(self):
+        c = self.make(b"ok", public=False)
+        with self.assertRaises(crawler_mod.netguard.UnsafeUrl):
+            c._http_get("http://127.0.0.1/x")
+        c._opener.open.assert_not_called()
