@@ -1,3 +1,29 @@
 {
-  "events": []
+  "events": [
+    {
+      "id": "ev-20260912-topic-54fa35c7",
+      "ruling": "R325",
+      "reason": "enriched by an editor in t67; user approved publish"
+    },
+    {
+      "id": "ev-20260729-topic-fec46013",
+      "ruling": "R325",
+      "reason": "enriched by an editor in t67; user approved publish"
+    },
+    {
+      "id": "ev-20260625-topic-6ac76a2a",
+      "ruling": "R325",
+      "reason": "enriched by an editor in t67; user approved publish"
+    },
+    {
+      "id": "ev-20260708-topic-d8105c51",
+      "ruling": "R325",
+      "reason": "enriched by an editor in t67; user approved publish"
+    },
+    {
+      "id": "ev-20260829-topic-97f2fc8b",
+      "ruling": "R325",
+      "reason": "enriched by an editor in t67; user approved publish"
+    }
+  ]
 }
