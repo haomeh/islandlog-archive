@@ -1,0 +1,13 @@
+schema_version: 1
+id: src-20261001-ey-minimum-wage-agenda
+source_class: official_statement
+grade: B
+title: "最低工資"
+publisher: "行政院"
+publisher_actor_id: ac-executive-yuan
+url: "https://www.ey.gov.tw/Page/448DE008087A1971/f56b115b-b12c-4ccd-b15f-816c42bfb1d7"
+published_on: 2026-10-01
+accessed_on: 2026-10-30
+has_archive_url: false
+quote: "每月最低工資由29,500元調整至30,900元"
+license: unknown
