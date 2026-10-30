@@ -42,6 +42,17 @@ from tools.newsfetch.topic_config import (
     MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES,
     ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY)
 
+EVENT_ID = re.compile(r"^ev-(\d{4})\d{4}-[a-z0-9]+(?:-[a-z0-9]+)*$")  # T64 F-11: no dot and no slash, so an ID never leaves events/
+
+
+def event_year(event_id):
+    """The year folder of an event ID. Raises ValueError when the ID is not an event ID."""
+    m = EVENT_ID.match(event_id or "")
+    if not m:
+        raise ValueError(f"not an event id: {event_id!r}")
+    return m.group(1)
+
+
 TOPIC_FILE = re.compile(r"^ev-\d{8}-topic-[0-9a-f]{8}\.md$")
 ELECTION = re.compile(r"參選|選情|民調|競選|拜票|提名|初選|選戰|輔選|候選人|號次|造勢|催票|對手陣營|競辦|競總")  # R106: the last 3 name a campaign without an election word
 CRIME = re.compile(r"起訴|判刑|聲押|收押|交保|嫌犯|涉嫌|偵辦|逮捕|送辦|殺人|命案|毒品|詐團|車手|性侵|猥褻|竊盜|酒駕|弊案|收賄|貪污|貪瀆|行賄|賄賂|洩題")  # R112.3: the last 7 name a corruption case
@@ -1038,7 +1049,10 @@ def _event_text(root, event_id, ref):
     """The event file text from the working tree, or from the git ref when the file is missing. None if neither exists."""
     import subprocess
     root = Path(root)
-    year = event_id.split("-")[1][:4]
+    try:
+        year = event_year(event_id)
+    except ValueError:
+        return None
     path = root / "events" / year / f"{event_id}.md"
     if path.exists():
         return path.read_text(encoding="utf-8")
@@ -1431,7 +1445,7 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
     relations = doc.get("relations")
     write_topic(root, ev, seed, today)
     if relations:
-        path = Path(root) / "events" / doc["id"].split("-")[1][:4] / f"{doc['id']}.md"
+        path = Path(root) / "events" / event_year(doc["id"]) / f"{doc['id']}.md"
         new, body = _read_event(path)
         out = {}
         for k, v in new.items():
