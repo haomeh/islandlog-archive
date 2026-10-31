@@ -45,7 +45,7 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 
 ## 5. Topics, news groups and review status (R57 to R65)
 
-1. The system forms and names topics with the clustering tool (`tools/newsfetch/cluster.py`). Editors do not create or name topics by hand. The only exception is an agent-created event (section 5A). An editor approves, rejects, or corrects facts and membership with sources.
+1. The system forms and names topics with the clustering tool (`tools/newsfetch/cluster.py`). Editors do not create or name topics by hand. The only exceptions are an agent-created event and an agent rename of a system topic whose name fails the name gate (section 5A, item 6). An editor approves, rejects, or corrects facts and membership with sources.
 2. A system topic is published with `review.status: draft-review`. The site shows a draft banner. An editor approval sets `review.status: editor-approved`.
 3. `news_groups[].kind` is `report` (報導), `clarification` (澄清・回應) or `post` (貼文). Reports with the same content form one group. A clarification or a response forms a new group and needs a `note`.
 4. A public commentator post is `social_media`, grade E. Record it only when a news report cites it: the news source is the evidence, and the post URL is added when the report links it. Do not crawl social platforms.
@@ -59,8 +59,11 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 3. An agent-created event has `review.status: draft-review`. It is never `editor-approved` by the agent.
 4. The event id is listed in `tools/newsfetch/enriched_topics.json`. A listed event gets no automatic update (R325).
 5. A separate verifier checks every claim against the opened source page. The agent that wrote the event does not verify it.
-6. The user reviews the event before it is published.
-7. If the event is sensitive (`review.sensitive: true`), it needs its own user decision. The two-approver rule still applies, except where the user records an exception in `review.reason`. An exception covers one event only.
+6. The event is published, withdrawn or renamed only after one of two checks (R336):
+   - The user reviews the event.
+   - Two independent read-only verifiers on different models agree. The second verifier gets the evidence, not the verdict of the first.
+   If the two verifiers disagree, the agent makes one fix round and both verify again. If they still disagree, the user decides.
+7. If the event is sensitive (`review.sensitive: true`), it needs its own user decision. Two verifiers do not replace it. The two-approver rule still applies, except where the user records an exception in `review.reason`. An exception covers one event only.
 8. Criminal investigation: state only what an official or court record, or an attributed report, says. Do not state guilt.
 
 ## 6. Corrections
