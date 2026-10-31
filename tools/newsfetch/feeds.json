@@ -107,7 +107,8 @@
     "publisher_group": "新頭殼",
     "group_source": "https://zh.wikipedia.org/wiki/%E6%96%B0%E9%A0%AD%E6%AE%BC",
     "aliases": [
-      "新頭殼"
+      "新頭殼",
+      "Newtalk新聞"
     ],
     "status": "ok",
     "route": {
@@ -427,6 +428,7 @@
     "aliases": [
       "華視",
       "華視新聞網",
+      "華視新聞（中央社）",
       "CTS"
     ],
     "type": "sitemap",
