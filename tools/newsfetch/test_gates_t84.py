@@ -224,5 +224,41 @@ class ForeignEventTest(unittest.TestCase):
             self.assertNotEqual(outcome, "ok", key)
 
 
+class CivilMarchTest(unittest.TestCase):
+    """R359.3 (G2): a civil march with traffic control and police is no public act (R229.2c). 警方 alone is no public body or act."""
+
+    MARCH = ["台灣同志遊行本周登場！ 文總換新裝：為自由去愛的靈魂應援", "台灣同志遊行10/31登場 交通管制措施看這裡",
+             "台灣同志遊行明登場 蔡英文感性發聲：願每個人都能勇敢安心做自己", "台灣同志遊行31日登場 盼共築多元共好社會、邁向真正傾聽",
+             "台灣同志遊行台北登場 主辦單位估17萬人上街「做伙行」", "台灣同志遊行登場 蕭美琴：這條路還需大家繼續並肩前行",
+             "北市不當搜索同志酒吧刺激 台灣同志遊行今下午登場估15萬人潮", "台灣同志遊行台北登場 主辦單位估17萬人上街「做伙行」【圖輯】",
+             "圖輯／台灣同志遊行上看17萬人上街 同婚靈魂人物現身揮舞彩虹旗", "台灣同志遊行登場 鄭麗文扮「黑魔女」祝福：放下偏見看見愛",
+             "台灣同志遊行「聲做伙聽 路做伙行」今登場 下午北市府前廣場出發", "第24屆台灣同志遊行登場 北市動員260名警力維安",
+             "第24屆台灣同志遊行登場 卓榮泰、鄭麗君都說話了", "現身台灣同志遊行！沈伯洋發「彩虹洋流」飄帶 民眾開心喊「我的市長」"]  # the 14 titles of the topic in the T83 run
+
+    def test_r359_3_traffic_control_for_a_march_is_no_public_act(self):
+        self.assertTrue(tf.no_public_act(self.MARCH))
+        self.assertFalse(tf.public_act_title("遊行10/31登場 交通管制措施看這裡"))
+
+    def test_r359_3_the_new_topic_gate_rejects_the_march(self):
+        members = [item(f"m{i}", t, "2026-10-31", "出版社" + str(i)) for i, t in enumerate(self.MARCH)]
+        self.assertEqual(tf.new_topic_reason(members), "no_public_act")
+
+    def test_r359_3_a_ruling_or_a_permit_makes_a_march_an_issue(self):
+        titles = self.MARCH + ["遊行路權爭議 市府核准路線", "遊行團體不服 行政法院裁定准許集會"]
+        self.assertFalse(tf.no_public_act(titles))
+
+    def test_r359_3_a_road_closure_order_for_a_disaster_stays_an_act(self):
+        self.assertTrue(tf.public_act_title("颱風來襲 公路局公告封閉道路 禁止通行"))
+
+    def test_r359_3_the_police_alone_is_no_public_act_for_the_private_matter_gate(self):
+        self.assertIsNone(tf.PUBLIC_ACT.search("警方到場了解"))
+        members = [item(f"m{i}", t, "2026-10-31", "出版社" + str(i)) for i, t in enumerate(["警方到場了解網紅聚會糾紛", "警方呼籲民眾勿圍觀", "警方關切聚會爭議"])]
+        self.assertEqual(tf.new_topic_reason(members), "private_matter")
+
+    def test_r359_3_a_body_with_an_act_still_passes_the_private_matter_gate(self):
+        members = [item(f"m{i}", t, "2026-10-31", "出版社" + str(i)) for i, t in enumerate(["警方開罰違規業者", "警方公告取締時段", "警方稽查夜店"])]
+        self.assertIsNone(tf.new_topic_reason(members))
+
+
 if __name__ == "__main__":
     unittest.main()

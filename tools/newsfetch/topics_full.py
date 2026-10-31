@@ -833,8 +833,8 @@ def candidate_talk(title):
 
 ACCIDENT = re.compile(r"車禍|肇事|撞(?!臉|期|名|衫)|[輾碾]|無呼吸心跳|捲入|墜樓|墜落|墜海|溺水|溺斃|落水|身亡|喪命|不治|命危|重傷|罹難|意外|工安|氣爆|爆炸|火警|火災|起火|落石|翻覆|翻車|倒塌|崩塌")  # R154 (PRD 4.5 item 2): the words of one accident
 ACCIDENT_POLICY = re.compile(r"規定|修法|條例|法規|制度|檢討|改善|預算|機制|政策|新制|辦法|草案|強化|加強|通報|補償|賠償")  # R154: a rule after an accident is a policy topic
-PUBLIC_ACT = re.compile(r"三讀|修法|條例|草案|預算|立法|法案|釋憲|公告|裁罰|罰款|罰鍰|開罰|補助|公投|官員|公所|稽查|函釋|核定|核准|核釋|審查|質詢|提案|朝野|藍白|在野|綠營|藍營|立院|議會|政府|主管機關|檢調|警方|海巡|消防|部會|法規|法令|規定|新制|政策|公務|公共|監察"
-                        r"|颱風|地震|豪雨|大雨|警報|停班|停課|放假|氣象|海嘯|磁暴|雨量|梅雨|防災|災害|疫情|疫苗|病毒|食安|捷運|鐵路|高鐵|道路|橋梁|機場|港口|電價|水庫|缺水|停電|學校|國小|國中|高中|醫院|診所")  # R154: a title that names a public act, a public body or a public service
+PUBLIC_ACT = re.compile(r"三讀|修法|條例|草案|預算|立法|法案|釋憲|公告|裁罰|罰款|罰鍰|開罰|補助|公投|官員|公所|稽查|函釋|核定|核准|核釋|審查|質詢|提案|朝野|藍白|在野|綠營|藍營|立院|議會|政府|主管機關|檢調|海巡|消防|部會|法規|法令|規定|新制|政策|公務|公共|監察"
+                        r"|颱風|地震|豪雨|大雨|警報|停班|停課|放假|氣象|海嘯|磁暴|雨量|梅雨|防災|災害|疫情|疫苗|病毒|食安|捷運|鐵路|高鐵|道路|橋梁|機場|港口|電價|水庫|缺水|停電|學校|國小|國中|高中|醫院|診所")  # R154: a title that names a public act, a public body or a public service. R359.3: 警方 alone is no public body or act
 OFFICIAL_PERSON = re.compile(r"市長|縣長|部長|署長|局長|院長|主委|總統|立委|議員|首長|閣揆|總長|議長")
 HEALTH = re.compile(r"住院|住進|開刀|手術|動刀|病倒|病情|罹癌|心臟病|中風|請假休養|確診")
 
@@ -846,7 +846,7 @@ def private_health_of_official(title):
 
 NATURAL_PHENOMENON = re.compile(r"地震|餘震|震度|海嘯|颱風|豪雨|大雨|暴雨|寒流|低溫|高溫|熱浪|降雪|下雪|霧霾|日蝕|月蝕|日食|月食|流星|彗星|極光|天象|超級月亮|彩虹|候鳥|黑面琵鷺|賞鳥|賞花|花季|櫻花|螢火蟲|蝴蝶|鯨豚|白海豚|鯨魚|鯊魚|野生動物")  # R229.2a: the words of an earthquake, weather, astronomy, animal or plant record
 CEREMONY = re.compile(r"剪綵|剪彩|啟用|通車|揭牌|動土|開幕|閉幕|典禮|儀式|遊行|遶境|繞境|嘉年華|慶典|燈會|煙火|跨年|音樂節|藝術節|文化節|花火|園遊會")  # R229.2b: the words of a ribbon-cutting, an opening, a parade or a festival
-PUBLIC_POWER_ACT = re.compile(r"停班|停課|放假|颱風假|應變中心|疏散|撤離|避難|救助|救災|慰助|履勘|驗收|勘查|查驗|環評|下令|搶修|搶通|搶險|賑災|罰單|處罰|開鍘|懲處|預算|經費|補助|補貼|津貼|三讀|修法|立法|條例|草案|法案|法規|新制|新規|規定|辦法|政策|函釋|裁罰|罰鍰|罰款|開罰|處分|稽查|查核|核定|核准|判決|裁定|釋憲|公告|決議|決定|禁令|管制|禁止|徵收|招標|採購|補償|賠償")  # R229.2c: a decision, a budget, a law or rule change, a ruling, a penalty, a subsidy or an emergency order; a remark (表示, 說明, 呼籲) is not an act
+PUBLIC_POWER_ACT = re.compile(r"停班|停課|放假|颱風假|應變中心|疏散|撤離|避難|救助|救災|慰助|履勘|驗收|勘查|查驗|環評|下令|搶修|搶通|搶險|賑災|罰單|處罰|開鍘|懲處|預算|經費|補助|補貼|津貼|三讀|修法|立法|條例|草案|法案|法規|新制|新規|規定|辦法|政策|函釋|裁罰|罰鍰|罰款|開罰|處分|稽查|查核|核定|核准|判決|裁定|釋憲|公告|決議|決定|禁令|(?<!交通)管制|禁止|徵收|招標|採購|補償|賠償")  # R229.2c: a decision, a budget, a law or rule change, a ruling, a penalty, a subsidy or an emergency order; a remark (表示, 說明, 呼籲) is not an act. R359.3: traffic control (交通管制) for a march is not an act
 
 def public_act_title(text):
     """R229.2c, R234.3: a title names a public-power act. The works and ad hoc words need a public body, so a private firm does not count (R234.5)."""
