@@ -99,6 +99,34 @@ class MergeCorpusTest(unittest.TestCase):
         with self.assertRaises(merge_corpus.MergeError):
             merge_corpus.merge(self.corpus, [bad], self.tmp / "out.jsonl")
 
+    def test_blank_line_in_the_corpus_is_an_error(self):
+        for blank in (b"\n", b"  \n", b"\r\n"):
+            with self.subTest(blank=blank):
+                good = json.dumps(row("https://a.example/1"), ensure_ascii=False).encode("utf-8")
+                self.corpus.write_bytes(good + b"\n" + blank + good.replace(b"/1", b"/2") + b"\n")
+                before = self.corpus.read_bytes()
+                with self.assertRaises(merge_corpus.MergeError):
+                    merge_corpus.merge(self.corpus, [], self.tmp / "out.jsonl")
+                self.assertEqual(self.corpus.read_bytes(), before)
+                self.assertFalse((self.tmp / "out.jsonl").exists())
+
+    def test_crlf_and_missing_last_newline_keep_the_old_bytes(self):
+        a = json.dumps(row("https://a.example/1"), ensure_ascii=False).encode("utf-8")
+        b = json.dumps(row("https://a.example/2"), ensure_ascii=False).encode("utf-8")
+        self.corpus.write_bytes(a + b"\r\n" + b)
+        new = self.tmp / "news-a.jsonl"
+        write_rows(new, [row("https://a.example/3")])
+        merge_corpus.merge(self.corpus, [new], self.tmp / "out.jsonl")
+        out = (self.tmp / "out.jsonl").read_bytes()
+        self.assertTrue(out.startswith(a + b"\r\n" + b))
+
+    def test_blank_lines_in_a_new_file_are_ignored(self):
+        write_rows(self.corpus, [row("https://a.example/1")])
+        new = self.tmp / "news-a.jsonl"
+        new.write_text("\n" + json.dumps(row("https://a.example/2")) + "\n\n", encoding="utf-8")
+        res = merge_corpus.merge(self.corpus, [new], self.tmp / "out.jsonl")
+        self.assertEqual(res["rows_new"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

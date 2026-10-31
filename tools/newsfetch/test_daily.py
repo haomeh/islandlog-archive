@@ -7,9 +7,13 @@ import http.server
 import io
 import json
 import os
+import re
 import shutil
+import signal
 import subprocess
+import sys
 import tempfile
+import time
 import threading
 import unittest
 from pathlib import Path
@@ -38,6 +42,10 @@ with open(out / "args.txt", "a") as f:
     f.write(json.dumps({"id": sid, "since": a.since, "until": a.until, "route": a.route, "no_resume": a.no_resume, "hash_seed": os.environ.get("PYTHONHASHSEED"), "log": bool(os.environ.get("NEWSFETCH_REQUEST_LOG"))}) + "\n")
 if spec.get("fail"):
     sys.exit(1)
+if spec.get("sleep"):
+    (out / f"pid-{sid}.txt").write_text(str(os.getpid()))
+    import time
+    time.sleep(60)
 host = spec.get("host", sid + ".example")
 t0 = datetime.datetime(2026, 10, 31, 4, 30, 0, tzinfo=datetime.timezone.utc)
 gap = spec.get("gap_ms", 1200)
@@ -118,13 +126,18 @@ def make_repo(root):
     git(repo, "init", "-q", "-b", "main")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "base")
-    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    origin = Path(root) / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(origin)], check=True)
+    git(repo, "remote", "add", "origin", str(origin))
+    git(repo, "push", "-q", "origin", "main")
     return repo
 
 
 def tree_hash(root):
     h = hashlib.sha256()
     for p in sorted(Path(root).rglob("*")):
+        if ".git" in p.relative_to(root).parts:
+            continue
         h.update(str(p.relative_to(root)).encode())
         if p.is_file() and not p.is_symlink():
             h.update(p.read_bytes())
@@ -164,6 +177,10 @@ class DailyBase(unittest.TestCase):
         self.addCleanup(p.stop)
         for k in ("STUB_CLUSTER_FAIL", "STUB_DRY_FAIL", "NEWSFETCH_VALIDATOR", "NEWSFETCH_SERVER_REPO", "ISLANDLOG_ARCHIVE_REPO"):
             os.environ.pop(k, None)
+        self.validator = self.tmp / "validator.sh"
+        self.validator.write_text("#!/bin/sh\necho '0 failure(s), 0 warning(s)'\n")
+        self.validator.chmod(0o755)
+        os.environ["NEWSFETCH_VALIDATOR"] = str(self.validator)
         self.server = http.server.HTTPServer(("127.0.0.1", 0), ApiHandler)
         ApiHandler.commit = git(self.repo, "rev-parse", "origin/main")
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
@@ -194,12 +211,12 @@ class EndToEndTest(DailyBase):
         md = (self.data / "reports" / f"{TODAY}.md").read_text(encoding="utf-8")
         self.assertEqual(rep["status"], "ok")
         names = [s["name"] for s in rep["steps"]]
-        self.assertEqual(names, ["lock", "crawl", "merge", "cluster", "promote", "dry_run", "validate", "report"])
+        self.assertEqual(names, ["lock", "fetch", "crawl", "merge", "cluster", "promote", "dry_run", "validate", "report"])
         for s in rep["steps"]:
             for key in ("start", "end", "rc", "status", "counts"):
                 self.assertIn(key, s)
         status = {s["name"]: s["status"] for s in rep["steps"]}
-        self.assertEqual(status["validate"], "BLOCKED")
+        self.assertEqual(status["validate"], "ok")
         self.assertEqual(rep["new_rows_by_outlet"], {"甲報": 2, "乙報": 1})
         self.assertEqual(rep["zero_row_outlets"], [])
         self.assertEqual([t["id"] for t in rep["new_topics"]], ["ev-20261030-topic-aaaaaaaa"])
@@ -396,25 +413,198 @@ class HelperTest(unittest.TestCase):
         self.assertEqual(gaps["h1.example"], 800)
         self.assertEqual(gaps["h2.example"], 2000)
 
-    def test_enrich_candidates(self):
+    def test_enrich_candidates_match_by_url_with_real_id_shapes(self):
+        # Real source ids are src-DATE-slug-words with no hash. The cluster mapping ids (sha256) never match them.
         tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, tmp, True)
         (tmp / "events" / "2026").mkdir(parents=True)
-        (tmp / "events" / "2026" / "ev-1.md").write_text("sources: src-20261030-a-11111111\n")
+        (tmp / "sources" / "2026").mkdir(parents=True)
+        (tmp / "events" / "2026" / "ev-1.md").write_text("summary: x [@src-20261030-cts-mofa-pakistan-airspace]\nsources:\n  - src-20261030-cts-mofa-pakistan-airspace\n")
+        (tmp / "sources" / "2026" / "src-20261030-cts-mofa-pakistan-airspace.yaml").write_text(
+            'schema_version: 1\nid: src-20261030-cts-mofa-pakistan-airspace\nurl: "https://news.cts.com.tw/a/4?utm_source=x"\npublished_on: 2026-10-30\n')
         clusters = [
-            {"cluster_id": "c1", "title": "大案", "news_groups": [{"source_ids": ["u1", "u2", "u3"]}]},
-            {"cluster_id": "c2", "title": "已發布", "news_groups": [{"source_ids": ["u4", "u5"]}]},
-            {"cluster_id": "c3", "title": "舊案", "news_groups": [{"source_ids": ["u6", "u7"]}]},
-            {"cluster_id": "c4", "title": "單篇", "news_groups": [{"source_ids": ["u8"]}]},
+            {"cluster_id": "c1", "title": "大案", "news_groups": [{"source_ids": ["https://a.example/1", "https://a.example/2", "https://a.example/3"]}]},
+            {"cluster_id": "c2", "title": "已發布", "news_groups": [{"source_ids": ["https://news.cts.com.tw/a/4/", "https://b.example/5#top"]}]},
+            {"cluster_id": "c3", "title": "舊案", "news_groups": [{"source_ids": ["https://a.example/6", "https://a.example/7"]}]},
+            {"cluster_id": "c4", "title": "單篇", "news_groups": [{"source_ids": ["https://a.example/8"]}]},
         ]
-        mapping = {"u4": "src-20261030-a-11111111"}
-        corpus = {"u1": ("甲", "2026-10-30"), "u2": ("乙", "2026-10-29"), "u3": ("甲", "2026-10-28"), "u4": ("甲", "2026-10-30"),
-                  "u5": ("乙", "2026-10-30"), "u6": ("甲", "2026-09-01"), "u7": ("乙", "2026-09-01"), "u8": ("甲", "2026-10-30")}
-        got = daily.enrich_candidates(clusters, mapping, corpus, tmp, TODAY, recent_days=3, limit=10)
+        corpus = {"https://a.example/1": ("甲", "2026-10-30"), "https://a.example/2": ("乙", "2026-10-29"), "https://a.example/3": ("甲", "2026-10-28"),
+                  "https://news.cts.com.tw/a/4/": ("華", "2026-10-30"), "https://b.example/5#top": ("乙", "2026-10-30"),
+                  "https://a.example/6": ("甲", "2026-09-01"), "https://a.example/7": ("乙", "2026-09-01"), "https://a.example/8": ("甲", "2026-10-30")}
+        got = daily.enrich_candidates(clusters, corpus, tmp, TODAY, recent_days=3, limit=10)
         self.assertEqual([c["cluster_id"] for c in got], ["c1"])
         self.assertEqual(got[0]["publishers"], 2)
         self.assertEqual(got[0]["size"], 3)
         self.assertEqual(got[0]["newest"], "2026-10-30")
+
+    def test_published_urls_read_sources_cited_by_events(self):
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, True)
+        (tmp / "events" / "2026").mkdir(parents=True)
+        (tmp / "sources" / "2026").mkdir(parents=True)
+        (tmp / "events" / "2026" / "ev-1.md").write_text("- src-20261030-a-b-c\n- src-20261031-gone-x\n")
+        (tmp / "sources" / "2026" / "src-20261030-a-b-c.yaml").write_text("id: src-20261030-a-b-c\nurl: https://x.example/1/\n")
+        (tmp / "sources" / "2026" / "src-20261029-uncited.yaml").write_text("id: src-20261029-uncited\nurl: https://x.example/2\n")
+        self.assertEqual(daily.published_urls(tmp), {"https://x.example/1"})
+
+
+class CrawlMessageTest(DailyBase):
+    def alert_text(self):
+        return (self.data / "ALERT").read_text(encoding="utf-8")
+
+    def test_plain_rc_failure_has_no_gap_text(self):
+        self.set_plan({"aaa": {"fail": True}, "bbb": {"rows": [row("https://bbb.example/1001", "乙報", "2026-10-31")]}})
+        self.assertEqual(self.run_daily(), 1)
+        self.assertIn("crawl rc", self.alert_text())
+        self.assertNotIn("under", self.alert_text())
+
+    def test_low_gap_failure_names_the_hosts(self):
+        self.set_plan({"aaa": {"gap_ms": 500, "rows": []}, "bbb": {"rows": []}})
+        self.assertEqual(self.run_daily(), 1)
+        self.assertIn("hosts under 1099 ms", self.alert_text())
+        self.assertIn("aaa.example", self.alert_text())
+
+
+class FetchTest(DailyBase):
+    def test_fetch_failure_is_a_step_failure(self):
+        git(self.repo, "remote", "set-url", "origin", str(self.tmp / "missing.git"))
+        before = self.corpus.read_bytes()
+        self.assertEqual(self.run_daily(), 1)
+        self.assertEqual(self.corpus.read_bytes(), before)
+        self.assertIn("fetch", (self.data / "ALERT").read_text(encoding="utf-8"))
+        by = {s["name"]: s["status"] for s in self.report()["steps"]}
+        self.assertEqual((by["fetch"], by["crawl"], by["dry_run"]), ("fail", "skipped", "skipped"))
+
+    def test_fetch_moves_origin_main_and_nothing_else(self):
+        clone = self.tmp / "clone"
+        git(self.tmp, "clone", "-q", str(self.tmp / "origin.git"), str(clone))
+        (clone / "events" / "2026" / "ev-20261030-new-aaaaaaaa.md").write_text("---\nid: ev-20261030-new-aaaaaaaa\n---\n")
+        git(clone, "add", "-A")
+        git(clone, "commit", "-q", "-m", "more")
+        git(clone, "push", "-q", "origin", "main")
+        new = git(clone, "rev-parse", "HEAD")
+        head, before = git(self.repo, "rev-parse", "HEAD"), tree_hash(self.repo)
+        ApiHandler.commit = new
+        self.assertEqual(self.run_daily(), 0)
+        self.assertEqual(git(self.repo, "rev-parse", "origin/main"), new)
+        self.assertEqual(self.report()["base_commit"], new)
+        self.assertEqual((git(self.repo, "rev-parse", "HEAD"), tree_hash(self.repo)), (head, before))
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "")
+        self.assertFalse((self.repo / ".git" / "FETCH_HEAD").exists())
+
+
+class AlertRuleTest(DailyBase):
+    def alert_text(self):
+        return (self.data / "ALERT").read_text(encoding="utf-8")
+
+    def test_validator_blocked_raises_an_alert(self):
+        os.environ.pop("NEWSFETCH_VALIDATOR")
+        with mock.patch.object(daily.shutil, "which", return_value=None):
+            self.assertEqual(self.run_daily(), 1)
+        self.assertIn("validate", self.alert_text())
+        self.assertIn("BLOCKED", self.alert_text())
+        by = {s["name"]: s["status"] for s in self.report()["steps"]}
+        self.assertEqual(by["validate"], "BLOCKED")
+
+    def put_state(self, since):
+        (self.data / "state.json").write_text(json.dumps({"last_good_date": "2026-10-30", "zero_streak": {}, "lan_mismatch_since": since}))
+
+    def hours_ago(self, h):
+        return daily.iso(datetime.datetime.now(daily.TAIPEI) - datetime.timedelta(hours=h))
+
+    def test_lan_stale_over_24_hours_raises_an_alert(self):
+        ApiHandler.commit = "0" * 40
+        self.put_state(self.hours_ago(25))
+        self.assertEqual(self.run_daily(), 1)
+        self.assertIn("LAN", self.alert_text())
+        self.assertIn("origin/main", self.alert_text())
+        self.assertEqual(self.report()["lan_api"]["match"], False)
+
+    def test_lan_stale_under_24_hours_is_quiet_and_keeps_the_start(self):
+        ApiHandler.commit = "0" * 40
+        since = self.hours_ago(5)
+        self.put_state(since)
+        self.assertEqual(self.run_daily(), 0)
+        self.assertEqual(json.loads((self.data / "state.json").read_text())["lan_mismatch_since"], since)
+        self.assertEqual(json.loads((self.data / "state.json").read_text())["last_good_date"], TODAY)
+
+    def test_first_lan_mismatch_records_the_start(self):
+        ApiHandler.commit = "0" * 40
+        self.assertEqual(self.run_daily(), 0)
+        self.assertTrue(json.loads((self.data / "state.json").read_text())["lan_mismatch_since"])
+
+    def test_lan_match_clears_the_start(self):
+        self.put_state(self.hours_ago(48))
+        self.assertEqual(self.run_daily(), 0)
+        self.assertIsNone(json.loads((self.data / "state.json").read_text()).get("lan_mismatch_since"))
+
+    def test_failed_run_keeps_last_good_date(self):
+        ApiHandler.commit = "0" * 40
+        os.environ["STUB_CLUSTER_FAIL"] = "1"
+        self.run_daily()
+        state = json.loads((self.data / "state.json").read_text())
+        self.assertNotEqual(state.get("last_good_date"), TODAY)
+
+
+def alive(pid):
+    try:
+        text = Path(f"/proc/{pid}/stat").read_text()
+    except OSError:
+        return False
+    return text.rsplit(")", 1)[1].split()[0] != "Z"
+
+
+class SignalTest(DailyBase):
+    def start_daily(self):
+        self.set_plan({"aaa": {"sleep": True}, "bbb": {"sleep": True}})
+        argv = [sys.executable, "-m", "tools.newsfetch.daily", "--repo", str(self.repo), "--data-dir", str(self.data), "--today", TODAY,
+                "--api-url", f"http://127.0.0.1:{self.server.server_port}"]
+        proc = subprocess.Popen(argv, cwd=HERE.parent.parent, env=dict(os.environ), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.addCleanup(lambda: proc.poll() is None and proc.kill())
+        files = [self.data / "runs" / TODAY / "out" / f"pid-{n}.txt" for n in ("aaa", "bbb")]
+        end = time.time() + 30
+        while time.time() < end and not all(f.exists() and f.read_text() for f in files):
+            time.sleep(0.1)
+        pids = [int(f.read_text()) for f in files]
+        self.addCleanup(lambda: [os.kill(p, signal.SIGKILL) for p in pids if alive(p)])
+        return proc, pids
+
+    def wait_dead(self, pids):
+        end = time.time() + 10
+        while time.time() < end and any(alive(p) for p in pids):
+            time.sleep(0.1)
+        return [p for p in pids if alive(p)]
+
+    def test_sigterm_stops_the_crawl_children(self):
+        proc, pids = self.start_daily()
+        proc.send_signal(signal.SIGTERM)
+        proc.wait(timeout=20)
+        self.assertEqual(self.wait_dead(pids), [])
+        self.assertNotEqual(proc.returncode, 0)
+
+    def test_sigkill_stops_the_crawl_children_where_the_system_allows(self):
+        proc, pids = self.start_daily()
+        proc.kill()
+        proc.wait(timeout=20)
+        self.assertEqual(self.wait_dead(pids), [])
+
+    def test_timeout_stops_the_whole_process_group(self):
+        pidfile = self.tmp / "grandchild.pid"
+        rc = daily.run_cmd(["sh", "-c", f"sleep 60 & echo $! > {pidfile}; wait"], self.tmp, dict(os.environ), 1, self.tmp / "o.txt")
+        self.assertEqual(rc, 124)
+        pid = int(pidfile.read_text())
+        self.addCleanup(lambda: alive(pid) and os.kill(pid, signal.SIGKILL))
+        self.assertEqual(self.wait_dead([pid]), [])
+
+
+class WorstCaseTest(unittest.TestCase):
+    def test_service_timeout_is_above_the_worst_case_of_the_step_timeouts(self):
+        feeds = [f for f in json.loads((HERE / "feeds.json").read_text(encoding="utf-8")) if f.get("status") != "blocked"]
+        worst = daily.worst_case_seconds(feeds)
+        self.assertGreaterEqual(worst, sum(v for k, v in daily.TIMEOUTS.items() if k != "crawl") + daily.TIMEOUTS["crawl"])
+        svc = (HERE / "deploy" / "islandlog-newsfetch.service").read_text(encoding="utf-8")
+        hours = int(re.search(r"^TimeoutStartSec=(\d+)h$", svc, re.M)[1])
+        self.assertGreater(hours * 3600, worst)
 
 
 class DeployFilesTest(unittest.TestCase):
@@ -429,6 +619,27 @@ class DeployFilesTest(unittest.TestCase):
         self.assertNotIn("islandlog/archive", svc)
         self.assertRegex(svc, r"TimeoutStartSec=([3-9]|\d\d)h")
         self.assertIn("ISLANDLOG_ARCHIVE_REPO=", self.read("newsfetch.env.example"))
+
+    def test_env_example_sets_path_and_names_the_host_tool_paths(self):
+        env = self.read("newsfetch.env.example")
+        self.assertRegex(env, r"(?m)^PATH=.*/home/linuxbrew/\.linuxbrew/bin")
+        self.assertIn("nvm", env)
+
+    def test_readme_steps(self):
+        text = self.read("README.md")
+        self.assertIn("loginctl enable-linger", text)
+        self.assertIn("mkdir -p", text)
+        self.assertIn("ReadWritePaths", text)
+        self.assertIn("NEWSFETCH_DATA_DIR", text)
+        self.assertIn("1.1 s", text)
+        self.assertNotIn("1 request per second", text)
+
+    def test_workflow_text(self):
+        text = (HERE / "WORKFLOW.md").read_text(encoding="utf-8")
+        for needle in ("child", "git fetch", "BLOCKED", "validate --mode full", "origin/main", "LAN", "24"):
+            self.assertIn(needle, text)
+        self.assertNotIn("它不執行 `git fetch`", text)
+        self.assertNotIn("`BLOCKED` 不是警報", text)
 
     def test_timers(self):
         self.assertIn("OnCalendar=*-*-* 04:30:00 Asia/Taipei", self.read("islandlog-newsfetch.timer"))

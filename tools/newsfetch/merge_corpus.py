@@ -34,6 +34,21 @@ def _lines(path):
     return [l for l in data.split(b"\n") if l.strip()]
 
 
+def _old_lines(path):
+    """The old corpus lines. A blank line is an error: the old file must stay a byte prefix of the new file."""
+    try:
+        data = Path(path).read_bytes()
+    except OSError as err:
+        raise MergeError(f"cannot read {path}: {err}") from err
+    lines = data.split(b"\n")
+    if lines and lines[-1] == b"":
+        lines.pop()                   # the final newline
+    for number, line in enumerate(lines, 1):
+        if not line.strip():
+            raise MergeError(f"blank line {number} in the corpus {path}")
+    return lines
+
+
 def _key(row):
     return canonical_url(row["url"])
 
@@ -48,7 +63,7 @@ def _sha256(path):
 
 def _check(tmp, old_lines, new_rows):
     """The temp file must start with the old rows (byte-equal) and hold every new row once."""
-    got = _lines(tmp)
+    got = _old_lines(tmp)
     if got[:len(old_lines)] != old_lines:
         raise MergeError("old rows are not byte-equal in the merged file")
     if len(got) != len(old_lines) + len(new_rows):
@@ -60,7 +75,7 @@ def _check(tmp, old_lines, new_rows):
 def merge(corpus, new_paths, out):
     """Returns the result dict. Raises MergeError and leaves the corpus unchanged on any problem."""
     corpus, out = Path(corpus), Path(out)
-    old_lines = _lines(corpus)
+    old_lines = _old_lines(corpus)
     seen = set()
     for line in old_lines:
         try:

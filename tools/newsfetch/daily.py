@@ -6,21 +6,26 @@ Usage:
     python3 -m tools.newsfetch.daily --check-freshness [--data-dir DIR]
 
 Steps, each logged with start, end, counts and rc:
-    lock, crawl, merge, cluster, promote, dry_run, validate, report. Then the work dirs are cleaned.
+    lock, fetch, crawl, merge, cluster, promote, dry_run, validate, report. Then the work dirs are cleaned.
 1. lock      one run at a time (flock on DATA/daily.lock).
+1b. fetch    git fetch origin main in the repo (R347.2). It writes refs in .git only. A failure fails the run before the crawl.
 2. crawl     incremental crawl from the last good date, one process per host, NEWSFETCH_REQUEST_LOG set.
             The step fails when a host gap is under 1099 ms (R61).
 3. merge     merge_corpus into a staged file. The corpus stays unchanged.
 4. cluster   cluster.py --as-news-groups with PYTHONHASHSEED=0 (R149).
 5. promote   rename the staged file onto the corpus. A failed step before this one leaves the corpus unchanged.
 6. dry_run   git archive of the base ref in RUN/dry, then topics_full with --today set to the Taipei date.
-7. validate  the validator if a binary or go with a server repo exists, else BLOCKED.
+7. validate  the validator if a binary or go with a server repo exists, else BLOCKED. BLOCKED gives an alert (R347.3).
 8. report    DATA/reports/DATE.json and .md. An alert writes DATA/ALERT and gives a non-zero exit.
+            A LAN snapshot that differs from origin/main for over 24 h gives an alert (R347.4).
+A signal (SIGTERM, SIGINT, SIGHUP) stops the child process groups and ends the run. A SIGKILL of this process
+ends each child by PR_SET_PDEATHSIG on Linux. Grandchildren in a child group get SIGTERM only on a signal or a timeout.
 Settings come from options, then from the environment (see deploy/newsfetch.env.example).
 """
 
 import argparse
 import collections
+import ctypes
 import datetime
 import fcntl
 import json
@@ -28,6 +33,7 @@ import logging
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -39,6 +45,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from tools.newsfetch import merge_corpus
+from tools.newsfetch.lists import canonical_url
 
 TAIPEI = ZoneInfo("Asia/Taipei")
 MIN_GAP_MS = 1099                # R61: 1 request per 1.1 s per host, with a 1 ms tolerance
@@ -48,10 +55,27 @@ EXIT_LOCKED = 75
 AUTO_ROUTE = {"ltn", "ettoday", "newtalk"}   # the same routes as T66; every other outlet uses the click route (R179)
 RECENT_DAYS = 3
 ENRICH_LIMIT = 20
-SRC_ID = re.compile(r"src-\d{8}-[a-z0-9-]+-[0-9a-f]{8}")
+SRC_ID = re.compile(r"src-\d{8}-[a-z0-9][a-z0-9-]*")
+URL_LINE = re.compile(r"""^url:\s*["']?([^"'\s]+)["']?\s*$""", re.M)
 REPORT_NAME = re.compile(r"^(\d{4}-\d{2}-\d{2})\.(json|md)$")
-TIMEOUTS = {"crawl": 3 * 3600, "cluster": 3600, "dry_run": 3 * 3600, "validate": 1800}
+TIMEOUTS = {"crawl": 3 * 3600, "cluster": 3600, "dry_run": 3 * 3600, "validate": 1800, "fetch": 600}
+LAN_STALE_HOURS = 24
 logger = logging.getLogger("newsfetch.daily")
+
+
+def group_by_host(feeds):
+    by_host = collections.OrderedDict()
+    for feed in feeds:
+        cr = (feed.get("click_route") or {}).get("urls") or []
+        url = cr[0] if cr else (feed.get("route") or {}).get("url") or feed.get("latest_sitemap") or ""
+        by_host.setdefault(urllib.parse.urlsplit(url).hostname or feed["id"], []).append(feed)
+    return by_host
+
+
+def worst_case_seconds(feeds):
+    """All step timeouts at the limit. A host runs its feeds one after another, so the longest host decides the crawl."""
+    longest = max((len(fs) for fs in group_by_host(feeds).values()), default=0)
+    return (TIMEOUTS["fetch"] + longest * TIMEOUTS["crawl"] + TIMEOUTS["cluster"] + TIMEOUTS["dry_run"] + TIMEOUTS["validate"])
 
 
 class StepFailed(Exception):
@@ -120,14 +144,64 @@ def tool_env(extra=None):
     return env
 
 
+_LIBC = ctypes.CDLL(None)
+STOPPING = threading.Event()
+CHILDREN = set()
+CHILDREN_LOCK = threading.Lock()
+
+
+def _die_with_parent():
+    """Runs in the child before exec. The child gets SIGTERM when this process dies, also after SIGKILL (Linux)."""
+    _LIBC.prctl(1, signal.SIGTERM)   # PR_SET_PDEATHSIG
+    if os.getppid() == 1:
+        os._exit(143)
+
+
+def kill_group(proc, sig=signal.SIGTERM):
+    try:
+        os.killpg(proc.pid, sig)
+    except (ProcessLookupError, PermissionError):
+        pass
+
+
+def stop_children():
+    STOPPING.set()
+    with CHILDREN_LOCK:
+        for proc in list(CHILDREN):
+            kill_group(proc)
+
+
+def _on_signal(signum, _frame):
+    stop_children()
+    raise SystemExit(128 + signum)
+
+
 def run_cmd(cmd, cwd, env, timeout, out_path):
-    """Runs a command with stdout and stderr in one file. Returns the rc (124 for a timeout)."""
+    """Runs a command in its own process group, with stdout and stderr in one file.
+    Returns the rc (124 for a timeout, 143 when the run is stopping). A timeout stops the whole group."""
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    if STOPPING.is_set():
+        return 143
     with open(out_path, "ab") as out:
+        proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=out, stderr=subprocess.STDOUT,
+                                start_new_session=True, preexec_fn=_die_with_parent)
+        with CHILDREN_LOCK:
+            CHILDREN.add(proc)
         try:
-            return subprocess.run(cmd, cwd=cwd, env=env, stdout=out, stderr=subprocess.STDOUT, timeout=timeout).returncode
+            if STOPPING.is_set():
+                kill_group(proc)
+            return proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
+            kill_group(proc)
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                kill_group(proc, signal.SIGKILL)
+                proc.wait()
             return 124
+        finally:
+            with CHILDREN_LOCK:
+                CHILDREN.discard(proc)
 
 
 # ---------------------------------------------------------------- crawl logs
@@ -203,21 +277,30 @@ def cluster_urls(cluster):
     return {u for g in cluster.get("news_groups", []) for u in g.get("source_ids", [])}
 
 
-def published_source_ids(root):
+def published_urls(root):
+    """Canonical URLs of the sources that published events cite. The cluster IDs are sha256 values and never match
+    the archive source IDs, so the match is by URL (G1)."""
+    root = Path(root)
     ids = set()
-    for p in Path(root).glob("events/*/*.md"):
+    for p in root.glob("events/*/*.md"):
         ids.update(SRC_ID.findall(p.read_text(encoding="utf-8", errors="replace")))
-    return ids
+    urls = set()
+    for sid in ids:
+        for p in root.glob(f"sources/*/{sid}.yaml"):
+            m = URL_LINE.search(p.read_text(encoding="utf-8", errors="replace"))
+            if m:
+                urls.add(canonical_url(m[1]))
+    return urls
 
 
-def enrich_candidates(clusters, mapping, meta, dry_root, today, recent_days=RECENT_DAYS, limit=ENRICH_LIMIT):
+def enrich_candidates(clusters, meta, dry_root, today, recent_days=RECENT_DAYS, limit=ENRICH_LIMIT):
     """The largest clusters with a recent row and no published event. A list for a person: nothing is written."""
     cutoff = (datetime.date.fromisoformat(today) - datetime.timedelta(days=recent_days)).isoformat()
-    published = published_source_ids(dry_root)
+    published = published_urls(dry_root)
     out = []
     for c in clusters:
         urls = cluster_urls(c)
-        if len(urls) < 2 or any(mapping.get(u) in published for u in urls):
+        if len(urls) < 2 or any(canonical_url(u) in published for u in urls):
             continue
         rows = [meta[u] for u in urls if u in meta]
         if not rows or max(d for _, d in rows) < cutoff:
@@ -299,6 +382,7 @@ class Run:
         self.events_before = set()
         self.zero, self.streak = [], dict(self.state.get("zero_streak", {}))
         self.gaps, self.refused, self.aborted = {}, {}, {}
+        self.lan = {}
 
     # -- step runner
     def step(self, name, fn, always=False):
@@ -329,17 +413,26 @@ class Run:
                     newest = max(newest, str(json.loads(line).get("published_on", "")))
         return newest
 
+    def fetch(self):
+        """git fetch origin main. It writes refs in .git only: no FETCH_HEAD, no gc (R347.2)."""
+        repo, ref = str(self.cfg.repo), self.cfg.base_ref
+        remote, _, branch = ref.partition("/")
+        if not branch:
+            raise StepFailed(f"base ref {ref} has no remote part")
+        cmd = ["git", "-C", repo, "-c", "gc.auto=0", "-c", "maintenance.auto=false", "fetch", "--quiet", "--no-write-fetch-head", "--no-tags",
+               remote, f"+refs/heads/{branch}:refs/remotes/{remote}/{branch}"]
+        rc = run_cmd(cmd, repo, git_env(), TIMEOUTS["fetch"], self.logs / "fetch.out")
+        if rc != 0:
+            raise StepFailed(f"git fetch {remote} {branch} rc {rc}", rc)
+        return {"origin_main": git_out(repo, "rev-parse", ref)}
+
     def crawl(self):
         if not self.corpus.exists():
             raise StepFailed(f"corpus not found: {self.corpus}")
         since = self.state.get("last_good_date") or self.corpus_newest()
         if not since:
             raise StepFailed("no start date")
-        by_host = collections.OrderedDict()
-        for feed in self.feeds:
-            cr = (feed.get("click_route") or {}).get("urls") or []
-            url = cr[0] if cr else (feed.get("route") or {}).get("url") or feed.get("latest_sitemap") or ""
-            by_host.setdefault(urllib.parse.urlsplit(url).hostname or feed["id"], []).append(feed)
+        by_host = group_by_host(self.feeds)
         self.out_dir.mkdir(parents=True, exist_ok=True)
         self.logs.mkdir(parents=True, exist_ok=True)
         rcs = {}
@@ -353,7 +446,7 @@ class Run:
                 rcs[feed["id"]] = run_cmd(cmd, self.cfg.repo, tool_env({"NEWSFETCH_REQUEST_LOG": str(reqlog)}),
                                           TIMEOUTS["crawl"], self.logs / f"run-{feed['id']}.out")
 
-        threads = [threading.Thread(target=worker, args=(h, fs)) for h, fs in by_host.items()]   # one process per host at a time
+        threads = [threading.Thread(target=worker, args=(h, fs), daemon=True) for h, fs in by_host.items()]   # one process per host at a time
         for t in threads:
             t.start()
         for t in threads:
@@ -364,7 +457,8 @@ class Run:
         bad = {k: v for k, v in rcs.items() if v != 0}
         low = {h: g for h, g in self.gaps.items() if g < MIN_GAP_MS}
         if bad or low:
-            raise StepFailed(f"crawl rc {bad}; hosts under {MIN_GAP_MS} ms: {low}")
+            parts = ([f"crawl rc {bad}"] if bad else []) + ([f"hosts under {MIN_GAP_MS} ms: {low}"] if low else [])
+            raise StepFailed("; ".join(parts))
         return {"since": since, "until": self.today, "processes": len(by_host), "outlets": len(rcs), "min_gap_ms": min(self.gaps.values(), default=None)}
 
     def merge(self):
@@ -392,8 +486,14 @@ class Run:
         pubs = {f["publisher"] for f in self.crawled}
         for p in pubs:
             self.streak[p] = self.streak.get(p, 0) + 1 if p in self.zero else 0
-        write_atomic(self.state_path, json.dumps({"last_good_date": self.today, "zero_streak": self.streak, "updated_at": iso()}, ensure_ascii=False, indent=1) + "\n")
+        self.save_state(last_good_date=self.today, zero_streak=self.streak)
         return {"rows_total": self.merge_result["rows_total"]}
+
+    def save_state(self, **changes):
+        """Merges the changes into state.json. Other keys stay."""
+        state = read_json(self.state_path, {})
+        state.update(changes, updated_at=iso())
+        write_atomic(self.state_path, json.dumps(state, ensure_ascii=False, indent=1) + "\n")
 
     def dry_run(self):
         repo, ref = str(self.cfg.repo), self.cfg.base_ref
@@ -438,6 +538,15 @@ class Run:
     # -- report
     def alerts(self):
         reasons = [f"step {s['name']} failed: {s.get('error', '')}" for s in self.steps if s["status"] == "fail"]
+        for s in self.steps:
+            if s["status"] == "BLOCKED":
+                reasons.append(f"step {s['name']} BLOCKED: {s.get('counts', {}).get('reason', 'not run')}")
+        since = self.lan.get("mismatch_since")
+        if since and self.lan.get("match") is False:
+            hours = (datetime.datetime.now(TAIPEI) - datetime.datetime.fromisoformat(since)).total_seconds() / 3600
+            if hours > LAN_STALE_HOURS:
+                reasons.append(f"LAN snapshot is stale: archive_commit {self.lan.get('archive_commit')} differs from origin/main "
+                               f"{self.lan.get('origin_main')} for {hours:.0f} hours (limit {LAN_STALE_HOURS})")
         for p, n in sorted(self.streak.items()):
             if n >= 2:
                 reasons.append(f"outlet {p} had 0 new rows in {n} runs")
@@ -465,7 +574,7 @@ class Run:
                        "failed": [r["id"] for r in self.dry_report.get("regate", []) if r.get("gate")]},
             "withdraw_blocked": [{"id": k, "reason": reasons.get(k, "unknown"), "gate": v} for k, v in sorted(blocked.items())],
             "enrich_candidates": self.enrich,
-            "lan_api": lan_api_state(self.cfg.api_url, origin),
+            "lan_api": self.lan,
             "disk": {"data_bytes": data_bytes, "corpus_bytes": self.corpus.stat().st_size if self.corpus.exists() else 0,
                      "free_bytes": shutil.disk_usage(self.data if self.data.exists() else "/").free},
         }
@@ -479,8 +588,26 @@ class Run:
             urls = cluster_urls(c)
             if len(urls) >= 2:
                 wanted |= urls
-        mapping = read_json(str(self.clusters) + ".sources.json", {})
-        return enrich_candidates(clusters, mapping, load_meta(self.corpus, wanted), self.dry, self.today)
+        return enrich_candidates(clusters, load_meta(self.corpus, wanted), self.dry, self.today)
+
+    def check_lan(self):
+        """Reads the LAN archive_commit and tracks since when it differs from origin/main (R347.4). An unreadable API keeps the start."""
+        repo = str(self.cfg.repo)
+        origin = self.base_commit or git_out(repo, "rev-parse", self.cfg.base_ref)
+        self.lan = lan_api_state(self.cfg.api_url, origin)
+        old = read_json(self.state_path, {}).get("lan_mismatch_since")
+        if self.lan["match"] is False:
+            since = old or iso()
+        elif self.lan["match"] is True:
+            since = None
+        else:
+            since = old
+        self.lan["mismatch_since"] = since
+        if since != old:
+            try:
+                self.save_state(lan_mismatch_since=since)
+            except OSError as err:
+                logger.warning("cannot save the LAN state: %s", err)
 
     def report(self):
         try:
@@ -488,6 +615,7 @@ class Run:
         except (OSError, ValueError, KeyError) as err:
             logger.warning("enrich candidates failed: %s", err)
         self.steps.append({"name": "report", "start": iso(), "end": iso(), "rc": 0, "status": "ok", "counts": {}})
+        self.check_lan()
         alerts = self.alerts()
         rep = self.build_report(alerts)
         self.steps[-1]["counts"] = {"alerts": len(alerts)}
@@ -515,6 +643,8 @@ class Run:
         self._alerts = []
         shutil.rmtree(self.run_dir, ignore_errors=True)   # a rerun on the same day starts clean
         self.run_dir.mkdir(parents=True)
+        self.logs.mkdir(parents=True, exist_ok=True)
+        self.step("fetch", self.fetch)
         self.step("crawl", self.crawl)
         self.step("merge", self.merge)
         self.step("cluster", self.cluster)
@@ -583,6 +713,11 @@ def main(argv=None):
     if lock is None:
         print(f"{iso()} step lock fail: another run holds the lock", flush=True)
         return EXIT_LOCKED
+    STOPPING.clear()
+    old_handlers = {}
+    if threading.current_thread() is threading.main_thread():
+        for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            old_handlers[sig] = signal.signal(sig, _on_signal)
     try:
         print(f"{iso()} step lock ok", flush=True)
         run = Run(args)
@@ -590,6 +725,8 @@ def main(argv=None):
         return run.go()
     finally:
         lock.close()
+        for sig, handler in old_handlers.items():
+            signal.signal(sig, handler)
 
 
 if __name__ == "__main__":

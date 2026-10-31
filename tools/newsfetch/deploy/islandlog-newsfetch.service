@@ -15,10 +15,13 @@ ExecStart=/bin/sh -c 'cd "$ISLANDLOG_ARCHIVE_REPO" && exec /usr/bin/python3 -m t
 # Exit 75 means that another run holds the lock. It is not a failure of this run.
 SuccessExitStatus=75
 Nice=10
-# The dry run takes about 55 minutes. The crawl and the clustering add about 1 hour. The limit leaves a margin.
-TimeoutStartSec=6h
+# A normal run takes about 2 hours. The limit is above the worst case of the step timeouts in daily.py (TIMEOUTS):
+# fetch 10 min + crawl 3 h + cluster 1 h + dry run 3 h + validate 30 min = 7 h 40 min. A test checks this.
+TimeoutStartSec=12h
 # Sandbox (T64 F-08). The run writes only below ~/islandlog-news. PrivateTmp is the Chromium temp dir.
 NoNewPrivileges=yes
 ProtectSystem=strict
 PrivateTmp=yes
+# The fetch step writes refs in the archive clone .git. Add that path in a drop-in (README.md, step 4).
+# A change of NEWSFETCH_DATA_DIR needs a change here too.
 ReadWritePaths=%h/islandlog-news
