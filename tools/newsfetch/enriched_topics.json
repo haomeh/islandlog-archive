@@ -39,6 +39,16 @@
       "id": "ev-20260424-ccg-kinmen-restricted-waters",
       "ruling": "R330",
       "reason": "created by an agent by web search in T73, not by the system clustering; draft-review; waits for the user review before publish"
+    },
+    {
+      "id": "ev-20261022-topic-7d4ca4c1",
+      "ruling": "R335",
+      "reason": "renamed by an agent in T75 from the sources; the id is unchanged; listed so a run does not restore the system name; waits for two independent verifiers (R336)"
+    },
+    {
+      "id": "ev-20261024-topic-bce38470",
+      "ruling": "R335",
+      "reason": "renamed by an agent in T75 from the sources; the id is unchanged; listed so a run does not restore the system name; waits for two independent verifiers (R336)"
     }
   ]
 }
