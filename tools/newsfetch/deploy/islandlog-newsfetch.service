@@ -1,20 +1,27 @@
-# Daily news metadata fetch (R90). Written as a file only: do not install without the user's approval.
-# Install (after approval): copy both files to ~/.config/systemd/user/, then
-#   systemctl --user daemon-reload && systemctl --user enable --now islandlog-newsfetch.timer
-# Change WorkingDirectory and the out and log paths to the real folders first.
+# Daily news layer (T79, R346): crawl, merge, cluster, dry run on a copy, report. It never writes to the repo tree.
+# Written as a file only: do not install without the user's approval (timer install is task T80).
+# Install (after approval): see README.md in this folder.
 [Unit]
-Description=islandlog newsfetch daily run (metadata only, 1 request per second per host)
+Description=islandlog newsfetch daily run (metadata only, 1 request per second per host, no change to public content)
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/islandlog/archive
+# ISLANDLOG_ARCHIVE_REPO and the other settings come from this file. Copy newsfetch.env.example to it and edit it.
+EnvironmentFile=%h/.config/islandlog-newsfetch.env
+WorkingDirectory=%h
 Environment=PYTHONUNBUFFERED=1
-# The window is the last 3 days. --no-resume makes every run read the lists again.
-ExecStart=/bin/sh -c 'python3 -m tools.newsfetch.backfill --no-resume --since "$(date -d "3 days ago" +%%F)" --until "$(date +%%F)" --out-dir %h/islandlog-news/out --log-dir %h/islandlog-news/logs'
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/bin/sh -c 'cd "$ISLANDLOG_ARCHIVE_REPO" && exec /usr/bin/python3 -m tools.newsfetch.daily'
+# Exit 75 means that another run holds the lock. It is not a failure of this run.
+SuccessExitStatus=75
 Nice=10
-TimeoutStartSec=4h
-# Sandbox (T64 F-08). The run writes only to the out folder, the log folder and the cache folder.
+# A normal run takes about 2 hours. The limit is above the worst case of the step timeouts in daily.py (TIMEOUTS):
+# fetch 10 min + crawl 3 h + cluster 1 h + dry run 3 h + validate 30 min = 7 h 40 min. A test checks this.
+TimeoutStartSec=12h
+# Sandbox (T64 F-08). The run writes only below ~/islandlog-news. PrivateTmp is the Chromium temp dir.
 NoNewPrivileges=yes
 ProtectSystem=strict
 PrivateTmp=yes
-ReadWritePaths=%h/islandlog-news -%h/islandlog/archive/tools/newsfetch/.cache
+# The fetch step writes refs in the archive clone .git. Add that path in a drop-in (README.md, step 4).
+# A change of NEWSFETCH_DATA_DIR needs a change here too.
+ReadWritePaths=%h/islandlog-news
