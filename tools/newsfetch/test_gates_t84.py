@@ -456,5 +456,77 @@ class DeployDocsTest(unittest.TestCase):
         self.assertIn("20-systemd-ssh-proxy.conf", text)
 
 
+class RunReportTest(unittest.TestCase):
+    """R359.7 (G4, G7): changed.tsv lists the renames, the removed members with their titles and an off-topic flag for each added member."""
+
+    def tree(self, root, title, members):
+        """`members`: list of (date, publisher, title). The event cites each member."""
+        (root / "events/2026").mkdir(parents=True, exist_ok=True)
+        (root / "sources/2026").mkdir(parents=True, exist_ok=True)
+        ids = []
+        for i, (day, pub, t) in enumerate(members):
+            sid = f"src-{day.replace('-', '')}-x-{i:08d}"
+            ids.append(sid)
+            (root / "sources/2026" / f"{sid}.yaml").write_text(
+                f"schema_version: 1\nid: {sid}\nsource_class: news\ngrade: C\ntitle: {t}\npublisher: {pub}\nurl: https://x.example/{sid}\npublished_on: '{day}'\n", encoding="utf-8")
+        (root / "events/2026/ev-20261001-topic-aaaaaaaa.md").write_text(
+            f"---\nid: ev-20261001-topic-aaaaaaaa\nstatus: published\ntitle: {title}\n---\n\n" + " ".join(f"[@{i}]" for i in ids) + "\n", encoding="utf-8")
+
+    def rows(self, before, after):
+        import tempfile
+        from tools.newsfetch import run_report
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            self.tree(Path(a), *before)
+            self.tree(Path(b), *after)
+            return run_report.changed_rows(run_report.load_tree(Path(a)), run_report.load_tree(Path(b)))
+
+    def test_r359_7_a_rename_is_listed(self):
+        rows = self.rows(("南鶯活動中心", [("2026-10-01", "甲", "南鶯活動中心啟用"), ("2026-10-02", "乙", "南鶯活動中心啟用典禮")]),
+                         ("新北南鶯活動中心", [("2026-10-01", "甲", "南鶯活動中心啟用"), ("2026-10-02", "乙", "南鶯活動中心啟用典禮")]))
+        self.assertEqual(len(rows), 1)
+        self.assertEqual((rows[0]["title_before"], rows[0]["title_after"], rows[0]["renamed"]), ("南鶯活動中心", "新北南鶯活動中心", "yes"))
+        self.assertEqual((rows[0]["members_before"], rows[0]["members_after"]), (2, 2))
+
+    def test_r359_7_removed_members_come_with_their_titles_and_the_date_that_goes_back_is_flagged(self):
+        before = ("外送專法", [("2026-07-01", "甲", "外送專法上路"), ("2026-09-04", "乙", "外送專法一個月")])
+        after = ("外送專法", [("2026-07-01", "甲", "外送專法上路")])
+        row = self.rows(before, after)[0]
+        self.assertEqual((row["removed"], row["added"]), (1, 0))
+        self.assertIn("外送專法一個月", row["removed_titles"])
+        self.assertEqual((row["latest_news_before"], row["latest_news_after"], row["latest_moves_back"]), ("2026-09-04", "2026-07-01", "yes"))
+
+    def test_r359_7_an_added_member_is_checked_for_the_key_a_foreign_body_a_case_and_an_attack(self):
+        tf.set_candidates({"王小明", "李大華"})
+        self.addCleanup(tf.set_candidates, frozenset())
+        base_members = [("2026-10-01", "甲", "移工懷孕爭議"), ("2026-10-02", "乙", "移工懷孕 勞動部說明")]
+        added = [("2026-10-03", "丙", "移工 雇主政策調整"), ("2026-10-03", "丁", "中國外交部約見日本公使 抗議移工懷孕"),
+                 ("2026-10-04", "戊", "移工懷孕 王小明批李大華"), ("2026-10-04", "己", "移工懷孕 查獲非法雇主"), ("2026-10-04", "庚", "移工懷孕 補助新制")]
+        row = self.rows(("移工懷孕", base_members), ("移工懷孕", base_members + added))[0]
+        self.assertEqual(row["added"], 5)
+        flags = row["added_flags"]
+        self.assertIn("no_key:移工 雇主政策調整", flags)
+        self.assertIn("foreign_body:中國外交部約見日本公使 抗議移工懷孕", flags)
+        self.assertIn("candidate_attack:移工懷孕 王小明批李大華", flags)
+        self.assertIn("case:移工懷孕 查獲非法雇主", flags)
+        self.assertNotIn("補助新制", flags)
+
+    def test_r359_7_an_event_with_no_change_is_not_listed(self):
+        members = [("2026-10-01", "甲", "南鶯活動中心啟用")]
+        self.assertEqual(self.rows(("南鶯活動中心", members), ("南鶯活動中心", members)), [])
+
+    def test_r359_7_the_tsv_has_a_header_and_one_line_for_each_row(self):
+        import tempfile
+        from tools.newsfetch import run_report
+        row = {"id": "ev-1", "title_before": "甲", "title_after": "乙", "renamed": "yes", "members_before": 1, "members_after": 2, "added": 1, "removed": 0,
+               "latest_news_before": "2026-10-01", "latest_news_after": "2026-10-02", "latest_moves_back": "no", "added_flags": "", "removed_titles": "", "added_titles": "標題"}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "changed.tsv"
+            run_report.write_tsv(path, run_report.CHANGED_COLUMNS, [row])
+            lines = path.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(lines[0].split("\t"), run_report.CHANGED_COLUMNS)
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(lines[1].split("\t")[0:4], ["ev-1", "甲", "乙", "yes"])
+
+
 if __name__ == "__main__":
     unittest.main()
