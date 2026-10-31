@@ -24,6 +24,21 @@
       "id": "ev-20260829-topic-97f2fc8b",
       "ruling": "R325",
       "reason": "enriched by an agent in T67; verified claim by claim; the user approved publish on 2026-10-31"
+    },
+    {
+      "id": "ev-20260729-hualien-county-donation-search",
+      "ruling": "R330",
+      "reason": "created by an agent by web search in T73, not by the system clustering; draft-review; waits for the user review before publish"
+    },
+    {
+      "id": "ev-20261028-pakistan-airspace-taiwan-flights",
+      "ruling": "R330",
+      "reason": "created by an agent by web search in T73, not by the system clustering; draft-review; waits for the user review before publish"
+    },
+    {
+      "id": "ev-20260424-ccg-kinmen-restricted-waters",
+      "ruling": "R330",
+      "reason": "created by an agent by web search in T73, not by the system clustering; draft-review; waits for the user review before publish"
     }
   ]
 }

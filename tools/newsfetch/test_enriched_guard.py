@@ -25,10 +25,12 @@ def listed(path):
 
 
 class LoaderTest(unittest.TestCase):
-    def test_the_list_file_in_this_branch_loads_the_five_r325_ids(self):
+    def test_the_list_file_in_this_branch_loads_the_eight_listed_ids(self):
         self.assertEqual(set(tp.load_enriched_topics(LIST)), {
             "ev-20260912-topic-54fa35c7", "ev-20260729-topic-fec46013", "ev-20260625-topic-6ac76a2a",
-            "ev-20260708-topic-d8105c51", "ev-20260829-topic-97f2fc8b"})
+            "ev-20260708-topic-d8105c51", "ev-20260829-topic-97f2fc8b",
+            "ev-20260729-hualien-county-donation-search", "ev-20261028-pakistan-airspace-taiwan-flights",
+            "ev-20260424-ccg-kinmen-restricted-waters"})
 
     def test_a_missing_file_is_an_empty_list(self):
         with tempfile.TemporaryDirectory() as tmp:
