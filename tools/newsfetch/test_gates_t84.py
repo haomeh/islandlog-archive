@@ -395,5 +395,66 @@ class CandidateMemberTest(unittest.TestCase):
         self.assertIn(tp.src_id(topic[0], tp.HOSTS), text)
 
 
+class EnrichNoiseTest(unittest.TestCase):
+    """R359.8: the list of enrich candidates (daily.enrich_candidates) holds no market, lottery, quake, digest, live or campaign cluster. The quake and campaign
+    rules are the rules of the gates (no_public_act, ELECTION, candidate_talk). The titles are the 20 candidates of the 2026-10-31 daily report."""
+
+    NOISE = {
+        "quake": ["宜蘭外海規模4.4地震 最大震度3級"],
+        "market": ["快訊／台積電漲40元至2120 台股大漲逾660點重返38K", "三大法人買超台股545.86億元", "新台幣開盤升2.5分 為31.55元",
+                   "精測4月和前4月營收創新高 AI晶片測試強勁", "5月電子期漲 金融期跌", "3飆股列「抓去關」新名單！處置到5／13 聯發科、旺宏列注意股"],
+        "lottery": ["今彩539第115101期開獎"],
+        "digest": ["04/24 各報重點新聞一覽", "超商咖啡「買2送2」助攻考生提神 周末優惠一次看"],
+        "live": ["立院LIVE》院會 現場直播中"],
+        "campaign": ["新北市長選舉》民調反超李四川0.2個百分點 蘇巧慧有最新回應", "沈伯洋競總成立   蔡其昌要帶東泉雞蛋糕祝賀？"],
+    }
+    KEEP = ["中共9機艦台海周邊活動 國軍嚴密監控應處", "蘋果供應鏈遭駭！iPhone 18 Pro主機板設計圖、A20 Pro文件外洩", "中油：下週汽柴油價格凍漲 累計吸收124億元",
+            "高雄旗山水管橋漏水搶修！停水23小時 影響範圍曝光", "颱風假 台中市停班停課", "立法院三讀通過水土保持法修正草案"]
+
+    def test_r359_8_each_class_of_noise_has_its_label(self):
+        for label, titles in self.NOISE.items():
+            for t in titles:
+                self.assertEqual(tf.enrich_noise(t), label, t)
+
+    def test_r359_8_an_issue_title_is_no_noise(self):
+        for t in self.KEEP:
+            self.assertIsNone(tf.enrich_noise(t), t)
+
+    def test_r359_8_the_candidate_list_drops_noise_clusters(self):
+        import shutil
+        import tempfile
+        from tools.newsfetch import daily
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, True)
+        (tmp / "events" / "2026").mkdir(parents=True)
+        (tmp / "sources" / "2026").mkdir(parents=True)
+        titles = [t for ts in self.NOISE.values() for t in ts] + self.KEEP
+        clusters, meta = [], {}
+        for i, t in enumerate(titles):
+            urls = [f"https://a.example/{i}/1", f"https://a.example/{i}/2"]
+            clusters.append({"cluster_id": f"c{i}", "title": t, "news_groups": [{"source_ids": urls}]})
+            meta.update({urls[0]: ("甲", "2026-10-30"), urls[1]: ("乙", "2026-10-30")})
+        got = daily.enrich_candidates(clusters, meta, tmp, "2026-10-31", recent_days=3, limit=50)
+        self.assertEqual(sorted(c["title"] for c in got), sorted(self.KEEP))
+
+
+class DeployDocsTest(unittest.TestCase):
+    """R358, R359.8: the env example and the README of the daily layer name GIT_SSH_COMMAND and GOCACHE (T80: the fetch step failed under the sandbox without the first;
+    the validator via go run needs a cache folder that the sandbox can write)."""
+
+    DEPLOY = Path(tp.__file__).parent / "deploy"
+
+    def test_r359_8_the_env_example_sets_the_ssh_command_and_the_go_cache(self):
+        text = (self.DEPLOY / "newsfetch.env.example").read_text(encoding="utf-8")
+        self.assertIn("GIT_SSH_COMMAND=ssh -F /dev/null -o BatchMode=yes", text)
+        self.assertRegex(text, r"(?m)^GOCACHE=/home/USER/islandlog-news/gocache$")
+
+    def test_r359_8_the_readme_tells_why(self):
+        text = (self.DEPLOY / "README.md").read_text(encoding="utf-8")
+        self.assertIn("GIT_SSH_COMMAND", text)
+        self.assertIn("GOCACHE", text)
+        self.assertIn("20-systemd-ssh-proxy.conf", text)
+
+
 if __name__ == "__main__":
     unittest.main()

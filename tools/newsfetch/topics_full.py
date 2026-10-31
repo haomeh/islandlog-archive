@@ -41,7 +41,8 @@ from tools.newsfetch.topic_config import (
     DUPLICATE_NEAR_DAYS, DUPLICATE_NEAR_TERM_LEN,
     ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE,
     MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES,
-    ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY, STRONG_KEY_MIN, STRONG_KEY_SHARE, BILL_SHARE)
+    ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY, STRONG_KEY_MIN, STRONG_KEY_SHARE, BILL_SHARE,
+    MARKET_NOISE, LOTTERY_NOISE, DIGEST_NOISE, LIVE_NOISE)
 
 logger = logging.getLogger(__name__)
 
@@ -869,6 +870,24 @@ def no_public_act(titles):
     if sum(1 for t in texts if NATURAL_PHENOMENON.search(t) or CEREMONY.search(t)) < PHENOMENON_SHARE * n:
         return False
     return sum(1 for t in texts if public_act_title(t)) < ACT_MIN_TITLES
+
+
+def enrich_noise(title):
+    """R359.8: the label of a cluster title that is no candidate for an enrich step, or None. The quake and campaign rules are the rules of the gates
+    (no_public_act, ELECTION, CAMPAIGN_ACT, candidate_talk). The other labels are lists of words (topic_config)."""
+    if LOTTERY_NOISE.search(title):
+        return "lottery"
+    if MARKET_NOISE.search(title):
+        return "market"
+    if DIGEST_NOISE.search(title) or tp.DROP.search(title):
+        return "digest"
+    if LIVE_NOISE.search(title):
+        return "live"
+    if (ELECTION.search(title) and not ELECTION_LEGAL.search(title)) or CAMPAIGN_ACT.search(title) or candidate_talk(title):
+        return "campaign"
+    if no_public_act([title]):
+        return "quake"
+    return None
 
 
 NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_keyword_bundle", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter", "rejected_mixed_cluster", "rejected_government_scope", "rejected_mixed_ministry", "rejected_no_public_act")  # R154, R196, R215.3, R229: the labels of the rules that only a new topic must pass

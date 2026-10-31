@@ -50,6 +50,10 @@ SECOND_ANCHOR_MIN_LEN, SECOND_ANCHOR_MAX_LEN = 2, 4  # A second key word has 2 t
 STRONG_KEY_MIN = 5  # R359.1: a key is strong (it names one issue) when the on-topic titles are at least this many ... Case: 外送專法 (29 of 51 uses), 南海仲裁案 (8 of 12), 媒宣費 (36 of 63) in the T83 run.
 STRONG_KEY_SHARE = 0.5  # ... and they are this share of all the uses of the key in the corpus. A generic key stays below it: 焚化爐 (7 of 138), 統促黨 (6 of 60), 移工 (5 of 681). The second anchor never removes a member of a strong key (R359.1).
 BILL_SHARE = 0.5  # R359.5: a new topic with a law name is a national bill when this share of its titles names a legislative act (修法, 草案, 三讀). The place of the case that led to the bill is no jurisdiction. Case: 少事法 (新北割頸案).
+MARKET_NOISE = re.compile(r"台股|股市|股價|收盤|開盤|漲停|跌停|三大法人|外資|買超|賣超|新台幣|匯率|期貨|電子期|金融期|營收|財報|飆股|處置股|注意股|ETF|成交量|盤中")  # R359.8: a market report. The list of enrich candidates (daily.enrich_candidates) drops it.
+LOTTERY_NOISE = re.compile(r"開獎|今彩|大樂透|威力彩|樂透|頭獎|發票中獎")  # R359.8: a lottery draw
+DIGEST_NOISE = re.compile(r"重點新聞|各報|新聞一覽|一次看|懶人包|晨報|晚報|早報|頭條新聞|整理包")  # R359.8: a digest of many stories, not one issue
+LIVE_NOISE = re.compile(r"直播|LIVE|live|轉播")  # R359.8: a live stream of a session or an event
 
 # --- Gates of the full run (topics_full.run) ---
 SAME_EVENT_SHARE = 0.3  # A topic that shares this share of its members with a published event is skipped. Start (R68).
