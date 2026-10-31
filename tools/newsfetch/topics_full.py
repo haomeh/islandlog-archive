@@ -1487,6 +1487,9 @@ REMOVED_SOURCES = tp.REMOVED_SOURCES
 load_removed_sources = tp.load_removed_sources  # R261.2c: one loader, in topics.py
 
 
+FRAGMENT_DEFER = ("rejected_name_quality", "rejected_foreign")  # R329.1: a fragment of an old topic fails these on its own titles; the re-gate of the old topic decides
+
+
 def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve_withdraw=None):
     enriched = tp.load_enriched_topics()  # R324.2: a list that cannot be read stops the run before any write
     tp.ENRICHED_SKIPPED.clear()
@@ -1569,10 +1572,14 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             days = sorted(_day(i["published_on"]) for i in seed_items)
             existing_keys += [(k, days[0] - timedelta(days=tp.WINDOW_BEFORE), days[-1] + timedelta(days=tp.WINDOW_AFTER)) for k in ks]
     urls_by_id = source_urls_by_id(root)
+    enriched_issues = []  # R330.1: the issue and the sources of each listed event
     for _, doc, text in old_system_topics(root, include_enriched=True):  # R162: the old system topics count for the duplicate test too
         cited = [by_url[urls_by_id[c]] for c in dict.fromkeys(re.findall(r"src-[0-9a-z-]+", text)) if c in urls_by_id and urls_by_id[c] in by_url]
         if cited:
-            old_issues.append((issue_profile(PLACE_PREFIX.sub("", doc["title"], count=1), cited), {it["url"] for it in cited}))
+            entry = (issue_profile(PLACE_PREFIX.sub("", doc["title"], count=1), cited), {it["url"] for it in cited})
+            old_issues.append(entry)
+            if doc["id"] in enriched:
+                enriched_issues.append(entry)
     # Bigger topics first, so a duplicate keeps the larger one.
     ordered = sorted(merged.items(), key=lambda kv: (-len(kv[1]), kv[0][1], kv[0][0]))
     window_items = sorted(corpus, key=lambda j: j["published_on"])
@@ -1614,9 +1621,9 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                 continue
             if outcome != "ok":
                 stats[outcome] += 1
-                if outcome not in NEW_TOPIC_ONLY:  # R155.4: the rules of a new topic do not fail an old topic; its re-gate decides
+                if outcome not in NEW_TOPIC_ONLY and not (rebuilds_old and outcome in FRAGMENT_DEFER):  # R155.4: the rules of a new topic do not fail an old topic; its re-gate decides
                     fail(outcome, [m["url"] for m in members])
-                elif rebuilds_old:  # R205: no other candidate may fail this old topic either
+                elif rebuilds_old:  # R205, R329.1: no other candidate may fail this old topic either
                     deferred.update(matching_published(published_ids, src_ids_of([m["url"] for m in members])))
                 continue
             jids, actors, name = found["jids"], found["actors"], found["name"]
@@ -1635,8 +1642,11 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                     "sensitive": False, "_keys": [key],
                     "_name": name, "_generic": False}
             urls = {m["url"] for m in members}
-            if tp.is_enriched(event_id, enriched):  # R324.2: the candidate would rebuild a listed event
+            listed_issue = any(len(urls & other) >= MERGE_OVERLAP * min(len(urls), len(other)) or same_issue(issue_profile(key, members), profile, df)
+                               for profile, other in enriched_issues)  # R330.1: a new id does not hide a listed event; the rule is the one for old topics
+            if tp.is_enriched(event_id, enriched) or listed_issue:  # R324.2: the candidate would rebuild a listed event
                 stats["skipped_enriched_candidate"] += 1
+                logger.info("Candidate %s (%s) skipped: it shares the issue or the sources with a listed event", event_id, key)
                 keep(urls)
                 continue
             if any(len(urls & other) >= MERGE_OVERLAP * min(len(urls), len(other)) for other in published_sets):
