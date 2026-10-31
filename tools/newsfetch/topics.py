@@ -29,7 +29,7 @@ import sys
 import unicodedata
 import urllib.parse
 from collections import Counter
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from tools.newsfetch.article import LTN_SECTIONS
@@ -612,6 +612,21 @@ def _dump(doc):
     return yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000, default_flow_style=False)
 
 
+TAIPEI = timezone(timedelta(hours=8))
+
+
+def accessed_on(it):
+    """R359.4: the Taipei date on which the crawler fetched the item (the corpus field fetched_on, UTC). It is never before the publication date.
+    A row without fetched_on is an error: the date of access must not be a guess."""
+    if it.get("accessed_on"):
+        return str(it["accessed_on"])  # an item that was read back from its source file (file_items) keeps the date of the file
+    fetched = it.get("fetched_on")
+    if not fetched:
+        raise ValueError(f"item has no fetched_on: {it.get('url')}")
+    day = datetime.fromisoformat(str(fetched).replace("Z", "+00:00")).astimezone(TAIPEI).date().isoformat()
+    return max(day, str(it["published_on"]))
+
+
 def _source_doc(it, enrich, actors_by_host):
     cls = it.get("source_class", "news")
     d = {"schema_version": 1, "id": src_id(it, actors_by_host), "source_class": cls,
@@ -625,7 +640,7 @@ def _source_doc(it, enrich, actors_by_host):
     quote = e.get("quote") or ""
     if not quote or CAPTION.search(quote):
         quote = it["title"]
-    d.update({"url": it["url"], "published_on": it["published_on"], "accessed_on": "2026-10-25",
+    d.update({"url": it["url"], "published_on": it["published_on"], "accessed_on": accessed_on(it),
               "has_archive_url": False, "quote": quote[:150]})
     section = LTN_SECTIONS.get(e.get("section", ""), e.get("section", ""))
     if section and not re.fullmatch(r"[A-Za-z]+", section):

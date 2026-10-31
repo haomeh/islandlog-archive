@@ -4,7 +4,7 @@ from tools.newsfetch import topics_full as tf
 
 
 def item(url, title, day, publisher="自由時報", cls="news", **extra):
-    d = {"url": url, "title": title, "published_on": day, "publisher": publisher, "source_class": cls}
+    d = {"url": url, "title": title, "published_on": day, "publisher": publisher, "source_class": cls, "fetched_on": f"{day}T12:00:00Z"}  # R359.4: a source file takes accessed_on from the row
     d.update(extra)
     return d
 

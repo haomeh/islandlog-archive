@@ -1404,6 +1404,8 @@ def file_items(root, ids):
             d = yaml.safe_load(p.read_text(encoding="utf-8"))
             item = {"url": d["url"], "title": d["title"], "published_on": str(d["published_on"]), "publisher": d["publisher"],
                     "source_class": d["source_class"], "quote": d.get("quote")}
+            if d.get("accessed_on"):
+                item["accessed_on"] = str(d["accessed_on"])  # R359.4: the date of the file stays
             group = index.group(d["publisher"])  # R344.3, PRD 4.4: one owner counts once
             if group != d["publisher"]:
                 item["publisher_group"] = group
@@ -1831,6 +1833,9 @@ def enrich_sources(root, corpus, enrich_path):
         doc = tp._source_doc(by_url[m.group(1)], enrich, tp.HOSTS)
         if doc["id"] != p.stem:
             continue
+        old_access = re.search(r"^accessed_on: '?(\d{4}-\d{2}-\d{2})'?$", p.read_text(encoding="utf-8"), re.M)
+        if old_access:
+            doc["accessed_on"] = old_access.group(1)  # R359.4: an existing file keeps its date of access
         p.write_text(tp._dump(doc), encoding="utf-8")
         done += 1
     return done

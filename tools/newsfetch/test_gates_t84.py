@@ -2,6 +2,7 @@
 The titles are the member titles of the old topics in the T83 run (cut to 60 characters)."""
 
 import unittest
+from pathlib import Path
 
 from tools.newsfetch import test_topics_full as base
 from tools.newsfetch import topics as tp
@@ -258,6 +259,51 @@ class CivilMarchTest(unittest.TestCase):
     def test_r359_3_a_body_with_an_act_still_passes_the_private_matter_gate(self):
         members = [item(f"m{i}", t, "2026-10-31", "出版社" + str(i)) for i, t in enumerate(["警方開罰違規業者", "警方公告取締時段", "警方稽查夜店"])]
         self.assertIsNone(tf.new_topic_reason(members))
+
+
+class AccessedOnTest(unittest.TestCase):
+    """R359.4 (G3): accessed_on of a new source file is the Taipei date of the corpus row (fetched_on), never a constant. Existing files stay."""
+
+    def doc(self, **extra):
+        it = item("https://www.ltn.com.tw/news/politics/breakingnews/5624930", "測試標題", "2026-10-27", "自由時報", fetched_on="2026-10-27T17:46:20Z")
+        it.update(extra)
+        return tp._source_doc(it, {}, tp.HOSTS)
+
+    def test_r359_4_the_date_comes_from_the_row(self):
+        self.assertEqual(self.doc()["accessed_on"], "2026-10-28")  # 17:46 UTC is 01:46 of the next day in Taipei
+
+    def test_r359_4_the_date_is_not_before_the_publication_date(self):
+        for fetched in ("2026-10-27T00:00:00Z", "2026-10-31T05:00:00Z", "2026-11-02T20:00:00Z"):
+            got = self.doc(fetched_on=fetched)["accessed_on"]
+            self.assertGreaterEqual(got, "2026-10-27", fetched)
+
+    def test_r359_4_a_row_without_fetched_on_is_an_error(self):
+        it = item("https://www.ltn.com.tw/news/politics/breakingnews/5624931", "測試標題", "2026-10-27", "自由時報")
+        del it["fetched_on"]
+        with self.assertRaises(ValueError):
+            tp._source_doc(it, {}, tp.HOSTS)
+
+    def test_r359_4_no_constant_date_is_left_in_the_source_writer(self):
+        text = (Path(tp.__file__)).read_text(encoding="utf-8")
+        self.assertFalse('"accessed_on": "20' in text, "a constant accessed_on is left in topics.py")
+
+    def test_r359_4_the_enrich_step_keeps_the_accessed_on_of_an_existing_file(self):
+        import json
+        import tempfile
+        it = item("https://www.ltn.com.tw/news/politics/breakingnews/5624930", "測試標題", "2026-10-27", "自由時報", fetched_on="2026-10-30T01:00:00Z")
+        doc = tp._source_doc(it, {}, tp.HOSTS)
+        doc["accessed_on"] = "2026-10-25"  # a file from an earlier run
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "sources/2026").mkdir(parents=True)
+            path = root / "sources/2026" / (doc["id"] + ".yaml")
+            path.write_text(tp._dump(doc), encoding="utf-8")
+            enrich = root / "enrich.jsonl"
+            enrich.write_text(json.dumps({"url": it["url"], "status": "ok", "byline": "記者"}, ensure_ascii=False), encoding="utf-8")
+            self.assertEqual(tf.enrich_sources(root, [it], enrich), 1)
+            text = path.read_text(encoding="utf-8")
+        self.assertIn("accessed_on: '2026-10-25'", text)
+        self.assertIn("byline", text)
 
 
 if __name__ == "__main__":
