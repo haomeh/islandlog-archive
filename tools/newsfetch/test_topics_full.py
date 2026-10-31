@@ -843,11 +843,11 @@ class RegateTest(unittest.TestCase):
     ON = ["桃園市府會勘南崁溪淤積問題", "南崁溪淤積嚴重 桃園市府將疏濬", "南崁溪淤積 桃園市府編列疏濬預算", "桃園南崁溪淤積　議員要求市府說明", "南崁溪淤積問題 桃園市府回應議員"]
     OFF = "北部釣客談南崁溪淤積 魚獲大減"
 
-    def setup(self, root, publishers=2, status="draft-review"):
+    def setup(self, root, publishers=2, status="draft-review", off_publisher="中央通訊社"):
         from tools.newsfetch import topics as tp
         corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
         topic = [item(f"t{i}", t, "2026-10-23", "自由時報" if i % publishers == 0 else "聯合新聞網") for i, t in enumerate(self.ON)]
-        topic.append(item("off", self.OFF, "2026-10-24", "中央通訊社"))
+        topic.append(item("off", self.OFF, "2026-10-24", off_publisher))
         corpus += topic
         for d in ("events/2026", "sources/2026", "actors"):
             (root / d).mkdir(parents=True, exist_ok=True)
@@ -887,7 +887,7 @@ class RegateTest(unittest.TestCase):
         from pathlib import Path
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            corpus, seed, _ = self.setup(root, publishers=1)  # the file cites one news publisher and one off-topic item
+            corpus, seed, _ = self.setup(root, publishers=1, off_publisher="自由時報")  # the file cites one news publisher; the off-topic item has the same one (R329.3)
             before = (root / "events/2026" / f"{self.ID}.md").read_text(encoding="utf-8")
             stats, _, _ = self.run_gate(root, corpus, seed)
             self.assertEqual((stats["regate_failed"], stats["withdrawn"], stats["withdraw_pending"]), (1, 0, 1))

@@ -1453,6 +1453,9 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
         return record
     seed["_keys"], seed["_name"] = [key], found["name"]
     ev, gate = build_checked(seed, corpus, df, members)
+    if gate == "rejected_source_rule" and record["dropped"] and meets_source_rule(file_items(root, before)):
+        record.update(file_sources_kept=True, key=key)  # R329.3, R337: the member drop caused the fail; the sources in the file pass the same rule, so the file stays as it is
+        return record
     if gate:
         record["gate"] = gate
         return record
@@ -1695,6 +1698,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             covered.discard(doc["id"])
         else:
             stats["regate_passed"] += 1
+            stats["regate_file_sources_kept"] += bool(rec.get("file_sources_kept"))
             stats["regate_members_removed"] += len(rec["removed"])
             stats["regate_renamed"] += rec["title_after"] != rec["title_before"]
             covered.add(doc["id"])
