@@ -59,7 +59,7 @@ review:
   reason: 'withdrawn: rejected_source_rule'
   status: draft-review
 correction_ids:
-- cr-20261031-05
+- cr-20261031-02
 ---
 
 ## 2026-09-26　2 則報導、1 則回應或澄清
