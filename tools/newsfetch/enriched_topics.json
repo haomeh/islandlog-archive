@@ -43,27 +43,27 @@
     {
       "id": "ev-20261022-topic-7d4ca4c1",
       "ruling": "R335",
-      "reason": "renamed by an agent in T75 from the sources; the id is unchanged; listed so a run does not restore the system name; the title and summary passed 2 models at b806ce1 with notes; the T81 fixes wait for 2 independent verifiers (R336)"
+      "reason": "renamed by an agent in T75 from the sources; the id is unchanged; listed so a run does not restore the system name; the title and summary passed 2 models at b806ce1 with notes; the T81 fixes passed 2 verifiers at 36cccdc; T81b did not change the page body; waits for 2 independent verifiers (R336)"
     },
     {
       "id": "ev-20261024-topic-bce38470",
       "ruling": "R335",
-      "reason": "renamed by an agent in T75 from the sources; the id is unchanged; listed so a run does not restore the system name; the title and summary passed 2 models at b806ce1 with notes; the T81 fixes wait for 2 independent verifiers (R336)"
+      "reason": "renamed by an agent in T75 from the sources; the id is unchanged; listed so a run does not restore the system name; the title and summary passed 2 models at b806ce1 with notes; the T81 fixes passed 2 verifiers at 36cccdc; T81b added words to review.reason only; the title cut at 3. and 81. is a parser backlog item; waits for 2 independent verifiers (R336)"
     },
     {
       "id": "ev-20260715-china-branded-attendance-devices",
       "ruling": "R344",
-      "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; T81 fixed the gaps of the 2 verifiers at b806ce1; waits for 2 independent verifiers (R336)"
+      "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; T81 and T81b fixed the gaps of the verifiers at b806ce1 and 36cccdc; waits for 2 independent verifiers (R336)"
     },
     {
       "id": "ev-20260804-hualien-emergency-kits",
       "ruling": "R344",
-      "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; T81 fixed the gaps of the 2 verifiers at b806ce1; waits for 2 independent verifiers (R336)"
+      "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; T81 and T81b fixed the gaps of the verifiers at b806ce1 and 36cccdc; waits for 2 independent verifiers (R336)"
     },
     {
       "id": "ev-20260821-tainan-annan-waste-fire",
       "ruling": "R344",
-      "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; review.sensitive true by the user decision of 2026-10-31 (R349), a one-event exception; the case is under investigation; T81 fixed the gaps of the 2 verifiers at b806ce1; waits for 2 independent verifiers (R336)"
+      "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; review.sensitive true by the user decision of 2026-10-31 (R349), a one-event exception; the case is under investigation; T81 and T81b fixed the gaps of the verifiers at b806ce1 and 36cccdc; waits for 2 independent verifiers (R336)"
     }
   ]
 }
