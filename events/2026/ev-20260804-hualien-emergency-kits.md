@@ -4,7 +4,7 @@ id: ev-20260804-hualien-emergency-kits
 kind: historical_event
 status: published
 title: 花蓮縣政府採購緊急避難包的發放進度與審計查核意見
-summary: 2026-08-04，媒體報導審計室查核指出花蓮縣政府採購的緊急避難包仍有 2 萬多組未發放 [@src-20260804-cts-ce4fc896]。花蓮縣消防局表示，剩餘約 9,800 組，9 月 30 日前可領取 [@src-20260805-cts-650964c2]。
+summary: 2026-08-04，媒體報導審計室查核發現，花蓮縣 2026 年 3 月仍有 2 萬多組緊急避難包未發放 [@src-20260804-cts-ce4fc896]。消防局於 8 月表示剩餘約 9,800 組，可領至 9 月 30 日 [@src-20260804-ltn-ee471cab]。
 start_date: '2026-08-04'
 start_date_precision: day
 gov_levels:
@@ -26,7 +26,7 @@ positions:
   question_id: q-01
   actor_id: ac-hualien-county-government
   stance: other
-  summary: 花蓮縣消防局表示，採購量依戶籍數估算，實際有戶籍在花蓮但不在當地居住的情形；剩餘約 9,800 組，9 月 30 日前可至各消防分隊領取，未來將在首波發放後再評估是否續購。
+  summary: 花蓮縣消防局表示，採購量依戶籍數估算，實際有戶籍在花蓮但不在當地居住的情形；8 月時剩餘約 9,800 組，9 月 30 日前可至各消防分隊領取，未來將在首波發放後再評估是否續購。
   stated_on: '2026-08-04'
   source_ids:
   - src-20260804-ltn-ee471cab
@@ -37,7 +37,6 @@ timeline:
   date: '2026-08-04'
   date_precision: day
   title: 媒體報導審計室查核意見，花蓮縣消防局說明剩餘數量與領取期限
-  attributed_to: ac-hualien-county-government
   source_ids:
   - src-20260804-cts-ce4fc896
   - src-20260804-ltn-ee471cab
@@ -45,7 +44,6 @@ timeline:
   date: '2026-08-05'
   date_precision: day
   title: 縣議員要求縣府說明，消防局補充無法發放的原因
-  attributed_to: ac-hualien-county-government
   source_ids:
   - src-20260805-cts-650964c2
   - src-20260805-ltn-f7fa68eb
@@ -92,7 +90,7 @@ review:
 
 ## 花蓮縣消防局的說明
 
-花蓮縣消防局表示，採購量依戶籍數估算，但有戶籍在花蓮、人不在當地的情形，因此未領取；目前剩餘約 9,800 組，民眾可在 9 月 30 日前到各消防分隊領取 [@src-20260804-ltn-ee471cab] [@src-20260805-ltn-f7fa68eb]。消防局表示，合約要求廠商一年內巡檢並更換過期品項，廠商已在 4 月與 5 月到各鄉鎮巡檢 [@src-20260804-ltn-ee471cab] [@src-20260804-cts-ce4fc896]。
+花蓮縣消防局表示，採購量依戶籍數估算，但有戶籍在花蓮、人不在當地的情形，因此未領取；8 月時剩餘約 9,800 組，民眾可在 9 月 30 日前到各消防分隊領取 [@src-20260804-ltn-ee471cab] [@src-20260805-ltn-f7fa68eb]。消防局表示，合約要求廠商一年內巡檢並更換過期品項，廠商已在 4 月與 5 月到各鄉鎮巡檢 [@src-20260804-ltn-ee471cab] [@src-20260804-cts-ce4fc896]。
 
 消防局災害管理科代理科長陳力平表示，約一至兩成無法發放，期限後剩餘避難包將用於防災宣導或捐贈弱勢團體 [@src-20260805-cts-650964c2]。消防局並表示，未來將改採動態採購 [@src-20260804-ltn-ee471cab]。
 
