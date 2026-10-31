@@ -63,7 +63,7 @@
     {
       "id": "ev-20260821-tainan-annan-waste-fire",
       "ruling": "R344",
-      "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; review.sensitive true by the user decision of 2026-10-31 (R349), a one-event exception; the case is under investigation; T81 and T81b fixed the gaps of the verifiers at b806ce1 and 36cccdc; waits for 2 independent verifiers (R336)"
+      "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; review.sensitive true by the user decision of 2026-10-31 (R349), a one-event exception; as of 2026-10-25 the case is under investigation, with no indictment found; T81, T81b and T81c fixed the gaps of the verifiers at b806ce1 and 36cccdc; waits for 2 independent verifiers (R336)"
     }
   ]
 }
