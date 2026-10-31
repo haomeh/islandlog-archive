@@ -175,6 +175,8 @@ def has_word_boundary(key, titles, df=None, new=False):
     for side in sides:
         if sum(c for _, c in side.most_common(3)) >= CONTINUATION_SHARE * n:
             return False
+    if new and key.endswith("法") and sum(c for ch, c in right.items() if ch in "庭院") >= CONTINUATION_SHARE * n:
+        return False  # R359.2: a new key that ends in 法 and is followed by 庭 or 院 in most uses is a cut of 憲法法庭 or 憲法法院 (波蘭憲法法)
     return True
 
 
@@ -543,6 +545,8 @@ NATIONAL_LAW = re.compile(r"修法|入法|立法|專法|子法|法案|草案|條
 FOREIGN_FIGURE = re.compile(r"川普|拜登|普丁|習近平|王毅|王滬寧|范斯|盧比歐|馬可仕|歐巴馬|趙小蘭|黎智英|戴恩斯|詹姆士|古天樂|郭文貴|澤倫斯基")  # names of public_figures.json that are not Taiwan officials
 TAIWAN_FIGURE_NAMES = frozenset(n for n in tp.PUBLIC_FIGURES if len(n) >= 2 and not FOREIGN_FIGURE.search(n))
 TAIWAN_FIGURE = re.compile("|".join(re.escape(n) for n in tp.PUBLIC_FIGURES if len(n) >= 2 and not FOREIGN_FIGURE.search(n)) or r"(?!)")  # R141.4: a mayor, legislator or minister of Taiwan
+GENERIC_BODY = re.compile(r"憲法法庭|憲法法院|大法官|司法院|外交部|國防部|財政部|教育部|內政部|法務部|經濟部|交通部|農業部|文化部|央行|中央銀行|國安局|國安會|總統府")  # R359.2: a body that every state has. Its name alone is no link to Taiwan: 波蘭憲法法庭 is not 憲法法庭.
+TW_POLITICS_NEW = re.compile(TW_POLITICS.pattern.replace("|部長", "").replace("|院長", ""))  # R359.2: a minister or a court president of any state
 TYPHOON = re.compile(r"颱風|颱|熱帶低壓|熱帶性低氣壓")
 TAIWAN_WORD = re.compile(r"台灣|臺灣|全台|[對近襲侵離登赴朝向]台")  # R141.4: a forecast that names Taiwan
 NATIONAL_ROAD = re.compile(r"台\d{1,2}線|國道\d|省道")
@@ -559,13 +563,16 @@ def taiwan_relevant(titles, new=False):
     hits = storm = named = 0
     for t in titles:
         foreign = bool((FOREIGN_NEW if new else FOREIGN_ONLY).search(t))
+        politics = TW_POLITICS
         if new:
             t = home_text(t)
             if foreign:
                 t = t.replace("氣象署", "")  # a report of a foreign quake cites the Taiwan agency as its source
+            if not PUBLIC_POWER_ACT.search(t):  # R359.2: a body that every state has counts as a Taiwan body only with a public act in the title
+                t, politics = GENERIC_BODY.sub(" ", t), TW_POLITICS_NEW
         if any(term in (place_text(t) if new else t) for _, _, _, terms in JURS for term in terms) or (LOCAL_GOV.search(t) and not (new and foreign)) \
                 or any(re.search(p, t) for p, _, _, _ in CENTRAL) or NATIONAL_SYSTEMS.search(t) or re.search(r"台灣|臺灣|全台|國人", t) \
-                or TW_POLITICS.search(t) or (NATIONAL_LAW.search(t) and not foreign) \
+                or politics.search(t) or (NATIONAL_LAW.search(t) and not foreign) \
                 or (TAIWAN_FIGURE.search(t) and not foreign) or NATIONAL_ROAD.search(t):
             hits += 1
         if TYPHOON.search(t):

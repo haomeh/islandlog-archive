@@ -451,7 +451,7 @@ class ThemeWordTest(unittest.TestCase):
         self.assertFalse(tf.theme_word("鍵", self.months([0, 0, 0, 0, 0, 0, 0])))
 
     def test_the_gate_rejects_a_theme_word_of_a_new_topic_and_keeps_an_old_topic(self):
-        titles = ["政治獻金案二審首庭 柯文哲否認", "政治獻金案二審 檢方說明", "政治獻金案 法務部說明"]
+        titles = ["政治獻金案二審首庭 柯文哲否認", "政治獻金案二審 檢方說明", "政治獻金案 法務部公告"]
         members = items(titles)
         corpus = members + [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
         df = tp.document_frequency(corpus)

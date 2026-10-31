@@ -180,5 +180,49 @@ class SecondAnchorMemberTest(unittest.TestCase):
         self.assertNotIn(robbery, {m["title"] for m in max(lists, key=len)})
 
 
+class ForeignEventTest(unittest.TestCase):
+    """R359.2 (G1): a foreign court is not a Taiwan body. A body that foreign states share (憲法法庭, 外交部) counts as a Taiwan link in a new topic only with a
+    public act. The test holds for every country, not for a list of countries. The name 波蘭憲法法 is a cut of 憲法法庭 and 憲法法院."""
+
+    POLAND = ["波蘭憲法法庭院長遭停職警方進駐！總統斥「政變」", "波蘭憲法法院動盪蔓延 駐中大使率先請辭引發跟進潮", "波蘭憲法法庭爆發對峙危機 總統緊急中斷訪非行程返國協商",
+              "波蘭憲法法庭院長遭停職引爆司法危機 總統中斷訪塞內加爾急返國", "波蘭憲法法庭院長遭停職引爆危機 警方戒備總統急返國",
+              "波蘭憲法法院爆奪權爭議 總統急返國召開危機對談", "波蘭憲法法院動盪蔓延  駐中大使請辭引發跟進潮"]
+    TAIWAN_COURT = ["憲法法庭裁定死刑違憲 法務部回應", "憲法法庭公告言詞辯論日期", "大法官審查國民法官法 憲法法庭判決出爐"]
+    TAIWAN_FOREIGN_MINISTRY = ["外交部公告旅遊警示升級", "外交部決定增派人員 協助國人撤離"]
+
+    def test_r359_2_a_foreign_court_with_no_act_is_not_about_taiwan(self):
+        self.assertFalse(tf.taiwan_relevant(self.POLAND, new=True))
+
+    def test_r359_2_the_test_holds_for_another_country(self):
+        titles = [t.replace("波蘭", "匈牙利") for t in self.POLAND]
+        self.assertFalse(tf.taiwan_relevant(titles, new=True))
+
+    def test_r359_2_a_taiwan_court_with_an_act_is_about_taiwan(self):
+        self.assertTrue(tf.taiwan_relevant(self.TAIWAN_COURT, new=True))
+        self.assertTrue(tf.taiwan_relevant(self.TAIWAN_FOREIGN_MINISTRY, new=True))
+
+    def test_r359_2_a_body_that_only_Taiwan_has_still_counts(self):
+        self.assertTrue(tf.taiwan_relevant(["行政院會議討論", "政院回應此事"], new=True))
+
+    def test_r359_2_an_old_topic_keeps_the_old_reading(self):
+        self.assertTrue(tf.taiwan_relevant(self.POLAND, new=False))  # R155.4: the rule of a new topic does not change an old topic
+
+    def test_r359_2_the_cut_name_of_a_foreign_court_fails_the_name_test(self):
+        self.assertFalse(tf.has_word_boundary("波蘭憲法法", self.POLAND, new=True))
+
+    def test_r359_2_a_law_name_keeps_the_name_test(self):
+        titles = ["外送專法7月21日上路 3子法明確4大保障", "外送專法21日上路！DEAT提3大建議", "外送專法將上路 工會批媒合費違法", "外送專法上路 平台預告運費必調",
+                  "外送專法今上路 經部公布外送合作契約範本", "外送專法上路2週 Uber Eats報酬提升"]
+        self.assertTrue(tf.has_word_boundary("外送專法", titles, new=True))
+
+    def test_r359_2_the_gate_rejects_the_polish_court_topic_for_a_new_topic_and_for_the_key_of_a_whole_name(self):
+        corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        members = [item(f"m{i}", t, "2026-10-31", "出版社" + str(i)) for i, t in enumerate(self.POLAND)]
+        df = tp.document_frequency(corpus + members)
+        for key in ("波蘭憲法法", "波蘭憲法法庭"):
+            outcome, _ = tf.gate_topic(key, members, members, df, corpus + members)
+            self.assertNotEqual(outcome, "ok", key)
+
+
 if __name__ == "__main__":
     unittest.main()
