@@ -57,11 +57,11 @@ class ServiceSandboxTest(unittest.TestCase):
         for line in ("NoNewPrivileges=yes", "ProtectSystem=strict", "PrivateTmp=yes"):
             self.assertIn(line, self.service)
 
-    def test_write_paths_are_the_out_log_and_cache_folders(self):
+    def test_write_path_is_the_data_folder_only(self):
+        # T79: the daily layer writes below ~/islandlog-news and never in the repo tree. The cache goes to the run folder.
         m = re.search(r"^ReadWritePaths=(.+)$", self.service, re.M)
         self.assertIsNotNone(m)
-        self.assertIn("%h/islandlog-news", m.group(1))
-        self.assertIn("tools/newsfetch/.cache", m.group(1))
+        self.assertEqual(m.group(1).split(), ["%h/islandlog-news"])
 
 
 if __name__ == "__main__":

@@ -52,6 +52,7 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 5. A public commentator (`actor_type: public_commentator`) is named only for public posts, with `named_basis_source_ids` that state the public identity.
 6. A source may carry `section` (版別) and `byline` (記者). The crawler reads them from the article page and never stores the article body.
 7. The double confirmation in section 5A, item 6 (R336) applies to every publish, withdrawal or rename of a topic, system-formed or agent-created. A sensitive event still needs its own user decision (section 5A, item 7).
+8. The daily news layer (crawl, merge, cluster, dry run, report, alerts) and the manual publish steps are in [`tools/newsfetch/WORKFLOW.md`](tools/newsfetch/WORKFLOW.md). The daily layer never writes to this repo.
 
 ## 5A. Agent-created events (R330, R332)
 

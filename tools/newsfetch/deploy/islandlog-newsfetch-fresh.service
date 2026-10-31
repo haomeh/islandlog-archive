@@ -1,0 +1,15 @@
+# Freshness check (T79): writes ~/islandlog-news/ALERT when the newest report is older than 26 hours.
+# Do not install without the user's approval.
+[Unit]
+Description=islandlog newsfetch freshness check
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/islandlog-newsfetch.env
+WorkingDirectory=%h
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/bin/sh -c 'cd "$ISLANDLOG_ARCHIVE_REPO" && exec /usr/bin/python3 -m tools.newsfetch.daily --check-freshness'
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+ReadWritePaths=%h/islandlog-news

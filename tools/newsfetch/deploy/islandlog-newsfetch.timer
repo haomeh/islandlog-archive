@@ -1,6 +1,6 @@
-# Daily timer for islandlog-newsfetch.service (R90). Do not install without the user's approval.
+# Daily timer for islandlog-newsfetch.service (R90, R346). Do not install without the user's approval.
 [Unit]
-Description=Run islandlog newsfetch once a day
+Description=Run the islandlog newsfetch daily layer once a day
 
 [Timer]
 OnCalendar=*-*-* 04:30:00 Asia/Taipei

@@ -1,0 +1,10 @@
+# Runs the freshness check every 6 hours. Do not install without the user's approval.
+[Unit]
+Description=Check that the islandlog newsfetch report is fresh
+
+[Timer]
+OnCalendar=*-*-* 00/6:10:00 Asia/Taipei
+Persistent=true
+
+[Install]
+WantedBy=timers.target
