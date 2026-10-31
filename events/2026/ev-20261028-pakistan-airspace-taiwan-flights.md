@@ -63,7 +63,7 @@ positions:
   question_id: q-01
   actor_id: ac-us-department-of-state
   stance: oppose
-  summary: 美國國務院發言人對中央社表示，樂見巴基斯坦撤回決定，並稱民航決定應基於安全與技術考量，反對北京的脅迫。
+  summary: 美國國務院發言人以背景方式對中央社表示，樂見巴基斯坦已撤回拒絕台灣民航公司進入其空域決定的報導，並稱民航決定應基於安全與技術考量，反對北京的脅迫。
   stated_on: '2026-10-30'
   source_ids:
   - src-20261030-cts-us-pakistan-airspace
@@ -78,7 +78,11 @@ positions:
 - id: pos-06
   question_id: q-01
   actor_id: ac-prc-government
-  stance: not_found
+  stance: other
+  summary: 中國外交部發言人郭嘉昆表示，一個中國原則是國際社會廣泛共識，台灣民眾的國際出行沒有障礙。
+  stated_on: '2026-10-30'
+  source_ids:
+  - src-20261030-cts-us-pakistan-airspace
 timeline:
 - id: tl-01
   date: '2026-10-28'
@@ -107,7 +111,7 @@ timeline:
 - id: tl-04
   date: '2026-10-30'
   date_precision: day
-  title: 美國國務院發言人表示樂見巴基斯坦撤回決定
+  title: 美國國務院發言人表示樂見巴基斯坦撤回決定的報導
   attributed_to: ac-us-department-of-state
   source_ids:
   - src-20261030-cts-us-pakistan-airspace
@@ -133,7 +137,7 @@ review:
 
 ## 各方立場
 
-外交部表示，予以最嚴厲的駁斥與譴責，指巴基斯坦扈從中國、漠視現實，並將空域政治化；外交部並表示將與交通部協調，尊重航空公司依安全、飛行時間與成本規劃航線 [@src-20261028-cts-mofa-pakistan-airspace]。
+外交部表示，予以最嚴厲的駁斥與譴責，指巴基斯坦扈從中國、漠視現實，並將空域政治化；外交部並表示將持續與交通部保持密切聯繫，尊重航空公司依安全、飛行時間與成本規劃航線 [@src-20261028-cts-mofa-pakistan-airspace]。
 
 行政院發言人李慧芝於 10 月 29 日表示高度遺憾，並表示中華民國台灣是主權國家，與中華人民共和國互不隸屬 [@src-20261029-cts-ey-pakistan-airspace] [@src-20261029-chinatimes-ey-caa-pakistan]。中時新聞網報導，民用航空局副局長表示，空域使用依國際航季申請，10 月 28 日至 3 月 27 日屬冬季航季 [@src-20261029-chinatimes-ey-caa-pakistan]。
 
@@ -141,6 +145,8 @@ review:
 
 中央社報導，美國國務院發言人以不具名方式對中央社表示，樂見巴基斯坦已撤回拒絕台灣民航公司進入其空域決定的報導，並表示民航決定應基於安全與技術考量 [@src-20261030-cts-us-pakistan-airspace]。
 
+中央社同一則報導指出，中國外交部發言人郭嘉昆表示，一個中國原則是國際社會廣泛共識，台灣民眾的國際出行沒有障礙 [@src-20261030-cts-us-pakistan-airspace]。報導未載發言日期。
+
 ## 資料限制
 
-查得的報導未載中華人民共和國政府對此事的回應，本頁以 `not_found` 記錄 [@src-20261030-setn-premier-pakistan-airspace]。巴基斯坦方面的公開說明，本頁只有經彭博轉述的內容。
+查得的報導只有中國外交部發言人的上述簡短表示，未載其他中華人民共和國部門的回應 [@src-20261030-cts-us-pakistan-airspace]。巴基斯坦方面的公開說明，本頁只有經彭博轉述的內容。
