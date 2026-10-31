@@ -126,8 +126,9 @@ class FileSourceAnchorTest(unittest.TestCase):
         corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
         core = [item(f"on{i}", t, "2026-10-23") for i, t in enumerate(on)]
         extra = [item(f"off{i}", t, "2026-10-23", "出版社" + str(i)) for i, t in enumerate(off)]
-        df = tp.document_frequency(corpus + core + extra)
-        out = tf.second_anchor_members(core + extra, core, [key], df, len(corpus) + len(core) + len(extra))
+        other_uses = [item(f"o{i}", f"{key}另案報導{i}號 氣象消息", "2026-10-20", "出版社" + str(i)) for i in range(40)]  # R359.1: a generic key has many other uses in the corpus, so it is no strong key
+        df = tp.document_frequency(corpus + core + extra + other_uses)
+        out = tf.second_anchor_members(core + extra, core, [key], df, len(corpus) + len(core) + len(extra) + len(other_uses))
         return {m["title"] for m in out}
 
     def check(self, key, on, off):

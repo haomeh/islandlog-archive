@@ -41,7 +41,7 @@ from tools.newsfetch.topic_config import (
     DUPLICATE_NEAR_DAYS, DUPLICATE_NEAR_TERM_LEN,
     ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE,
     MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES,
-    ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY)
+    ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY, STRONG_KEY_MIN, STRONG_KEY_SHARE)
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ ENTERTAINMENT = re.compile(r"演唱會|歌手|藝人|女星|男星|偶像|專輯
 ELECTION_LEGAL = re.compile(r"駁回|裁定|判決|高行|行政法院|法院|當選無效|選舉訴訟")  # R112.4: a court ruling on a candidacy is not campaign content
 LAW_PASSED = re.compile(r"三讀|條例》|修正草案|修法")  # R112.4: a law passed by the legislature is not sensitive by its subject alone
 CONSUMER = re.compile(r"優惠|折扣|現省|省[\d百千萬]|半價|折抵|票價|抵用|買一送一")  # R112.5: a discount is a consumer title, not entertainment news
-CASE_TITLE = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄")  # R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
+CASE_TITLE = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄|搶劫|槍殺")  # R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
 FOREIGN_ONLY = re.compile(r"美國|川普|中國|大陸|日本|南韓|北韓|俄羅斯|烏克蘭|伊朗|以色列|歐盟|英國|德國|法國|印度|菲律賓|越南|泰國|馬來西亞")
 FOREIGN_NEW = re.compile(FOREIGN_ONLY.pattern
                          + r"|萬那杜|索羅門|斐濟|印尼|土耳其|沙烏地|埃及|巴西|阿根廷|加拿大|澳洲|紐西蘭|新加坡|巴基斯坦|阿富汗|敘利亞|黎巴嫩|古巴|墨西哥|委內瑞拉|智利|秘魯|肯亞|奈及利亞|南非|蘇丹|葉門|伊拉克|緬甸|柬埔寨|寮國|尼泊爾|孟加拉|斯里蘭卡")  # R154: a country list, so a foreign quake or a foreign bank has a foreign label; R162 (N1): only a new topic reads it
@@ -1407,13 +1407,29 @@ def file_items(root, ids):
 GENRE_WORD = re.compile(tp.CLAR.pattern + r"|錯誤|誤導|謠言|網傳|資訊")  # R141.3: a word that names the kind of title (a clarification), not its issue
 
 
+def strong_key(keys, core, df):
+    """R359.1: the key names one issue when the on-topic titles are most of its uses in the corpus (外送專法, 南海仲裁案, 媒宣費)."""
+    uses = df.get(keys[0], 0) if keys else 0
+    return bool(uses) and len(core) >= STRONG_KEY_MIN and len(core) >= STRONG_KEY_SHARE * uses
+
+
+def foreign_body_only(title):
+    """R359.1, PRD 4.5 item 6: the title names a body of a foreign state (中國外交部) and no body of Taiwan."""
+    return bool(FOREIGN_OFFICE.search(title)) and not names_government(title, True)
+
+
 def second_anchor_members(members, core, keys, df, total):
     """R141.3: the members whose title has a second anchor of the on-topic titles (`core`: the members that the corpus confirms,
     after the case split). The key is in every member already. A seed title has no right of its own: the seeds of an old topic can
     hold an off-topic story, and a response (a clarification or a release) answers one issue only when it holds the anchor too.
-    A word that names the kind of title (錯誤, 澄清) is no anchor. The members stay as they are when the core shares no anchor."""
+    A word that names the kind of title (錯誤, 澄清) is no anchor. The members stay as they are when the core shares no anchor.
+    R359.1: a foreign body is no anchor, so 中國外交部 is not the 外交部 of Taiwan, and a title with only a foreign body leaves.
+    A strong key (strong_key) names one issue: the anchor does not remove its members, because a body that a minority of the
+    on-topic titles names (勞動部 in 2 of 29 titles of 外送專法) cannot tell the issue from other news."""
+    if strong_key(keys, core, df):
+        return [m for m in members if not foreign_body_only(m["title"])]
     second = {a for a in tp.second_anchors([m["title"] for m in core], keys, df, total) if not GENRE_WORD.search(a)}
-    return [m for m in members if not second or tp.has_anchor(m["title"], second)]
+    return [m for m in members if not second or tp.has_anchor(home_text(m["title"]), second)]
 
 
 def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):

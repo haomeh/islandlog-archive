@@ -47,6 +47,8 @@ SECOND_ANCHOR_MIN_SEEDS = 4  # With fewer seed titles than this no word can be s
 SECOND_ANCHOR_MIN = 2  # ... and in at least this many of them. A place or a government actor in this many seed titles is an anchor too. Sample T18-AP (R112.1).
 SECOND_ANCHOR_MAX_DF = 400  # A second key word is in at most this many items of the corpus. 回應 (1117) and 民眾 (858) are generic; 內政部 (288) and 縣府 (308) are not. Sample T18-AP (R112.1).
 SECOND_ANCHOR_MIN_LEN, SECOND_ANCHOR_MAX_LEN = 2, 4  # A second key word has 2 to 4 characters (環評, 憲法法庭). Sample T18-AP (R112.1).
+STRONG_KEY_MIN = 5  # R359.1: a key is strong (it names one issue) when the on-topic titles are at least this many ... Case: 外送專法 (29 of 51 uses), 南海仲裁案 (8 of 12), 媒宣費 (36 of 63) in the T83 run.
+STRONG_KEY_SHARE = 0.5  # ... and they are this share of all the uses of the key in the corpus. A generic key stays below it: 焚化爐 (7 of 138), 統促黨 (6 of 60), 移工 (5 of 681). The second anchor never removes a member of a strong key (R359.1).
 
 # --- Gates of the full run (topics_full.run) ---
 SAME_EVENT_SHARE = 0.3  # A topic that shares this share of its members with a published event is skipped. Start (R68).

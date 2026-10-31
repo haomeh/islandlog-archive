@@ -1,0 +1,184 @@
+"""T84 (R359): gate fixes after the T83 run. Each test names the item of R359 it checks.
+The titles are the member titles of the old topics in the T83 run (cut to 60 characters)."""
+
+import unittest
+
+from tools.newsfetch import test_topics_full as base
+from tools.newsfetch import topics as tp
+from tools.newsfetch import topics_full as tf
+
+item = base.item
+
+
+class SecondAnchorMemberTest(unittest.TestCase):
+    """R359.1 (G8): one anchor word, or a body that is held by a minority of the on-topic titles, must not remove on-topic members.
+    China's 外交部 is not the 外交部 of Taiwan."""
+
+    DELIVERY = [
+        '外送專法子法拍板！平台業者表態：全力配合、儘速研析新制',
+        '勞動部發布外送專法三子法 企業須在7/21前改正所有外送員契約',
+        '外送專法7月21日上路 3子法明確4大保障',
+        '外送專法21日上路！DEAT提3大建議、專家示警5大衝擊',
+        '外送專法將上路 工會批媒合費違法是課金上班',
+        'DEAT盼滾動檢討外送專法 專家：研議向外送員收媒合費',
+        '業者估外送專法上路成本恐增3成 平台是否漲價待評估',
+        '《外送專法》21日上路 Uber Eats公布外送員4大保障措施',
+        '外送專法7/21上路 Uber Eats推即時提領報酬',
+        '外送專法7／21上路 傳平台預告「運費必調」 估大漲3成',
+        '外送專法7／21上路 平台預告「運費必漲」最高5成',
+        '外送專法將上路 民眾黨團5訴求要求保障外送員',
+        '外送專法明上路配套未齊 民眾黨轟陳世凱「別只會騎車作秀」',
+        '《外送專法》明上路 四大部會完成相關7項配套法規同步施行',
+        '外送專法上路！公平會警告外送平台\u3000聯合漲價違者可重罰5千萬',
+        '外送專法今上路 經部公布外送合作契約範本',
+        '外送專法上路！平台疊單意願低 消費者等餐恐更久',
+        '外送專法今上路！ 勞動部曝「以四方關係衡平為核心」：將建立溝通機制',
+        '外送專法今上路 Grab接球18大工會聲明 承諾保障外送員收入、尊重多平台接單',
+        '外送專法今上路！Uber Eats率先調漲2費用 foodpanda最新回應曝',
+        '外送專法上路！律師點出隱憂 恐4類人都輸「只有立委贏了」',
+        '外送專法上路「三輸」？黃世聰轟藍白政治操作：苦的還是外送員',
+        '外送專法上路「薪」酸 南部外送員：單量變少',
+        '外送專法上路2週 Uber Eats：低報酬者收入增逾18%',
+        '外送專法上路兩週 Uber Eats：外送夥伴報酬提升、整體訂單量穩定',
+        '外送專法上路首批報酬明細曝光 工會痛批Uber Eats：不要把外送員當傻子',
+        '外送專法上路2周 Uber Eats：外送員報酬提升18.2％ 訂單量持穩',
+        'UberEats挨告！外送專法上路 聯盟、工會控：短付報酬涉詐欺',
+        '法律觀點－外送專法新上路 誰受益，誰買單？',
+        '外送專法上路成本增！foodpanda商家續約方案掀討論 官方回應了',
+        '外送專法上路變貴又變慢？胡采蘋等餐逾1小時怒：每叫一次都在懲罰自己',
+        '外送專法上路！Uber Eats數據揭：平台成本增4成、消費者等餐多7分',
+    ]
+
+    SEA = [
+        '南海仲裁案10週年 外交部重申4原則籲維護和平',
+        '南海仲裁案裁決10週年 14國聯合聲明中國不接受',
+        '南海仲裁案10周年 外交部重申我國「四點原則」、反對單邊擴張主義',
+        '南海仲裁案10週年 外交部重申4原則：台灣應納入多邊爭端解決機制',
+        '中國外交部約見日本公使 抗議南海仲裁案等議題',
+        '南海仲裁案裁決10週年 14國聲明肯定裁決拘束力',
+        '南海仲裁案10週年 陳清龍：政府該「強硬起來」表達主權',
+        '南海仲裁案10周年 陳以信籲賴清德親登太平島',
+        '南海仲裁案10週年 作證美學者竟在菲律賓家中遭搶劫槍殺',
+    ]
+
+    MEDIA_FEE = [
+        '藍提案砍外交部「媒宣費」1億 馬文君：保留送協商',
+        '外交部媒宣費藍委刪1億保留協商 徐巧芯同意不凍結護照預算',
+        '外交部今年媒宣費 藍委又要砍逾億',
+        '遭控刪外交部1.04億媒宣費 徐巧芯批造謠抹黑要求道歉 吳思瑤急更正',
+        '外交部媒宣費 藍委提案刪1億 保留協商',
+        '吳思瑤控刪外交部1億媒宣費 徐巧芯打臉要求公開道歉',
+        '獨家》翁曉玲對文化部下狠手 4738萬元媒宣費全砍光',
+        '尊重翁曉玲刪光文化部媒宣費 蔡春綢：公帑不能發包給顏色親近側翼',
+        '翁曉玲刪光文化部媒宣費 王婉諭：不能為政黨惡鬥癱瘓行政機關',
+        '遭指砍文化部媒宣費 翁曉玲：浮編亂編就該刪',
+        '才大刪外交部》翁曉玲再下重手 要砍光文化部媒宣費',
+        '下重手砍光文化部媒宣費 翁曉玲嗆：我太佛心！否則會刪更多',
+        '提案砍光文化部4738萬媒宣費 翁曉玲自稱「佛心」',
+        '翁曉玲砍文化部媒宣費 嗆「我太佛心」否則刪更多！王定宇轟：台灣哪裡對不起妳？',
+        '文化部媒宣費柯志恩「凍結300萬」取得共識  遭羅廷瑋駁：須尊重翁曉玲',
+        '立院審查文化部預算 媒宣費最終凍結800萬元',
+        '翁曉玲提全刪文化部媒宣費！ 「教委會」吵翻.最終凍結800萬',
+        '點名7女綠委轟「跳樑小丑」 翁曉玲嗆再刪光文化部媒宣費',
+        '文化部編列4738萬元媒宣費惹議 立法院決議凍結800萬元',
+        '批砍文化部媒宣費閹割台灣文化力 吳思瑤嗆她：還要繼續作亂嗎',
+        '翁曉玲砍媒宣費遭轟「文化殺手」 綠委爆4部會提案全複製貼上',
+        '鐵了心砍光文化部4738萬媒宣費！ 翁曉玲嗆綠營：將再提案全刪',
+        '不滿翁曉玲要砍光文化部4738萬媒宣費 吳沛憶轟：政治凌駕文化的傲慢',
+        '翁曉玲刪光文化部及13部會媒宣費 律師：已違憲、檢調應查是否受中國指示',
+        '翁曉玲狂刪13部會媒宣費 黃暐瀚：刪光不叫監督！藍營執政14縣市是否也全砍？',
+        '批藍營「刪光預算不叫監督」 黃暐瀚：執政縣市媒宣費也全砍光？',
+        '翁曉玲砍多部會媒宣費 民進黨：這不算監督而是傲慢',
+        '陳秀寳憂在野黨擬提案刪媒宣費 李遠盼溝通',
+        '總預算啟動朝野協商 藍黨團：媒宣費、首長特別費嚴格刪減或凍結',
+        '陸委會媒宣費恐遭全砍！梁文傑嗆「剩一張嘴也要戰鬥」翁曉玲：替國家節省公帑',
+        '翁曉玲發文嗆媒宣費全刪！梁文傑親自轉發回「這句」嗆爆',
+        '翁曉玲刪陸委會媒宣費更嗆梁文傑 他噴：按妳標準藍「這縣市」可比照辦理....',
+        '文化部媒宣費全刪 李遠：假日繼續宣傳政策',
+        '公視預算刪2185萬 文化部媒宣費全砍',
+        '媒宣費刪減89% 陸委會：年度僅有144萬元可用',
+        '陸委會媒宣費到年底只剩15萬 梁文傑嘆：比縣市中小局處都少',
+    ]
+
+    SINKHOLE = [
+        '巴威颱風攪局 竹北「豐采520」天坑案宣判延期至下週一',
+        '竹北天坑案一審宣判 楊文科獲判無罪',
+        '天坑案楊文科一審無罪 竹檢：收到判決後評估上訴',
+        '竹北天坑案一審獲判無罪 楊文科喊「真相終於水落石出」：沒有喜悅只有欣慰',
+        '竹北天坑案被控涉貪 楊文科一審無罪',
+        '竹北天坑案一審無罪 楊文科：鐵腕把關不退讓 清白經得起檢驗',
+        '天坑案宣判楊文科無罪  歐陽霆：切割下屬卸責「有什麼好欣慰」',
+        '天坑案宣判 民進黨竹縣長參選人、竹北市長鄭朝方這麼回應',
+        '竹北天坑案》楊文科獲判無罪 曾聖凱：市民更在意城市是否安全',
+        '不服天坑案一審判決 豐邑建設：將依法提起上訴',
+        '竹北天坑案一審出爐 楊文科脫罪、兩公務員涉不法利益有罪',
+        '快訊／新竹縣長楊文科捲竹北天坑案 一審宣判無罪',
+        '新竹天坑案宣判前一天…「豐邑文心匯」出事！高空招牌驚見明火',
+        '竹北天坑案涉圖利獲判無罪 楊文科：事實不會被抹黑掩蓋',
+        '天坑案楊文科一審無罪！竹北市長參選人邱臣遠：安全底線不能退讓',
+        '竹北天坑案楊文科一審無罪 王婉諭支持檢方上訴 促楊專心縣政',
+        '天坑案 楊文科獲判無罪》藍營：遲來的正義 綠議員：責推下屬',
+        '竹北天坑案判決掀議！專家揭建商「8次違規」仍一路闖關 他直呼：主管能都不知情？',
+        '天坑案才判完！楊文科率高官請假跑造勢 她怒轟：基層公務員情何以堪？',
+        '竹北天坑案爆「藏寶圖」藏賄款  監院彈劾前竹縣工務處長江良淵',
+        '竹北天坑案楊文科一審無罪 新竹地檢提上訴',
+        '獨家》竹北天坑案楊文科涉貪一審無罪  竹檢不服判決提上訴',
+        '竹北天坑案楊文科涉貪一審宣判無罪竹檢提上訴 竹縣府回應了',
+        '竹北豐采520天坑案「楊文科無罪」 檢察官不服提上訴',
+        '快訊／竹北天坑案楊文科一審無罪！ 竹檢不服上訴',
+    ]
+
+    def kept(self, key, titles, other_uses=0):
+        """`other_uses`: the titles outside the topic that hold the key. Every other word is common in the real corpus (df 1000), as in the T83 run,
+        where only the body names were second anchors."""
+        corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(60)]
+        core = [item(f"m{i}", t, "2026-10-23", "出版社" + str(i % 5)) for i, t in enumerate(titles)]
+        df = {g: 1000 for g in tp.document_frequency(corpus + core)}
+        df[key] = len(core) + other_uses
+        out = tf.second_anchor_members(core, core, [key], df, len(corpus) + len(core))
+        return {m["title"] for m in out}
+
+    def test_r359_1_a_single_body_anchor_keeps_the_on_topic_members_of_the_delivery_law(self):
+        got = self.kept("外送專法", self.DELIVERY, other_uses=19)  # 29 of 51 uses in the T83 corpus
+        self.assertEqual(got, set(self.DELIVERY))
+
+    def test_r359_1_a_generic_key_still_needs_the_anchor(self):
+        got = self.kept("外送專法", self.DELIVERY, other_uses=600)  # the same titles under a key that most other news holds
+        self.assertLess(len(got), len(self.DELIVERY))
+        self.assertTrue(all("勞動部" in t for t in got))
+
+    def test_r359_1_the_opposition_side_of_the_media_fee_topic_stays(self):
+        got = self.kept("媒宣費", self.MEDIA_FEE, other_uses=27)
+        for t in self.MEDIA_FEE:
+            if "翁曉玲" in t or "黃暐瀚" in t or "陳秀寳" in t or "協商" in t:
+                self.assertIn(t, got, t)
+
+    def test_r359_1_the_developer_side_of_the_sinkhole_case_stays(self):
+        got = self.kept("天坑案", self.SINKHOLE, other_uses=8)
+        for t in self.SINKHOLE:
+            if "竹北" in t:
+                self.assertIn(t, got, t)
+
+    def test_r359_1_the_arbitration_topic_keeps_the_14_nation_statement_and_drops_the_foreign_office(self):
+        got = self.kept("南海仲裁案", self.SEA, other_uses=3)
+        for t in self.SEA:
+            if "14國" in t or "陳清龍" in t:
+                self.assertIn(t, got, t)
+        self.assertNotIn("中國外交部約見日本公使 抗議南海仲裁案等議題", got)  # 中國外交部 is not a body of Taiwan
+
+    def test_r359_1_a_foreign_office_is_no_anchor(self):
+        got = self.kept("南海仲裁案", self.SEA, other_uses=3)
+        self.assertTrue(any("外交部重申" in t for t in got))
+        self.assertFalse(any(t.startswith("中國外交部") for t in got))
+
+    def test_r359_1_a_robbery_title_is_another_case(self):
+        members = [item(f"m{i}", t, "2026-10-23", "出版社" + str(i)) for i, t in enumerate(self.SEA)]
+        lists = tf.split_cases(members)
+        robbery = "南海仲裁案10週年 作證美學者竟在菲律賓家中遭搶劫槍殺"
+        self.assertEqual(len(lists), 2)
+        self.assertEqual([m["title"] for lst in lists for m in lst if m["title"] == robbery], [robbery])
+        self.assertNotIn(robbery, {m["title"] for m in max(lists, key=len)})
+
+
+if __name__ == "__main__":
+    unittest.main()
