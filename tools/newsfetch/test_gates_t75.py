@@ -79,6 +79,18 @@ class FileItemsOwnerTest(unittest.TestCase):
         self.assertEqual(len({tf.owner(it) for it in items}), 2)
         self.assertTrue(tf.meets_source_rule(items))
 
+    def test_spellings_on_disk_map_to_their_brand_owner(self):
+        """T81: two spellings that sources on disk carry map to the brand, so one owner counts once."""
+        items = self.items(["Newtalk", "Newtalk新聞"])
+        self.assertEqual(len({tf.owner(it) for it in items}), 1)
+        self.assertFalse(tf.meets_source_rule(items))
+        items = self.items(["華視新聞", "華視新聞（中央社）"])
+        self.assertEqual(len({tf.owner(it) for it in items}), 1)
+        self.assertFalse(tf.meets_source_rule(items))
+        items = self.items(["Newtalk新聞", "華視新聞（中央社）"])
+        self.assertEqual(len({tf.owner(it) for it in items}), 2)
+        self.assertTrue(tf.meets_source_rule(items))
+
     def test_an_unknown_publisher_counts_by_its_name(self):
         items = self.items(["某某小報"])
         self.assertEqual(tf.owner(items[0]), "某某小報")
