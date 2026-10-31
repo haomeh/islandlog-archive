@@ -1388,13 +1388,19 @@ def regate_seed(doc, text, seed, urls_by_id, by_url):
 def file_items(root, ids):
     """R132: the items that the source files of a topic record (url, title, date, publisher, class)."""
     import yaml
+    from tools.newsfetch import publishers as pubs
+    index = pubs.load_index()
     removed = load_removed_sources(REMOVED_SOURCES)  # R261.2a: a removed source on disk is no member and no extra
     out = []
     for p in sorted((Path(root) / "sources").glob("*/*.yaml")):
         if p.stem in ids and p.stem not in removed:
             d = yaml.safe_load(p.read_text(encoding="utf-8"))
-            out.append({"url": d["url"], "title": d["title"], "published_on": str(d["published_on"]), "publisher": d["publisher"],
-                        "source_class": d["source_class"], "quote": d.get("quote")})
+            item = {"url": d["url"], "title": d["title"], "published_on": str(d["published_on"]), "publisher": d["publisher"],
+                    "source_class": d["source_class"], "quote": d.get("quote")}
+            group = index.group(d["publisher"])  # R344.3, PRD 4.4: one owner counts once
+            if group != d["publisher"]:
+                item["publisher_group"] = group
+            out.append(item)
     return out
 
 
