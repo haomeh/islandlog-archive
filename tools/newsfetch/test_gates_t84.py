@@ -3,6 +3,7 @@ The titles are the member titles of the old topics in the T83 run (cut to 60 cha
 
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from tools.newsfetch import test_topics_full as base
 from tools.newsfetch import topics as tp
@@ -337,6 +338,61 @@ class NationalBillTest(unittest.TestCase):
 
     def test_r359_5_the_bill_titles_hold_no_sensitive_term(self):
         self.assertFalse(tf.has_sensitive_term(self.BILL))
+
+
+class CandidateMemberTest(unittest.TestCase):
+    """R359.6 (G6): the candidate-attack gate (PRD 4.5 item 5) reads the members that a re-gate adds and the members of a new topic, not only the share of a candidate.
+    A member of the file stays: an old topic keeps its sources (R155.4)."""
+
+    ATTACK = "南崁溪淤積 王小明批李大華 桃園市府疏濬進度成戰場"
+    PLAIN = "南崁溪淤積 桃園市府公告疏濬進度"
+
+    def setUp(self):
+        tf.set_candidates({"王小明", "李大華"})
+        self.addCleanup(tf.set_candidates, frozenset())
+
+    def test_r359_6_the_filter_removes_a_candidate_title_that_is_not_in_the_file(self):
+        members = [item("a", self.ATTACK, "2026-10-24"), item("b", self.PLAIN, "2026-10-24", "聯合新聞網")]
+        kept = tf.drop_candidate_talk(members)
+        self.assertEqual([m["title"] for m in kept], [self.PLAIN])
+
+    def test_r359_6_a_title_of_the_file_stays(self):
+        members = [item("a", self.ATTACK, "2026-10-24")]
+        kept = tf.drop_candidate_talk(members, keep_ids={tp.src_id(members[0], tp.HOSTS)})
+        self.assertEqual(len(kept), 1)
+
+    def test_r359_6_a_regate_does_not_add_a_candidate_attack_member(self):
+        import tempfile
+        rt = base.RegateTest()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            corpus, seed, _ = rt.setup(root)
+            corpus += [item("n1", self.ATTACK, "2026-10-24", "中央通訊社"), item("n2", self.PLAIN, "2026-10-24", "聯合新聞網")]
+            with mock.patch.object(tf, "candidate_names", lambda c: {"王小明", "李大華"}):  # the names come from the public figure list in a real run
+                stats, _, _ = rt.run_gate(root, corpus, seed)
+            text = (root / "events/2026" / f"{rt.ID}.md").read_text(encoding="utf-8")
+            self.assertIn(tp.src_id(corpus[-1], tp.HOSTS), text)  # the plain title joins
+            self.assertNotIn(tp.src_id(corpus[-2], tp.HOSTS), text)  # the attack title does not
+            self.assertEqual(stats["regate_passed"], 1)
+
+    def test_r359_6_a_new_topic_does_not_keep_a_candidate_attack_member(self):
+        import tempfile
+        helper = base.RunHelper()
+        corpus, topic = helper.corpus(second_news_publisher=True)
+        attack = item("x", "南崁溪淤積問題 王小明批李大華 桃園市府疏濬成戰場", "2026-10-24", "中央通訊社")
+        corpus = corpus + [attack]
+        clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic + [attack]]}]}]
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(tf, "candidate_names", lambda c: {"王小明", "李大華"}):
+            root = Path(tmp)
+            for d in ("events/2026", "sources/2026", "actors"):
+                (root / d).mkdir(parents=True)
+            stats, published, _ = tf.run(corpus, clusters, [], root, root / "report.json", today="2026-10-25")
+            files = sorted((root / "events/2026").glob("*.md"))
+            self.assertEqual(len(files), 1)
+            text = files[0].read_text(encoding="utf-8")
+        self.assertEqual(stats["candidate_attack_members_removed"], 1)
+        self.assertNotIn(tp.src_id(attack, tp.HOSTS), text)
+        self.assertIn(tp.src_id(topic[0], tp.HOSTS), text)
 
 
 if __name__ == "__main__":

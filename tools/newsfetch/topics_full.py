@@ -831,6 +831,12 @@ def candidate_talk(title):
     return bool(CAMPAIGN_ACT.search(title)) or (named > 1 and bool(ATTACK.search(title)))
 
 
+def drop_candidate_talk(members, keep_ids=frozenset()):
+    """R359.6 (PRD 4.5 item 5): the candidate-attack rule reads each member, not only the share of a candidate. A title of `keep_ids` (the
+    sources that the file of an old topic cites) stays, because an old topic keeps its sources (R155.4)."""
+    return [m for m in members if not candidate_talk(m["title"]) or tp.src_id(m, tp.HOSTS) in keep_ids]
+
+
 ACCIDENT = re.compile(r"車禍|肇事|撞(?!臉|期|名|衫)|[輾碾]|無呼吸心跳|捲入|墜樓|墜落|墜海|溺水|溺斃|落水|身亡|喪命|不治|命危|重傷|罹難|意外|工安|氣爆|爆炸|火警|火災|起火|落石|翻覆|翻車|倒塌|崩塌")  # R154 (PRD 4.5 item 2): the words of one accident
 ACCIDENT_POLICY = re.compile(r"規定|修法|條例|法規|制度|檢討|改善|預算|機制|政策|新制|辦法|草案|強化|加強|通報|補償|賠償")  # R154: a rule after an accident is a policy topic
 PUBLIC_ACT = re.compile(r"三讀|修法|條例|草案|預算|立法|法案|釋憲|公告|裁罰|罰款|罰鍰|開罰|補助|公投|官員|公所|稽查|函釋|核定|核准|核釋|審查|質詢|提案|朝野|藍白|在野|綠營|藍營|立院|議會|政府|主管機關|檢調|海巡|消防|部會|法規|法令|規定|新制|政策|公務|公共|監察"
@@ -1487,6 +1493,7 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
     seed_urls = set(seed["seed_urls"])
     members = max(split_cases(members), key=lambda g: (sum(1 for m in g if m["url"] in seed_urls), len(g)))  # R112.3
     members = second_anchor_members(members, [m for m in members if m["url"] in by_url] or members, keys, df, len(corpus))  # R141.3
+    members = drop_candidate_talk(members, before)  # R359.6: a member that the re-gate adds passes the candidate-attack rule
     record["dropped"] = sorted(before - {tp.src_id(m, tp.HOSTS) for m in members})  # the file sources that the membership rule does not keep
     seeds = [by_url[u] for u in sorted(seed_urls, key=lambda u: (by_url[u]["published_on"], u))]
     known = {"name": name, "jids": doc.get("jurisdiction_ids", []),
@@ -1674,6 +1681,13 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                     deferred.update(matching_published(published_ids, src_ids_of([m["url"] for m in members])))
                 continue
             jids, actors, name = found["jids"], found["actors"], found["name"]
+            attack = len(members) - len(drop_candidate_talk(members))
+            if attack:  # R359.6: the candidate-attack rule reads each member of a new topic
+                members = drop_candidate_talk(members)
+                stats["candidate_attack_members_removed"] += attack
+                if len(members) < SEED_MIN_ITEMS:
+                    stats["rejected_candidate_attack"] += 1
+                    continue
             if found["off_level"]:  # R196.6: a title of another government level fails (b)
                 members = [m for m in members if m["url"] not in found["off_level"]]
                 stats["scope_titles_removed"] += len(found["off_level"])
