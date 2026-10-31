@@ -52,5 +52,37 @@ class RegateSourceDropTest(unittest.TestCase):
         self.assertEqual(state[pid]["gate"], "rejected_source_rule")
 
 
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class FileItemsOwnerTest(unittest.TestCase):
+    """R344.3, PRD 4.4: file_items maps the publisher of a source file to its owner group, so one owner counts once."""
+
+    def items(self, publishers):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "sources/2026").mkdir(parents=True)
+            ids = set()
+            for i, name in enumerate(publishers):
+                sid = f"src-20261001-x-{i:08d}"
+                ids.add(sid)
+                (root / "sources/2026" / f"{sid}.yaml").write_text(
+                    f"id: {sid}\nsource_class: news\ntitle: t{i}\npublisher: {name}\nurl: https://example.org/{i}\n"
+                    "published_on: '2026-10-01'\nquote: q\n", encoding="utf-8")
+            return tf.file_items(root, ids)
+
+    def test_two_brands_of_one_owner_count_once(self):
+        items = self.items(["華視新聞", "公視新聞網"])
+        self.assertEqual(len({tf.owner(it) for it in items}), 1)
+        self.assertFalse(tf.meets_source_rule(items))
+
+    def test_two_owners_count_twice(self):
+        items = self.items(["自由時報", "公視新聞網"])
+        self.assertEqual(len({tf.owner(it) for it in items}), 2)
+        self.assertTrue(tf.meets_source_rule(items))
+
+    def test_an_unknown_publisher_counts_by_its_name(self):
+        items = self.items(["某某小報"])
+        self.assertEqual(tf.owner(items[0]), "某某小報")
+
+
 if __name__ == "__main__":
     unittest.main()
