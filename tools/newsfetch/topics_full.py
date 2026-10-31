@@ -41,7 +41,7 @@ from tools.newsfetch.topic_config import (
     DUPLICATE_NEAR_DAYS, DUPLICATE_NEAR_TERM_LEN,
     ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE,
     MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES,
-    ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY, STRONG_KEY_MIN, STRONG_KEY_SHARE)
+    ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY, STRONG_KEY_MIN, STRONG_KEY_SHARE, BILL_SHARE)
 
 logger = logging.getLogger(__name__)
 
@@ -1272,6 +1272,18 @@ def recorded_name_passes(name, titles):
     return noun_phrase_name(name) and not generic_name(name) and not is_person_or_party(name, titles) and not is_place_name(name)
 
 
+BILL_NAME = re.compile(r"[\u4e00-\u9fff]{2,}法$")
+LEGISLATIVE_ACT = re.compile(r"修法|立法|入法|修正草案|草案|三讀|法案|修訂|增訂")
+
+
+def national_bill(name, titles):
+    """R359.5: a law name with no place in front, and BILL_SHARE of the titles name a legislative act. A place in the titles is the place of the
+    case that led to the bill (新北割頸案), not a jurisdiction of the bill."""
+    if not BILL_NAME.search(name) or PLACE_PREFIX.match(name):
+        return False
+    return sum(1 for t in titles if LEGISLATIVE_ACT.search(t)) >= BILL_SHARE * max(1, len(titles))
+
+
 def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, known=None, mf=None, rebuilds_old=False):
     """The gates of one member list, in order: name quality, foreign, existing event, exclusion, government actor, Taiwan,
     name. Returns (outcome, found). The outcome is "ok", "skipped_existing_event" or a rejected_* label. `found` holds the
@@ -1298,7 +1310,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
     reason = exclusion_reason(members, skip=("sensitive",) if known and known.get("sensitive") else (), new=new) or (new_topic_reason(members) if new else None)
     if reason:
         return "rejected_" + reason, None
-    jids = detect_jurisdictions(titles)
+    jids = ["jur-tw"] if new and national_bill(tp.display_name(key, [s["title"] for s in seeds]), titles) else detect_jurisdictions(titles)  # R359.5
     if jids == ["jur-tw"] and local_known:
         jids = local_known
     actors = detect_gov_actors(titles, jids, new)

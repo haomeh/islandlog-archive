@@ -306,5 +306,38 @@ class AccessedOnTest(unittest.TestCase):
         self.assertIn("byline", text)
 
 
+class NationalBillTest(unittest.TestCase):
+    """R359.5 (G5): a national bill gets gov level central and jur-tw, also when the titles name the place of the case that led to it.
+    Rule read for the sensitive flag: CONTRIBUTING section 4, item 4 and PRD R-03 (CI-15) make a record of a person's criminal past, health, genes
+    or sex life sensitive (sensitive_terms.yaml: 前科, 犯罪紀錄, 刑案紀錄 ...). A bill that a case led to is a law topic. The case name (割頸案) is no listed term,
+    so the topic is not sensitive. The event file names no minor."""
+
+    BILL = ["新北國中割頸案促「少事法」修法 重大犯罪服刑1/2才能假釋", "新北割頸案促少事法修法 重大犯罪服刑1/2才能假釋", "行政院會通過少事法修正草案 立法院將審議"]
+    LOCAL = ["新北市府推出敬老卡新制 長者免費搭公車", "新北市政府公告敬老卡新制加值辦法", "新北敬老卡新制上路 市府加碼補助", "議員質疑敬老卡新制 市府回應", "長者領取敬老卡新制 市府說明", "持卡搭乘 敬老卡新制 市府公告"]
+
+    def gate(self, key, titles):
+        corpus = [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
+        members = [item(f"m{i}", t, "2026-10-29", "出版社" + str(i)) for i, t in enumerate(titles)]
+        df = tp.document_frequency(corpus + members)
+        return tf.gate_topic(key, members, members[:1], df, corpus + members)
+
+    def test_r359_5_a_national_bill_has_the_national_jurisdiction(self):
+        outcome, found = self.gate("少事法", self.BILL)
+        self.assertEqual(outcome, "ok")
+        self.assertEqual(found["jids"], ["jur-tw"])
+        self.assertEqual(found["name_jids"], ["jur-tw"])
+        self.assertEqual(tf._levels(found["jids"]), ["central"])
+        self.assertNotIn("ac-new-taipei-city-government", found["actors"])
+
+    def test_r359_5_a_local_program_keeps_its_place(self):
+        outcome, found = self.gate("敬老卡新制", self.LOCAL)
+        self.assertEqual(outcome, "ok")
+        self.assertIn("jur-65000000", found["jids"])
+        self.assertNotIn("jur-tw", found["jids"])
+
+    def test_r359_5_the_bill_titles_hold_no_sensitive_term(self):
+        self.assertFalse(tf.has_sensitive_term(self.BILL))
+
+
 if __name__ == "__main__":
     unittest.main()
