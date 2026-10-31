@@ -1040,8 +1040,9 @@ def write_status_record(root, event_id, rtype, summary, rule_id, today, gate=Non
     return cid
 
 
-def write_withdrawal_record(root, event_id, gate, today):
-    return write_status_record(root, event_id, "withdrawal", f"系統撤回事件：未通過 {gate}（{WITHDRAW_RULE}）。",
+def write_withdrawal_record(root, event_id, gate, today, note=None):
+    """`note` (R335) is a reason text that an approved withdrawal adds to the summary."""
+    return write_status_record(root, event_id, "withdrawal", f"系統撤回事件：未通過 {gate}（{WITHDRAW_RULE}）。" + (note or ""),
                                WITHDRAW_RULE, today, gate=gate)
 
 
@@ -1107,7 +1108,7 @@ def _with_correction_ids(doc, ids):
     return new
 
 
-def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
+def withdraw_topic(root, event_id, gate, ref="HEAD", today=None, note=None):
     """R82: a published system topic that fails a gate keeps its file and id. It gets status withdrawn, the
     failed gate in review.reason and a link to its correction record (R86). A missing file is restored from the
     git ref first. A topic that is withdrawn already stays as it is and writes no new record (R105). An editor-approved topic stays as it is too (R141.1).
@@ -1125,7 +1126,7 @@ def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
         return path
     doc["status"] = "withdrawn"
     doc["review"]["reason"] = f"withdrawn: {gate}"
-    cid = write_withdrawal_record(root, event_id, gate, today or date.today().isoformat())
+    cid = write_withdrawal_record(root, event_id, gate, today or date.today().isoformat(), note)
     if cid not in doc.get("correction_ids", []):
         doc["correction_ids"] = doc.get("correction_ids", []) + [cid]
     _write_event(path, doc, body)
