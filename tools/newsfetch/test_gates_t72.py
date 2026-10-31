@@ -17,7 +17,7 @@ class FragmentCandidateTest(unittest.TestCase):
         helper = RegateTest()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            corpus, seed, _ = helper.setup(root, publishers=1)  # the re-gate of the old topic fails by itself, so a fail count is visible
+            corpus, seed, _ = helper.setup(root, publishers=1, off_publisher="自由時報")  # the re-gate of the old topic fails by itself, so a fail count is visible
             fragment = [it["url"] for it in corpus if it["url"] in {"t0", "t1", "t2"}]  # half of the 6 sources of the old topic
             clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": fragment}]}]
             real = tf.gate_topic

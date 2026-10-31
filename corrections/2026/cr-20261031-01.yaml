@@ -1,0 +1,10 @@
+schema_version: 1
+id: cr-20261031-01
+target_ids:
+- ev-20260712-hengchun-ghost-festival-hiring-scam
+date: '2026-10-31'
+type: withdrawal
+summary: 系統撤回事件：未通過 rejected_name_quality（R82）。名稱「屏東縣豎孤棚」只是習俗用語，未指出爭議或政府行為；2 篇來源都來自自由時報。
+made_by: tool
+gate: rejected_name_quality
+rule_id: R82

@@ -9,11 +9,6 @@
   "fails": 1,
   "gate": "rejected_name_quality"
  },
- "ev-20260712-hengchun-ghost-festival-hiring-scam": {
-  "day": "2026-10-27",
-  "fails": 2,
-  "gate": "rejected_name_quality"
- },
  "ev-20260712-topic-887a7ce9": {
   "day": "2026-10-27",
   "fails": 1,
@@ -53,11 +48,6 @@
   "day": "2026-10-27",
   "fails": 1,
   "gate": "rejected_name_quality"
- },
- "ev-20260926-taipei-renai-roundabout-trees": {
-  "day": "2026-10-27",
-  "fails": 2,
-  "gate": "rejected_source_rule"
  },
  "ev-20261017-topic-75f7289d": {
   "day": "2026-10-27",

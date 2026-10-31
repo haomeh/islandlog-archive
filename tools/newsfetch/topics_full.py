@@ -1040,8 +1040,9 @@ def write_status_record(root, event_id, rtype, summary, rule_id, today, gate=Non
     return cid
 
 
-def write_withdrawal_record(root, event_id, gate, today):
-    return write_status_record(root, event_id, "withdrawal", f"系統撤回事件：未通過 {gate}（{WITHDRAW_RULE}）。",
+def write_withdrawal_record(root, event_id, gate, today, note=None):
+    """`note` (R335) is a reason text that an approved withdrawal adds to the summary."""
+    return write_status_record(root, event_id, "withdrawal", f"系統撤回事件：未通過 {gate}（{WITHDRAW_RULE}）。" + (note or ""),
                                WITHDRAW_RULE, today, gate=gate)
 
 
@@ -1107,7 +1108,7 @@ def _with_correction_ids(doc, ids):
     return new
 
 
-def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
+def withdraw_topic(root, event_id, gate, ref="HEAD", today=None, note=None):
     """R82: a published system topic that fails a gate keeps its file and id. It gets status withdrawn, the
     failed gate in review.reason and a link to its correction record (R86). A missing file is restored from the
     git ref first. A topic that is withdrawn already stays as it is and writes no new record (R105). An editor-approved topic stays as it is too (R141.1).
@@ -1125,7 +1126,7 @@ def withdraw_topic(root, event_id, gate, ref="HEAD", today=None):
         return path
     doc["status"] = "withdrawn"
     doc["review"]["reason"] = f"withdrawn: {gate}"
-    cid = write_withdrawal_record(root, event_id, gate, today or date.today().isoformat())
+    cid = write_withdrawal_record(root, event_id, gate, today or date.today().isoformat(), note)
     if cid not in doc.get("correction_ids", []):
         doc["correction_ids"] = doc.get("correction_ids", []) + [cid]
     _write_event(path, doc, body)
@@ -1387,13 +1388,19 @@ def regate_seed(doc, text, seed, urls_by_id, by_url):
 def file_items(root, ids):
     """R132: the items that the source files of a topic record (url, title, date, publisher, class)."""
     import yaml
+    from tools.newsfetch import publishers as pubs
+    index = pubs.load_index()
     removed = load_removed_sources(REMOVED_SOURCES)  # R261.2a: a removed source on disk is no member and no extra
     out = []
     for p in sorted((Path(root) / "sources").glob("*/*.yaml")):
         if p.stem in ids and p.stem not in removed:
             d = yaml.safe_load(p.read_text(encoding="utf-8"))
-            out.append({"url": d["url"], "title": d["title"], "published_on": str(d["published_on"]), "publisher": d["publisher"],
-                        "source_class": d["source_class"], "quote": d.get("quote")})
+            item = {"url": d["url"], "title": d["title"], "published_on": str(d["published_on"]), "publisher": d["publisher"],
+                    "source_class": d["source_class"], "quote": d.get("quote")}
+            group = index.group(d["publisher"])  # R344.3, PRD 4.4: one owner counts once
+            if group != d["publisher"]:
+                item["publisher_group"] = group
+            out.append(item)
     return out
 
 
@@ -1453,6 +1460,9 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
         return record
     seed["_keys"], seed["_name"] = [key], found["name"]
     ev, gate = build_checked(seed, corpus, df, members)
+    if gate == "rejected_source_rule" and record["dropped"] and meets_source_rule(file_items(root, before)):
+        record.update(file_sources_kept=True, key=key)  # R329.3, R337: the member drop caused the fail; the sources in the file pass the same rule, so the file stays as it is
+        return record
     if gate:
         record["gate"] = gate
         return record
@@ -1695,6 +1705,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             covered.discard(doc["id"])
         else:
             stats["regate_passed"] += 1
+            stats["regate_file_sources_kept"] += bool(rec.get("file_sources_kept"))
             stats["regate_members_removed"] += len(rec["removed"])
             stats["regate_renamed"] += rec["title_after"] != rec["title_before"]
             covered.add(doc["id"])
