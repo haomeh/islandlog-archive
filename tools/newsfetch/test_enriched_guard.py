@@ -81,6 +81,41 @@ class GuardTest(base.RunHelper, unittest.TestCase):
                 self.assertEqual(stats["skipped_enriched"], 1)
                 self.assertEqual(stats["published"], 0)
 
+    def write_source_files(self, root):
+        """The run reads the sources of a listed event from its source files, as in the real archive."""
+        _, topic = self.corpus(True)
+        for t in topic:
+            doc = {k: t.get(k) for k in ("url", "title", "published_on", "publisher", "source_class")}
+            text = "".join(f"{k}: {json.dumps(v, ensure_ascii=False)}\n" for k, v in doc.items())  # a double-quoted scalar is YAML, and the url line is as in a source file
+            (root / "sources/2026" / f"{tp.src_id(t, tp.HOSTS)}.yaml").write_text(text, encoding="utf-8")
+
+    def test_a_candidate_with_a_new_id_on_the_sources_of_a_listed_event_is_skipped(self):
+        """T72b (R330.1): 食安法修法 got a new id and 17 of 22 sources of the listed 食安法. The id guard missed it."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            root.mkdir()
+            with listed(write_list(tmp, [self.EVENT_ID])):
+                self.run_in(root, second_news_publisher=True, today="2026-10-25")
+                self.write_source_files(root)
+                before = self.event_path(root).read_bytes()
+                with mock.patch.object(tf, "stable_id", lambda *a: "ev-20261023-topic-bbbbbbbb"):
+                    stats, _, _ = tf.run(*self.args(root), today="2026-10-26")
+                self.assertFalse((root / "events/2026/ev-20261023-topic-bbbbbbbb.md").exists())
+                self.assertEqual(self.event_path(root).read_bytes(), before)
+                self.assertEqual(stats["published"], 0)
+                self.assertEqual(stats["skipped_enriched_candidate"], 1)
+
+    def test_the_same_candidate_is_written_when_no_event_is_listed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            root.mkdir()
+            with listed(write_list(tmp, [])):
+                self.run_in(root, second_news_publisher=True, today="2026-10-25")
+                self.write_source_files(root)
+                with mock.patch.object(tf, "stable_id", lambda *a: "ev-20261023-topic-bbbbbbbb"):
+                    stats, _, _ = tf.run(*self.args(root), today="2026-10-26")
+                self.assertEqual(stats["skipped_enriched_candidate"], 0)
+
     def args(self, root):
         corpus, topic = self.corpus(True)
         clusters = [{"cluster_id": "c1", "news_groups": [{"source_ids": [t["url"] for t in topic]}]}]
