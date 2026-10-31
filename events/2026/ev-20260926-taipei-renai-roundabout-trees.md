@@ -2,7 +2,7 @@
 schema_version: 1
 id: ev-20260926-taipei-renai-roundabout-trees
 kind: historical_event
-status: published
+status: withdrawn
 title: 臺北市仁愛圓環
 summary: 2026-09-26，自由時報共 3 則報導提及仁愛圓環 [@src-20260926-ltn-b2721815]。
 start_date: '2026-09-26'
@@ -56,8 +56,10 @@ privacy:
   basis_source_ids: []
 review:
   sensitive: false
-  reason: 'draft-review: 系統依爬取資料自動形成與命名，編輯尚未審閱。'
+  reason: 'withdrawn: rejected_source_rule'
   status: draft-review
+correction_ids:
+- cr-20261031-05
 ---
 
 ## 2026-09-26　2 則報導、1 則回應或澄清
