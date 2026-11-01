@@ -29,7 +29,7 @@ import sys
 import unicodedata
 import urllib.parse
 from array import array
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
@@ -195,8 +195,9 @@ class GramIndex:
     its rarest bigram only. The ids follow the month of published_on, so a range of months is a range of ids (counts(g, ranges))."""
 
     def __init__(self, corpus):
-        order = sorted(range(len(corpus)), key=lambda i: str(corpus[i]["published_on"])[:7])
+        order = sorted(range(len(corpus)), key=lambda i: str(corpus[i]["published_on"]))  # a month is a range of ids, a day too
         self.texts = []
+        self.days = []
         self.post = {}
         self.month_ids = {}  # month -> [first id, end id)
         month = None
@@ -208,6 +209,10 @@ class GramIndex:
                     self.month_ids[month][1] = new_id
                 self.month_ids[m] = [new_id, new_id]
                 month = m
+            try:
+                self.days.append(_day(it["published_on"]))
+            except ValueError:
+                self.days.append(None)
             runs = CJK_RUN.findall(unicodedata.normalize("NFKC", it["title"] or ""))
             self.texts.append(" ".join(runs))
             for b in {run[k:k + 2] for run in runs for k in range(len(run) - 1)}:
@@ -217,7 +222,14 @@ class GramIndex:
                 arr.append(new_id)
         if month is not None:
             self.month_ids[month][1] = len(self.texts)
+        self.ordered = None not in self.days and all(a <= b for a, b in zip(self.days, self.days[1:]))
         self._total = {}
+
+    def day_range(self, lo, hi):
+        """The half-open id range of the titles dated in [lo, hi], or None when the dates do not follow the ids."""
+        if not self.ordered:
+            return None
+        return bisect_left(self.days, lo), bisect_right(self.days, hi)
 
     def count(self, g, ranges=None):
         """Titles that hold g, among the ids in the half-open `ranges` (all titles when None)."""
@@ -247,6 +259,29 @@ class GramIndex:
 
     def __getitem__(self, gram):
         return self.count(gram)
+
+
+class _IndexWindow:
+    """What window_frequency(corpus, lo, hi) gives for .get and [], read from the index for the grams that a caller asks for."""
+
+    def __init__(self, index, span):
+        self.index = index
+        self.span = span
+
+    def get(self, gram, default=0):
+        return self.index.count(gram, [self.span]) or default
+
+    def __getitem__(self, gram):
+        return self.index.count(gram, [self.span])
+
+
+def window_counts(df, corpus, lo, hi):
+    """window_frequency(corpus, lo, hi) when df is the Counter of the corpus; a view on the index when df is the GramIndex of the same corpus."""
+    if isinstance(df, GramIndex) and len(df.texts) == len(corpus):
+        span = df.day_range(lo, hi)
+        if span is not None:
+            return _IndexWindow(df, span)
+    return window_frequency(corpus, lo, hi)
 
 
 def window_frequency(corpus, lo, hi):
@@ -341,19 +376,40 @@ def topic_title(key, jurisdiction_names, national=False, generic=False):
     return key
 
 
-def members(seed, corpus, df):
+_VIEW = {}
+
+
+def _corpus_view(corpus):
+    """T82: by_url and the corpus sorted by (published_on, url) with the days, built once for the corpus that a caller passes again and again."""
+    hit = _VIEW.get("last")
+    if hit is not None and hit[0] is corpus and hit[1] == len(corpus):
+        return hit[2]
     by_url = {it["url"]: it for it in corpus}
+    ordered = sorted(corpus, key=lambda j: (j["published_on"], j["url"]))
+    try:
+        days = [_day(it["published_on"]) for it in ordered]
+    except ValueError:
+        days = None
+    if days is not None and not all(a <= b for a, b in zip(days, days[1:])):
+        days = None
+    view = (by_url, ordered, days)
+    _VIEW["last"] = (corpus, len(corpus), view)
+    return view
+
+
+def members(seed, corpus, df):
+    by_url, ordered, days = _corpus_view(corpus)
     seeds = [by_url[u] for u in seed["seed_urls"] if u in by_url]
     titles = [s["title"] for s in seeds]
     lo = min(_day(s["published_on"]) for s in seeds) - timedelta(days=WINDOW_BEFORE)
     hi = max(_day(s["published_on"]) for s in seeds) + timedelta(days=WINDOW_AFTER)
-    keys = topic_keys(titles, df, len(corpus), dfw=window_frequency(corpus, lo, hi))
+    dfw = window_counts(df, corpus, lo, hi)  # one window count, read for the asked grams only
+    keys = topic_keys(titles, df, len(corpus), dfw=dfw)
     seed["_keys"] = keys
     by_date = [s["title"] for s in sorted(seeds, key=lambda j: (j["published_on"], j["url"]))]
     seed["_name"] = display_name(keys[0], by_date) if keys else ""
     names = seed.get("jurisdiction_names", [])
     national = "jur-tw" in seed.get("jurisdiction_ids", [])
-    dfw = window_frequency(corpus, lo, hi)
     burst = dfw.get(keys[0], 0) / max(1, df.get(keys[0], 0)) if keys else 1.0
     generic = (not national and len(names) == 1 and bool(keys) and df.get(keys[0], 0) > PLACE_FILTER_DF
                and burst < GENERIC_BURST and not PLACE.search(keys[0]))
@@ -367,8 +423,9 @@ def members(seed, corpus, df):
         places += [g for g, c in cover.items() if c >= max(LOCAL_ANCHOR_MIN, LOCAL_ANCHOR_SHARE * len(titles)) and df.get(g, 0) <= PLACE_FILTER_DF
                    and not any(g in k for k in keys)]
     out, seen = [], set()
-    for it in sorted(corpus, key=lambda j: (j["published_on"], j["url"])):
-        if DROP.search(it["title"]) or not (lo <= _day(it["published_on"]) <= hi):
+    window = ordered if days is None else ordered[bisect_left(days, lo):bisect_right(days, hi)]
+    for it in window:
+        if DROP.search(it["title"]) or (days is None and not (lo <= _day(it["published_on"]) <= hi)):
             continue
         if not any(k in it["title"] for k in keys):
             continue

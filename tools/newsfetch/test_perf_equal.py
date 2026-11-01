@@ -61,6 +61,31 @@ class GramIndexTest(unittest.TestCase):
                 self.assertEqual(new.months[month].get(g, 0), counter[g])
 
 
+class WindowCountsTest(unittest.TestCase):
+    def test_the_index_window_equals_window_frequency_for_every_gram(self):
+        rows = corpus()
+        gi = tp.GramIndex(rows)
+        grams = set(tp.document_frequency(rows)) | {"鑫鑫", "颱風A"}
+        for lo, hi in [(date(2026, 4, 3), date(2026, 4, 9)), (date(2026, 5, 20), date(2026, 5, 20)), (date(2026, 1, 1), date(2026, 12, 31)), (date(2027, 1, 1), date(2027, 2, 1))]:
+            want, view = tp.window_frequency(rows, lo, hi), tp.window_counts(gi, rows, lo, hi)
+            for g in grams:
+                self.assertEqual(view.get(g, 0), want.get(g, 0), (g, lo, hi))
+                self.assertEqual(view[g], want[g], (g, lo, hi))
+            self.assertEqual(view.get("鑫鑫", 7), want.get("鑫鑫", 7))
+
+    def test_members_equal_with_the_counter_and_with_the_index(self):
+        rows = corpus(600)
+        df, gi = tp.document_frequency(rows), tp.GramIndex(rows)
+        rng = random.Random(11)
+        for _ in range(30):
+            picks = rng.sample(rows, 3)
+            seed = {"seed_urls": [r["url"] for r in picks], "jurisdiction_names": [], "jurisdiction_ids": ["jur-tw"]}
+            a, b = dict(seed), dict(seed)
+            ma, mb = tp.members(a, rows, df), tp.members(b, rows, gi)
+            self.assertEqual([id(x) for x in ma], [id(x) for x in mb])
+            self.assertEqual((a["_keys"], a["_name"], a["_generic"]), (b["_keys"], b["_name"], b["_generic"]))
+
+
 class DayIndexTest(unittest.TestCase):
     def test_slice_equals_the_scan(self):
         rows = corpus()
