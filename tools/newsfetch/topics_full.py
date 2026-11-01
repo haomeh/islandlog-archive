@@ -2029,6 +2029,53 @@ def read_slim(path):
     return out
 
 
+def _keep_cluster_urls(d):
+    """json object hook: run() reads news_groups of a cluster and source_ids of a group only, so every other field is dropped on the load."""
+    if "news_groups" in d:
+        return {"news_groups": d["news_groups"]}
+    if "source_ids" in d:
+        return {"source_ids": d["source_ids"]}
+    return d
+
+
+def read_clusters(path, block=1 << 22):
+    """The clusters of json.load(path), reduced to what run() reads (T82): the URL lists. The full load takes 429 MB and a spike of 1.6 GB
+    (the text of the file as one string). A file whose top level is a list is read one cluster at a time from blocks of `block` characters."""
+    decoder = json.JSONDecoder(object_hook=_keep_cluster_urls)
+    with open(path, encoding="utf-8") as f:
+        buf = f.read(block)
+        start = len(buf) - len(buf.lstrip())
+        if buf[start:start + 1] != "[":
+            return decoder.decode(buf + f.read())
+        out, pos, eof = [], start + 1, False
+        while True:
+            while True:  # skip white space and commas; read more when the buffer ends
+                while pos < len(buf) and buf[pos] in " \t\r\n,":
+                    pos += 1
+                if pos < len(buf) or eof:
+                    break
+                more = f.read(block)
+                eof = not more
+                buf, pos = buf[pos:] + more, 0
+            if pos >= len(buf):
+                raise ValueError("clusters file: the list does not end")
+            if buf[pos] == "]":
+                if buf[pos + 1:].strip() or f.read(1).strip():
+                    raise ValueError("clusters file: text after the list")
+                return out
+            while True:
+                try:
+                    value, end = decoder.raw_decode(buf, pos)
+                    break
+                except json.JSONDecodeError:
+                    more = f.read(block)
+                    if not more:
+                        raise
+                    buf, pos = buf[pos:] + more, 0
+            out.append(value)
+            pos = end
+
+
 def main(argv):
     try:
         args, today = parse_today(list(argv[1:]))
@@ -2040,7 +2087,7 @@ def main(argv):
         print(__doc__.splitlines()[2], file=sys.stderr)
         return 2
     corpus = read_slim(args[0])
-    clusters = json.load(open(args[1], encoding="utf-8"))
+    clusters = read_clusters(args[1])
     existing = json.load(open(args[2], encoding="utf-8"))
     stats, published, _ = run(corpus, clusters, existing, args[3], args[4], today=today,
                               approve_withdraw=read_approval_file(approve_file) if approve_file else None)

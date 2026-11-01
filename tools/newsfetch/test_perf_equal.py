@@ -102,5 +102,29 @@ class SlimRowsTest(unittest.TestCase):
             self.assertEqual(tf.read_slim(path), tf.slim_rows(tp.read_jsonl(path)))
 
 
+class ReadClustersTest(unittest.TestCase):
+    def test_the_reduced_clusters_give_the_same_url_lists(self):
+        import json
+        import tempfile
+        data = [{"cluster_id": "c1", "title": "x", "topics": ["a"], "news_groups": [{"id": "ng-01", "kind": "report", "source_ids": ["u1", "u2"], "extra": {"source_ids": ["no"]}},
+                                                                              {"id": "ng-02", "source_ids": ["u3"]}]},
+                {"cluster_id": "c2", "news_groups": []}, {"cluster_id": "c3"}]
+        with tempfile.TemporaryDirectory() as d:
+            path = d + "/c.json"
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f)
+            got = tf.read_clusters(path)
+            for block in (1, 2, 7, 64):  # the block ends inside a value, inside a string, between values
+                self.assertEqual(tf.read_clusters(path, block), got)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n [ " + json.dumps(data, ensure_ascii=False)[1:-1].replace("},", "}\n ,\n") + "\n]\n")
+            self.assertEqual(tf.read_clusters(path, 5), got)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("[]")
+            self.assertEqual(tf.read_clusters(path, 1), [])
+        urls = lambda cs: [[u for g in c.get("news_groups", []) for u in g.get("source_ids", [])] for c in cs]
+        self.assertEqual(urls(got), urls(data))
+
+
 if __name__ == "__main__":
     unittest.main()
