@@ -478,10 +478,12 @@ def scope_levels(titles, national):
     return off, mixed
 
 
-def place_scope(titles, jids):
+def place_scope(titles, jids, most=False):
     """R196.5: a place stays in the name of the topic only when every title names it. The other places go out of the name. The topic keeps
-    its jurisdictions and its actors."""
-    kept = [j for j in jids if j != "jur-tw" and all(j in _title_jurisdictions(t) for t in titles)]
+    its jurisdictions and its actors. R363.7: `most` is for a rebuild of an old topic; the place must be in more than half of the titles."""
+    named = [_title_jurisdictions(t) for t in titles]
+    ok = (lambda j: sum(1 for n in named if j in n) * 2 > len(titles)) if most else (lambda j: all(j in n for n in named))
+    kept = [j for j in jids if j != "jur-tw" and ok(j)]
     return kept or ["jur-tw"]
 
 
@@ -1401,7 +1403,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
         return "rejected_mixed_ministry", None
     if not known and not t32_name_ok(key, name, titles):  # R196.1, R196.2, R196.3, R196.8: a rebuild of an old topic gets a new name from its key, so the name tests apply to it too
         return "rejected_issue_name", None
-    return "ok", {"jids": jids, "actors": actors, "name": name, "name_jids": place_scope(titles, jids) if new else jids, "off_level": {members[i]["url"] for i in off}}
+    return "ok", {"jids": jids, "actors": actors, "name": name, "name_jids": place_scope(titles, jids) if new else (jids if known else place_scope(titles, jids, most=True)), "off_level": {members[i]["url"] for i in off}}
 
 
 def build_checked(seed, corpus, df, members):

@@ -279,5 +279,36 @@ class OneStoryBranchTest(unittest.TestCase):
         self.assertTrue(set(core) <= kept)
 
 
+class RenamePlaceTest(unittest.TestCase):
+    """R363.7 (G7, R196.5): a rebuild of an old topic adds a place word to the name only when most member titles name that place."""
+
+    TITLES = ["平日國旅補助優惠 澎湖首波額度使用破8成達標", "國旅補助優惠集中在平日 上班族嘆「還要請特休」：寧願出國"]
+
+    def test_a_place_in_one_title_of_two_is_not_most(self):
+        jid = next(j for j, _, name, terms in tf.JURS if "澎湖" in terms)
+        self.assertEqual(tf.place_scope(["國旅補助優惠 澎湖首波使用破8成", "國旅補助優惠集中在平日"], [jid]), ["jur-tw"])  # every title: no
+        self.assertEqual(tf.place_scope(self.TITLES, [jid], most=True), ["jur-tw"])  # 1 of 2 is not most
+        self.assertEqual(tf.place_scope(self.TITLES + ["澎湖國旅補助優惠 加碼"], [jid], most=True), [jid])  # 2 of 3 is most
+
+    def test_a_place_in_most_titles_stays(self):
+        titles = ["社子島細部計畫 臺北市府說明", "臺北市社子島細部計畫通過審議", "社子島細部計畫 居民陳情"]
+        self.assertEqual(tf.place_scope(titles, ["jur-63000000"], most=True), ["jur-63000000"])
+
+    def test_the_default_still_asks_for_every_title(self):
+        titles = ["社子島細部計畫 臺北市府說明", "臺北市社子島細部計畫通過審議", "社子島細部計畫 居民陳情"]
+        self.assertEqual(tf.place_scope(titles, ["jur-63000000"]), ["jur-tw"])
+
+    def test_the_gate_of_a_rebuild_leaves_the_place_out_of_the_name(self):
+        jid = next(j for j, _, name, terms in tf.JURS if "澎湖" in terms)
+        members = [{"url": f"https://x.example/{i}", "title": t, "published_on": "2026-09-25", "publisher": f"報{i}", "source_class": "news"} for i, t in enumerate(self.TITLES)]
+        corpus = [dict(m, fetched_on="2026-09-25T12:00:00Z") for m in members] + \
+                 [{"url": f"https://y.example/{i}", "title": f"無關新聞{i}號 氣象消息", "published_on": "2026-09-20", "publisher": "乙", "source_class": "news"} for i in range(40)]
+        df = tp.document_frequency(corpus)
+        outcome, found = tf.gate_topic("國旅補助優惠", members, members, df, corpus, rebuilds_old=True)
+        self.assertEqual(outcome, "ok")
+        self.assertIn(jid, found["jids"])
+        self.assertNotIn(jid, found["name_jids"])
+
+
 if __name__ == "__main__":
     unittest.main()
