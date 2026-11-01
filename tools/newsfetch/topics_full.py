@@ -553,6 +553,17 @@ TAIWAN_WORD = re.compile(r"台灣|臺灣|全台|[對近襲侵離登赴朝向]台
 NATIONAL_ROAD = re.compile(r"台\d{1,2}線|國道\d|省道")
 
 
+PLACE_BEFORE_BODY = (r"(?:" + FOREIGN_NEW.pattern + r"|[\u4e00-\u9fff]{1,3}(?:共和國|王國|聯邦|公國)"  # a place word: a country of the list, a state form, or the end of a transliterated name
+                     r"|[\u4e00-\u9fff]{1,3}(?:蘭|亞|牙|坦|曼|麥|丹|威|瓦|維|尼|魯|哥|宛|克|牙利|大利|地利|利時))")
+FOREIGN_GENERIC = re.compile(PLACE_BEFORE_BODY + r"(?:" + GENERIC_BODY.pattern + r")")  # R363.3: 波蘭憲法法庭, 匈牙利憲法法庭, 立陶宛外交部
+
+
+def foreign_marked(title):
+    """R363.3: a place word stands directly before a body that every state has (憲法法庭, 外交部). The list of countries is not the only test:
+    the end of a transliterated name counts too, so a country that no list names is a marker."""
+    return bool(FOREIGN_GENERIC.search(title))
+
+
 def taiwan_relevant(titles, new=False):
     """R84, R127: a title is about Taiwan when it names a place, a government body, a national system, a Taiwan party,
     legislator or minister, or (with no foreign country named) a national law or policy noun. R141.4: a Taiwan public figure
@@ -569,8 +580,8 @@ def taiwan_relevant(titles, new=False):
             t = home_text(t)
             if foreign:
                 t = t.replace("氣象署", "")  # a report of a foreign quake cites the Taiwan agency as its source
-            if not PUBLIC_POWER_ACT.search(t):  # R359.2: a body that every state has counts as a Taiwan body only with a public act in the title
-                t, politics = GENERIC_BODY.sub(" ", t), TW_POLITICS_NEW
+            if foreign_marked(t):  # R363.3: a body that every state has loses its Taiwan link when a foreign marker stands directly before it
+                t, politics = FOREIGN_GENERIC.sub(" ", t), TW_POLITICS_NEW
         if any(term in (place_text(t) if new else t) for _, _, _, terms in JURS for term in terms) or (LOCAL_GOV.search(t) and not (new and foreign)) \
                 or any(re.search(p, t) for p, _, _, _ in CENTRAL) or NATIONAL_SYSTEMS.search(t) or re.search(r"台灣|臺灣|全台|國人", t) \
                 or politics.search(t) or (NATIONAL_LAW.search(t) and not foreign) \

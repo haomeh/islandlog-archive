@@ -125,5 +125,40 @@ class HeldSensitiveTest(base.RunHelper, unittest.TestCase):
         self.assertEqual(run_report.HELD_COLUMNS[:2], ["id", "title"])
 
 
+class ForeignMarkerTest(unittest.TestCase):
+    """R363.3 (G2): the Taiwan link of a generic body (外交部, 憲法法庭) fails by a foreign marker, not by a missing act word."""
+
+    FOREIGN = ["波蘭憲法法庭裁定總統令違憲", "匈牙利憲法法庭裁定總統令違憲", "中國外交部約見日本公使"]
+    TAIWAN = ["教育部 唾液篩檢", "外交部 自動通關", "交通部 機車後座兒童", "國防部 體位區分標準", "內政部 特搜隊成軍"]
+
+    def test_a_foreign_title_with_an_act_word_is_not_about_taiwan(self):
+        for title in self.FOREIGN:
+            self.assertFalse(tf.taiwan_relevant([title], new=True), title)
+            self.assertFalse(tf.taiwan_relevant([title, title.replace("裁定", "宣布")], new=True), title)
+
+    def test_a_taiwan_ministry_with_no_act_word_keeps_the_link(self):
+        for title in self.TAIWAN:
+            self.assertTrue(tf.taiwan_relevant([title], new=True), title)
+
+    def test_the_test_holds_for_a_country_that_no_list_names(self):
+        for place in ("立陶宛", "哈薩克", "秘魯", "捷克", "賴比瑞亞", "塔吉克"):
+            self.assertFalse(tf.taiwan_relevant([f"{place}憲法法庭裁定總統令違憲"], new=True), place)
+
+    def test_a_place_word_directly_before_a_generic_body_is_a_marker(self):
+        self.assertTrue(tf.foreign_marked("立陶宛外交部召見大使"))
+        self.assertTrue(tf.foreign_marked("匈牙利憲法法庭裁定"))
+        self.assertFalse(tf.foreign_marked("教育部 唾液篩檢"))
+
+    def test_a_verb_or_a_word_before_a_body_is_no_marker(self):
+        for title in ("立委要求教育部說明", "函請外交部協助國人", "送達內政部文件", "民團籲交通部改善", "福利部門與國防部協商"):
+            self.assertFalse(tf.foreign_marked(title), title)
+
+    def test_a_taiwan_marker_before_a_body_keeps_the_link(self):
+        self.assertTrue(tf.taiwan_relevant(["我國外交部抗議", "中華民國外交部聲明"], new=True))
+
+    def test_an_old_topic_keeps_the_old_reading(self):
+        self.assertTrue(tf.taiwan_relevant(["波蘭憲法法庭裁定總統令違憲"], new=False))
+
+
 if __name__ == "__main__":
     unittest.main()
