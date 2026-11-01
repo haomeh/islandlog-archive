@@ -52,9 +52,9 @@ def latest_news(tree, members):
     return max([tree["sources"][i]["date"] for i in members if tree["sources"][i]["class"] == "news"], default="")
 
 
-# R363.1: a title that may name a minor or a victim. A name before a family word, or a word for a student, a child or a victim.
+# R363.1, R384.1: a title that may name a minor or a victim. A name before a family word, or a word for a student, a child or a victim.
 VICTIM_TITLE = re.compile(r"[\u4e00-\u9fff]{2,4}(?:的)?(?:父親|母親|爸爸|媽媽|家屬|家長|遺族|家人|姊姊|姐姐|哥哥|弟弟|妹妹)|"
-                          r"(?:國小|國中|高中|高職|大學)生|學童|男童|女童|少年|少女|未成年|被害人|受害(?:者|人|學生)|死者|遇害|命案|霸凌")
+                          r"(?:國小|國中|高中|高職|大學)生|學童|男童|女童|少年|少女|未成年|父母|遺屬|學生|被害人|受害(?:者|人|學生)|死者|遇害|命案|霸凌")
 
 
 def victim_flag(title):
