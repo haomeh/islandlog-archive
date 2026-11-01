@@ -94,5 +94,39 @@ class ServeTermTest(unittest.TestCase):
         self.assertEqual(len(tf.split_cases(members)), 1)
 
 
+class CampaignNamesTest(unittest.TestCase):
+    """R384.4: the campaign class reads candidate names and the words 交鋒, 反問, 陣營質疑, 選將, 換人做. A policy statement of an official with no campaign word stays."""
+
+    def setUp(self):
+        tf.set_candidates({"王小明", "李大華", "陳小安"})
+        self.addCleanup(tf.set_candidates, frozenset())
+
+    CAMPAIGN = ["長者健保補助再交鋒 李大華反問王小明：哪個法案不是全國性的？",
+                "王小明支持中央補助長者健保費且全國一致  對手陣營質疑「哪個才是王小明？」",
+                "新竹爆食安事件 藍選將也喊：做不好就換人做",
+                "「食安」疑慮說不清 陳小安要求王小明下台負責",
+                "長者健保補助 李大華交鋒王小明",
+                "王小明反問：長者健保補助為何不一致？"]
+    POLICY = ["兩部會協商長者健保費 交鋒焦點在財源", "行政院長卓榮泰：長者健保費補助將修法", "衛福部反問業者：標示為何不全？",
+              "國手選將名單公布 教練團說明", "廠商不行就換人做 工程會：採購法有規定", "王小明：長者健保費補助將於明年上路",
+              "立法院交鋒 國防預算三讀", "市府說明長者健保補助新制"]
+
+    def test_each_campaign_title_is_candidate_talk(self):
+        for title in self.CAMPAIGN:
+            self.assertTrue(tf.candidate_talk(title), title)
+
+    def test_each_policy_title_stays(self):
+        for title in self.POLICY:
+            self.assertFalse(tf.candidate_talk(title), title)
+
+    def test_the_words_alone_do_not_judge_without_a_candidate_or_a_party_word(self):
+        for title in ("議場交鋒 預算審查", "官員被反問 無法答覆", "民眾質疑新制 陣營不明"):
+            self.assertFalse(tf.candidate_talk(title), title)
+
+    def test_the_old_classes_still_work(self):
+        for title in ("議員為候選人助講 批新制", "市府新制 某黨競辦回應"):
+            self.assertTrue(tf.candidate_talk(title), title)
+
+
 if __name__ == "__main__":
     unittest.main()

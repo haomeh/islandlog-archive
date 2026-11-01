@@ -872,7 +872,7 @@ def school_name_only(title):
 
 
 CAMPAIGN_ACT = re.compile(r"站台|助選|後援會|辯論會|電視辯論|選市長|選縣長|選議員|競選看板|競選總部")  # R154 (PRD 4.5 item 5): an act of a campaign
-ATTACK = re.compile(r"酸|嗆|轟|開砲|反擊|回擊|槓|打臉|嘲|諷|反酸|批|指控|抹黑|攻擊|霸凌")  # R154: a candidate attacks or answers another
+ATTACK = re.compile(r"酸|嗆|轟|開砲|反擊|回擊|槓|打臉|嘲|諷|反酸|批|指控|抹黑|攻擊|霸凌|下台")  # R154: a candidate attacks or answers another
 CANDIDATE_NAME = re.compile(r"([\u4e00-\u9fff]{3})(?:宣布|表態|確定|登記|成立競辦|爭取|角逐)?(?:參選|競選|連任|角逐|出線|選市長|選縣長)|(?:提名|候選人|參選人)([\u4e00-\u9fff]{3})")
 _CANDIDATES = frozenset()
 
@@ -894,11 +894,20 @@ def set_candidates(names):
 CAMPAIGN_CLASS = re.compile(r"助講|宣講|競辦|競選辦公室|競總|點名.{0,4}候選人|候選人.{0,2}表態|參選人.{0,2}表態|陣營.{0,3}(?:交鋒|攻防|隔空|互嗆|對槓|喊話)")  # R363.4: the classes 助講, 競辦, 候選人表態, 陣營交鋒
 
 
+CAMPAIGN_SIDE = re.compile(r"陣營質疑|對手陣營|[藍綠白]營?選將|[藍綠白]營?選將.{0,4}喊")  # R384.4: a side of a campaign speaks
+CANDIDATE_DUEL = re.compile(r"交鋒|反問|下台負責|要求.{0,8}下台")  # R384.4: with a named candidate these words judge a candidate
+CHANGE_SLOGAN = re.compile(r"換人做")
+PARTY_WORD = re.compile(r"國民黨|民進黨|民眾黨|[藍綠白]營|[藍綠白]選將|[藍綠白]委|[藍綠白]議員")
+
+
 def candidate_talk(title):
     """R154 (PRD 4.5 item 5): a title with a campaign act, or with two candidates and an attack word, judges candidates.
     R363.4: the campaign classes 助講, 競辦, 候選人表態 and 陣營交鋒 count too. A policy statement of an official with no campaign word stays."""
     named = sum(1 for n in _CANDIDATES if n in title)
-    return bool(CAMPAIGN_ACT.search(title)) or bool(CAMPAIGN_CLASS.search(title)) or (named > 1 and bool(ATTACK.search(title)))
+    if CAMPAIGN_ACT.search(title) or CAMPAIGN_CLASS.search(title) or CAMPAIGN_SIDE.search(title) or (named > 1 and ATTACK.search(title)):
+        return True
+    # R384.4: 交鋒 and 反問 judge a candidate; 換人做 is a slogan of a side, not of a firm
+    return bool((named and CANDIDATE_DUEL.search(title)) or (CHANGE_SLOGAN.search(title) and (named or PARTY_WORD.search(title))))
 
 
 def drop_candidate_talk(members, keep_ids=frozenset()):
