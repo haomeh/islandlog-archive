@@ -213,5 +213,23 @@ class MergeSlotsTest(unittest.TestCase):
             self.assertEqual(list(old.items()), list(new.items()))
 
 
+class DailyClustersTest(unittest.TestCase):
+    def test_the_reduced_clusters_give_the_same_count_and_enrich_input(self):
+        import json
+        import tempfile
+        from tools.newsfetch import daily, jsonlist
+        data = [{"cluster_id": f"c{i}", "title": f"標題{i}", "topics": ["a"], "groups": [{"x": 1}],
+                 "news_groups": [{"id": "ng-01", "kind": "report", "source_ids": [f"https://a.example/{i}", f"https://b.example/{i}"], "topics": []}]} for i in range(5)]
+        with tempfile.TemporaryDirectory() as d:
+            path = d + "/c.json"
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            full = json.load(open(path, encoding="utf-8"))
+            self.assertEqual(sum(1 for _ in jsonlist.iter_list(path, daily._drop_all_fields)), len(full))
+            reduced = jsonlist.read_list(path, daily._keep_enrich_fields)
+        key = lambda cs: [(c.get("cluster_id"), c.get("title"), sorted(daily.cluster_urls(c))) for c in cs]
+        self.assertEqual(key(reduced), key(full))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -44,7 +44,7 @@ import urllib.request
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from tools.newsfetch import merge_corpus
+from tools.newsfetch import jsonlist, merge_corpus
 from tools.newsfetch.lists import canonical_url
 
 TAIPEI = ZoneInfo("Asia/Taipei")
@@ -273,6 +273,19 @@ def load_meta(corpus, wanted):
     return meta
 
 
+def _keep_enrich_fields(d):
+    """json object hook: the enrich step reads cluster_id and title of a cluster and source_ids of a group (T82)."""
+    if "news_groups" in d:
+        return {"cluster_id": d.get("cluster_id"), "title": d.get("title"), "news_groups": d["news_groups"]}
+    if "source_ids" in d:
+        return {"source_ids": d["source_ids"]}
+    return d
+
+
+def _drop_all_fields(d):
+    return {}
+
+
 def cluster_urls(cluster):
     return {u for g in cluster.get("news_groups", []) for u in g.get("source_ids", [])}
 
@@ -482,7 +495,7 @@ class Run:
         rc = run_cmd(cmd, self.cfg.repo, tool_env(), TIMEOUTS["cluster"], self.logs / "cluster.out")
         if rc != 0:
             raise StepFailed(f"cluster rc {rc}", rc)
-        return {"clusters": len(json.loads(self.clusters.read_text(encoding="utf-8")))}
+        return {"clusters": sum(1 for _ in jsonlist.iter_list(self.clusters, _drop_all_fields))}  # T82: a count needs no parsed clusters
 
     def promote(self):
         os.replace(self.staged, self.corpus)
@@ -585,7 +598,7 @@ class Run:
     def compute_enrich(self):
         if not (self.clusters.exists() and self.dry.exists()):
             return []
-        clusters = json.loads(self.clusters.read_text(encoding="utf-8"))
+        clusters = jsonlist.read_list(self.clusters, _keep_enrich_fields)  # T82: the fields that the enrich step reads
         wanted = set()
         for c in clusters:
             urls = cluster_urls(c)
