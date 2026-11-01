@@ -38,6 +38,7 @@ import logging
 import re
 import sys
 import unicodedata
+from array import array
 from bisect import bisect_left
 from collections import Counter
 from datetime import date, timedelta
@@ -45,6 +46,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 LOGGER = logging.getLogger(__name__)
+NO_TOPICS = frozenset()
 
 SAME_CONTENT_THRESHOLD = 0.55
 TOPIC_THRESHOLD = 0.25
@@ -132,15 +134,16 @@ def _source_group(item):
 
 
 class _Prepared:
-    """An item with its day, bigrams and clarification flag computed once."""
-    __slots__ = ("item", "day", "bigrams", "order", "has_word",
+    """An item with its day, normalized title and clarification flag computed once.
+    T82b: the bigrams are made when the item is placed in a group, not held for every item (norm is the short text; it is dropped there)."""
+    __slots__ = ("item", "day", "norm", "order", "has_word",
                  "source_group", "routine", "is_clar", "legacy", "negative",
                  "clarification", "sensitive", "topics")
 
     def __init__(self, item):
         self.item = item
         self.day = _day(item)
-        self.bigrams = _bigrams_of(normalize_title(item["title"]))
+        self.norm = normalize_title(item["title"])
         self.order = (self.day, _publisher_rank(item), item["url"])
         self.has_word = any(word in item["title"] for word in CLARIFICATION_WORDS)
         self.source_group = _source_group(item)
@@ -149,7 +152,7 @@ class _Prepared:
         self.clarification = item.get("clarification") is True
         self.sensitive = item.get("sensitive") is True
         topics = item.get("topics")
-        self.topics = {t for t in topics if isinstance(t, str)} if isinstance(topics, list) else set()
+        self.topics = (frozenset(t for t in topics if isinstance(t, str)) if isinstance(topics, list) else NO_TOPICS)
         self.legacy = "clarification" not in item
         self.is_clar = self.clarification and (self.source_group == "official" or self.has_word)
 
@@ -162,7 +165,10 @@ class _Index:
 
     def add(self, node_id, grams):
         for gram in grams:
-            self.postings.setdefault(gram, []).append(node_id)
+            posting = self.postings.get(gram)
+            if posting is None:
+                posting = self.postings[gram] = array("I")  # T82b: 4 bytes an entry; a list holds a pointer and an int object
+            posting.append(node_id)
 
     def shared(self, grams, first=0):
         """Count, for each node with id >= first, the grams that it shares. The posting lists are in the order of the ids (T82)."""
@@ -187,38 +193,49 @@ def _prepare(items):
     return prepared
 
 
+def _interned_bigrams(normalized, table):
+    """The bigrams of a title as a set whose strings are shared with every other title (T82b: one string object for each distinct bigram)."""
+    return {table.setdefault(gram, gram) for gram in _bigrams_of(normalized)}
+
+
 def _report_groups(prepared):
-    groups = []  # each: {"rep": _Prepared, "members": [_Prepared]}
+    groups = []  # each: {"rep": _Prepared, "members": [_Prepared], "n": bigrams of rep, "bigrams": union of the members}
     rep_days = []  # the day of each group's representative; the entries come in day order, so the list is sorted
     indexes = {}
+    table = {}
+    closed = 0
     for entry in prepared:
         index = indexes.setdefault((entry.source_group, entry.is_clar), _Index())
+        grams = _interned_bigrams(entry.norm, table)
+        entry.norm = None
         best, best_score = None, 0.0
         # T82: a group whose representative is more than SAME_CONTENT_DAYS before the entry is skipped below, so it is not counted at all.
         first = bisect_left(rep_days, entry.day - timedelta(days=SAME_CONTENT_DAYS))
-        for group_id, shared in index.shared(entry.bigrams, first).items():
+        for group_id in range(closed, first):  # T82b: no later entry joins these groups; the union of the members is final
+            groups[group_id]["bigrams"] = tuple(groups[group_id]["bigrams"])
+        closed = max(closed, first)
+        for group_id, shared in index.shared(grams, first).items():
             rep = groups[group_id]["rep"]
             if abs((entry.day - rep.day).days) > SAME_CONTENT_DAYS:
                 continue
             if (entry.source_group == "news" and entry.legacy and entry.has_word
                     and not rep.has_word):
                 continue
-            score = shared / (len(entry.bigrams) + len(rep.bigrams) - shared)
+            score = shared / (len(grams) + groups[group_id]["n"] - shared)
             if score >= SAME_CONTENT_THRESHOLD and (score > best_score or (
                     score == best_score and group_id < best)):
                 best, best_score = group_id, score
         if best is None:
-            index.add(len(groups), entry.bigrams)
+            index.add(len(groups), grams)
             rep_days.append(entry.day)
-            groups.append({"rep": entry, "members": [entry]})
+            groups.append({"rep": entry, "members": [entry], "n": len(grams), "bigrams": grams})
         else:
             groups[best]["members"].append(entry)
+            groups[best]["bigrams"] |= grams
+    for group in groups[closed:]:
+        group["bigrams"] = tuple(group["bigrams"])
     for group in groups:
         group["clar"] = group["rep"].is_clar
-        group["bigrams"] = set().union(*(member.bigrams for member in group["members"]))
-    for group in groups:  # T82: the member bigrams are not read again; the group keeps the union
-        for member in group["members"]:
-            member.bigrams = ()
     return groups
 
 
@@ -319,6 +336,43 @@ def _proposed_source_id(url, published_on):
     return f"src-{str(published_on).replace('-', '')}-{label}-{digest}"
 
 
+def _days_by_url(items):
+    """url -> published_on text, over the items with a valid day. A later item with the same url wins."""
+    return {entry["url"]: str(entry["published_on"]) for entry in items if entry.get("url") and _valid_day(entry)}
+
+
+def _news_groups_of(cluster, days, mapping):
+    """The news_groups entry of one cluster. It adds the url -> proposed source id pairs of the cluster to mapping."""
+    news_groups = []
+    for number, group in enumerate(cluster["groups"], start=1):
+        for url in group["member_urls"]:
+            mapping[url] = _proposed_source_id(url, days[url])
+        entry = {
+            "id": f"ng-{number:02d}",
+            "kind": group["kind"],
+            "source_group": group["source_group"],
+            "title": group["title"],
+            "representative_source_id": group["representative_url"],
+            "source_ids": list(group["member_urls"]),
+        }
+        for key in ("source_class", "negative", "clarification", "sensitive", "topics"):
+            entry[key] = group[key]
+        if group.get("routine"):
+            entry["routine"] = True
+        news_groups.append(entry)
+    return {"cluster_id": cluster["cluster_id"], "title": cluster["title"],
+            "negative": cluster["negative"], "clarification": cluster["clarification"],
+            "sensitive": cluster["sensitive"], "topics": cluster["topics"],
+            "has_negative_and_clarification": cluster["has_negative_and_clarification"],
+            "news_groups": news_groups}
+
+
+def iter_news_groups(clusters, days, mapping):
+    """T82b: as_news_groups one cluster at a time. mapping is complete when the iterator ends."""
+    for cluster in clusters:
+        yield _news_groups_of(cluster, days, mapping)
+
+
 def as_news_groups(clusters, items):
     """Return (news_groups per cluster, url -> proposed source id).
 
@@ -327,36 +381,36 @@ def as_news_groups(clusters, items):
     """
     days = {entry["url"]: str(entry["published_on"]) for entry in items if entry.get("url")}
     mapping = {}
-    result = []
-    for cluster in clusters:
-        news_groups = []
-        for number, group in enumerate(cluster["groups"], start=1):
-            for url in group["member_urls"]:
-                mapping[url] = _proposed_source_id(url, days[url])
-            entry = {
-                "id": f"ng-{number:02d}",
-                "kind": group["kind"],
-                "source_group": group["source_group"],
-                "title": group["title"],
-                "representative_source_id": group["representative_url"],
-                "source_ids": list(group["member_urls"]),
-            }
-            for key in ("source_class", "negative", "clarification", "sensitive", "topics"):
-                entry[key] = group[key]
-            if group.get("routine"):
-                entry["routine"] = True
-            news_groups.append(entry)
-        result.append({"cluster_id": cluster["cluster_id"], "title": cluster["title"],
-                       "negative": cluster["negative"], "clarification": cluster["clarification"],
-                       "sensitive": cluster["sensitive"], "topics": cluster["topics"],
-                       "has_negative_and_clarification": cluster["has_negative_and_clarification"],
-                       "news_groups": news_groups})
-    return result, mapping
+    return list(iter_news_groups(clusters, days, mapping)), mapping
 
 
-def read_jsonl(path):
+ITEM_FIELDS = ("url", "title", "published_on", "publisher", "source_group", "source_class",
+               "routine", "negative", "clarification", "sensitive", "topics")  # the fields that clustering and the output read (T82b)
+
+
+def read_jsonl(path, keep=None):
+    """The rows of a JSON lines file. With keep, a row holds only those of its fields that are present (T82b: the snippet and the other fields are not read again)."""
+    rows = []
     with Path(path).open(encoding="utf-8") as stream:
-        return [json.loads(line) for line in stream if line.strip()]
+        for line in stream:
+            if line.strip():
+                row = json.loads(line)
+                if keep is not None and isinstance(row, dict):
+                    row = {key: row[key] for key in keep if key in row}
+                rows.append(row)
+    return rows
+
+
+def write_json_list(path, values):
+    """Write values as json.dumps(list(values), ensure_ascii=False, indent=2) + "\n" gives, one value at a time (T82b).
+    A newline in the text of a value is escaped by json, so each newline that is left is a line of the layout."""
+    with Path(path).open("w", encoding="utf-8") as stream:
+        opened = False
+        for value in values:
+            stream.write(",\n  " if opened else "[\n  ")
+            stream.write(json.dumps(value, ensure_ascii=False, indent=2).replace("\n", "\n  "))
+            opened = True
+        stream.write("\n]\n" if opened else "[]\n")
 
 
 def main(argv=None):
@@ -366,14 +420,16 @@ def main(argv=None):
     parser.add_argument("--as-news-groups", action="store_true",
                         help="write news_groups entries and <output>.sources.json")
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
-    items = read_jsonl(args.input)
+    items = read_jsonl(args.input, ITEM_FIELDS)
     clusters = cluster_items(items)
     out = Path(args.output)
     if args.as_news_groups:
-        clusters, mapping = as_news_groups(clusters, [i for i in items if _valid_day(i)])
+        mapping = {}
+        write_json_list(out, iter_news_groups(clusters, _days_by_url(items), mapping))
         Path(str(out) + ".sources.json").write_text(
             json.dumps(mapping, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    out.write_text(json.dumps(clusters, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    else:
+        write_json_list(out, clusters)
 
 
 def _valid_day(item):

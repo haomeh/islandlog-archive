@@ -26,7 +26,7 @@
 4. `merge`：`merge_corpus` 把新列合併到暫存檔 `runs/DATE/corpus.next.jsonl`。每個正規化網址只留一列。舊列逐位元相同。語料本身不變。
 5. `cluster`：用 `PYTHONHASHSEED=0` 執行 `cluster.py --as-news-groups`，輸出 `runs/DATE/clusters-ng.json`（R149）。
 6. `promote`：前面五步都成功，才把暫存檔改名成語料，並更新 `state.json`。前面任何一步失敗，語料和 `state.json` 都不變。
-7. `dry_run`：把 `origin/main` 用 `git archive` 匯出到 `runs/DATE/dry/`，在那裡執行 `topics_full`，`--today` 設成臺北日期。這一步約 55 分鐘。
+7. `dry_run`：把 `origin/main` 用 `git archive` 匯出到 `runs/DATE/dry/`，在那裡執行 `topics_full`，`--today` 設成臺北日期。這一步量到的時間：`topics_full` 在 277,420 列語料上用 9 分 54 秒，尖峰記憶體 1069 MB（T82b，2026-11-01，`/usr/bin/python3` 3.14.8）；加上匯出 `origin/main` 的時間，約 10 分鐘。
 8. `validate`：如果有驗證器執行檔（`NEWSFETCH_VALIDATOR`，或 PATH 上的 `islandlog`），或有 `NEWSFETCH_SERVER_REPO` 加 `go`，就對 `dry/` 執行 `validate --mode full`。兩者都沒有就標示 `BLOCKED`。`BLOCKED` 會產生警報（R347.3）。T80 要設定驗證器。
 9. `report`：寫 `reports/DATE.json` 和 `.md`（繁體中文），再寫或刪除 `ALERT`。
 
@@ -49,7 +49,7 @@
 1. 讀最新的每日報告。如果 `ALERT` 存在，先處理警報（第 3 節）。如果 `validate` 步驟是 `BLOCKED`，不要發布：在分支上自己執行 `islandlog validate --mode full .`（或在 `server/` 用 `go run . validate --mode full <分支路徑>`），通過後才繼續。
 2. 把當天的 `corpus.jsonl` 和 `runs/DATE/clusters-ng.json` 複製到 PM 的資料夾。記錄兩個檔案的 sha256。報告裡的 `origin/main` commit 要等於分支的起點。
 3. 在新分支上做真實的 `topics_full`（R150）：
-   `PYTHONHASHSEED=0 python3 -m tools.newsfetch.topics_full CORPUS CLUSTERS tools/newsfetch/topic_seeds.json . REPORT --today <臺北日期>`
+   `PYTHONHASHSEED=0 /usr/bin/python3 -m tools.newsfetch.topics_full CORPUS CLUSTERS tools/newsfetch/topic_seeds.json . REPORT --today <臺北日期>`
    - 只暫存有改動的 `events/`、`actors/`、`sources/`、`corrections/` 和 `topic_state.json`，逐一指名，不用 `git commit -a`（R189.5）。
    - 結果要等於當天的 dry run（R190.3）。不要用假日期（R150）。
 4. 精準度回合（R165）：一個唯讀 agent 對每個新主題判斷 (a)、(b)、(c)。目標是 80%。低於 80% 時，把閘門交回寫入 agent，不合併。

@@ -196,6 +196,7 @@ class GramIndex:
     its rarest bigram only. The ids follow the month of published_on, so a range of months is a range of ids (counts(g, ranges))."""
 
     def __init__(self, corpus):
+        self.corpus = corpus  # T82b: window_counts checks that a caller passes this corpus (a reference only; the rows are held anyway)
         order = sorted(range(len(corpus)), key=lambda i: str(corpus[i]["published_on"]))  # a month is a range of ids, a day too
         self.texts = []
         self.days = []
@@ -280,7 +281,7 @@ class _IndexWindow:
 
 def window_counts(df, corpus, lo, hi):
     """window_frequency(corpus, lo, hi) when df is the Counter of the corpus; a view on the index when df is the GramIndex of the same corpus."""
-    if isinstance(df, GramIndex) and len(df.texts) == len(corpus):
+    if isinstance(df, GramIndex) and df.corpus is corpus and len(df.texts) == len(corpus):
         span = df.day_range(lo, hi)
         if span is not None:
             return _IndexWindow(df, span)
