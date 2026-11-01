@@ -24,7 +24,7 @@ SRC_ID = re.compile(r"src-[A-Za-z0-9._-]+")
 SEP = "｜"
 CHANGED_COLUMNS = ["id", "title_before", "title_after", "renamed", "members_before", "members_after", "added", "removed", "latest_news_before",
                    "latest_news_after", "latest_moves_back", "added_flags", "added_titles", "removed_titles"]
-NEW_COLUMNS = ["id", "name", "members", "news_publishers", "first_date", "last_date", "sample_titles"]
+NEW_COLUMNS = ["id", "name", "members", "news_publishers", "first_date", "last_date", "sample_titles", "flagged_titles"]
 REGATE_COLUMNS = ["id", "gate", "title_before", "title_after", "members_before", "members_after", "removed"]
 
 
@@ -52,8 +52,20 @@ def latest_news(tree, members):
     return max([tree["sources"][i]["date"] for i in members if tree["sources"][i]["class"] == "news"], default="")
 
 
+# R363.1: a title that may name a minor or a victim. A name before a family word, or a word for a student, a child or a victim.
+VICTIM_TITLE = re.compile(r"[\u4e00-\u9fff]{2,4}(?:的)?(?:父親|母親|爸爸|媽媽|家屬|家長|遺族|家人|姊姊|姐姐|哥哥|弟弟|妹妹)|"
+                          r"(?:國小|國中|高中|高職|大學)生|學童|男童|女童|少年|少女|未成年|被害人|受害(?:者|人|學生)|死者|遇害|命案|霸凌")
+
+
+def victim_flag(title):
+    """True if the title may name a minor or a victim. The writer reads every flag (R363.1)."""
+    return bool(VICTIM_TITLE.search(title))
+
+
 def member_flag(name, title):
     """The first failing check of an added member, as "label", or None. `name` is the event title without the place in front."""
+    if victim_flag(title):
+        return "minor_or_victim"
     if name and name not in title:
         return "no_key"
     if tf.foreign_body_only(title):
@@ -101,7 +113,8 @@ def new_rows(before, after):
         dates = sorted(s["date"] for s in src)
         rows.append({"id": eid, "name": ev["title"], "members": len(src), "news_publishers": len({s["publisher"] for s in news}),
                      "first_date": dates[0] if dates else "", "last_date": dates[-1] if dates else "",
-                     "sample_titles": SEP.join(s["title"] for s in sorted(src, key=lambda s: s["date"])[:3])})
+                     "sample_titles": SEP.join(s["title"] for s in sorted(src, key=lambda s: s["date"])[:3]),
+                     "flagged_titles": SEP.join(s["title"] for s in src if victim_flag(s["title"]))})
     return rows
 
 
