@@ -4,8 +4,8 @@ id: ev-20260622-wanli-river-barrier-lake
 kind: historical_event
 status: published
 title: 萬里溪堰塞湖
-summary: 2026-06-22至2026-07-23，華視新聞、自由時報、ETtoday新聞雲等共 75 則報導提及萬里溪堰塞湖 [@src-20260622-cts-deadcce8]。行政院等機關發布 2 則相關說明 [@src-20260629-ey-0470ca2f]。
-start_date: '2026-06-22'
+summary: 2026-06-21至2026-07-23，華視新聞、自由時報、ETtoday新聞雲等共 75 則報導提及萬里溪堰塞湖 [@src-20260621-cts-b9df07e9]。行政院等機關發布 2 則相關說明 [@src-20260629-ey-0470ca2f]。
+start_date: '2026-06-21'
 start_date_precision: day
 gov_levels:
 - central
@@ -34,6 +34,12 @@ positions:
   stance: not_found
 timeline:
 - id: tl-01
+  date: '2026-06-21'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
+  - src-20260621-cts-b9df07e9
+- id: tl-02
   date: '2026-06-22'
   date_precision: day
   title: 6 則報導
@@ -41,21 +47,14 @@ timeline:
   - src-20260622-cts-deadcce8
   - src-20260622-cts-89b68994
   - src-20260622-cts-fb1de1e5
-- id: tl-02
+- id: tl-03
   date: '2026-06-23'
   date_precision: day
-  title: 8 則報導
+  title: 12 則報導
   source_ids:
   - src-20260623-cts-c3cd5eef
   - src-20260623-cts-263c05d5
   - src-20260623-cts-4ed025bc
-- id: tl-03
-  date: '2026-06-25'
-  date_precision: day
-  title: 5 則報導
-  source_ids:
-  - src-20260625-cts-2e07c568
-  - src-20260626-ltn-49cd7b95
 - id: tl-04
   date: '2026-06-27'
   date_precision: day
@@ -118,95 +117,95 @@ news_groups:
 - id: ng-01
   timeline_id: tl-01
   kind: report
+  title: 花蓮萬里溪上游疑新增堰塞湖 林保署籲周邊勿活動
+  representative_source_id: src-20260621-cts-b9df07e9
+  source_ids:
+  - src-20260621-cts-b9df07e9
+- id: ng-02
+  timeline_id: tl-02
+  kind: report
   title: 萬里溪堰塞湖空拍畫面曝光！蓄水量估達600萬立方公尺 尚未蓄滿溢流
   representative_source_id: src-20260622-cts-deadcce8
   source_ids:
   - src-20260622-cts-deadcce8
   - src-20260623-ltn-df0306d9
-- id: ng-02
-  timeline_id: tl-01
+- id: ng-03
+  timeline_id: tl-02
   kind: report
   title: 花蓮萬里溪堰塞湖零星落石崩落 林保署監控警戒
   representative_source_id: src-20260622-cts-89b68994
   source_ids:
   - src-20260622-cts-89b68994
-- id: ng-03
-  timeline_id: tl-01
+- id: ng-04
+  timeline_id: tl-02
   kind: report
   title: 「米克拉」明恐轉強颱 萬里溪堰塞湖提高警戒
   representative_source_id: src-20260622-cts-fb1de1e5
   source_ids:
   - src-20260622-cts-fb1de1e5
-- id: ng-04
-  timeline_id: tl-01
+- id: ng-05
+  timeline_id: tl-02
   kind: report
   title: 花蓮萬里溪堰塞湖蓄水量估達600萬立方公尺 恐衝擊萬榮鄉、鳳林鎮
   representative_source_id: src-20260622-ltn-e862dbc8
   source_ids:
   - src-20260622-ltn-e862dbc8
-- id: ng-05
-  timeline_id: tl-01
+- id: ng-06
+  timeline_id: tl-02
   kind: report
   title: 萬里溪堰塞湖完成空中勘查！花蓮分署公布初判結果 持續監控警戒
   representative_source_id: src-20260622-ettoday-471ec663
   source_ids:
   - src-20260622-ettoday-471ec663
-- id: ng-06
-  timeline_id: tl-02
+- id: ng-07
+  timeline_id: tl-03
   kind: report
   title: 萬里溪堰塞湖 林保署花蓮分署估極端情境溢淹30公分
   representative_source_id: src-20260623-cts-c3cd5eef
   source_ids:
   - src-20260623-cts-c3cd5eef
-- id: ng-07
-  timeline_id: tl-02
+- id: ng-08
+  timeline_id: tl-03
   kind: report
   title: 萬里溪堰塞湖日增20萬噸 陽明交大估19天蓄滿溢流
   representative_source_id: src-20260623-cts-263c05d5
   source_ids:
   - src-20260623-cts-263c05d5
-- id: ng-08
-  timeline_id: tl-02
+- id: ng-09
+  timeline_id: tl-03
   kind: report
   title: 花蓮萬里溪堰塞湖持續蓄積 林保署：若潰決恐威脅下游4村里
   representative_source_id: src-20260623-cts-4ed025bc
   source_ids:
   - src-20260623-cts-4ed025bc
-- id: ng-09
-  timeline_id: tl-02
+- id: ng-10
+  timeline_id: tl-03
   kind: report
   title: 花蓮萬里溪堰塞湖持續蓄積 林保署已請花蓮縣府規劃疏散計畫
   representative_source_id: src-20260623-ltn-74989d99
   source_ids:
   - src-20260623-ltn-74989d99
-- id: ng-10
-  timeline_id: tl-02
+- id: ng-11
+  timeline_id: tl-03
   kind: report
   title: 花蓮萬里溪堰塞湖形成 地方鄉鎮公所上緊發條
   representative_source_id: src-20260623-ltn-11e8564f
   source_ids:
   - src-20260623-ltn-11e8564f
-- id: ng-11
-  timeline_id: tl-02
+- id: ng-12
+  timeline_id: tl-03
   kind: report
   title: 花蓮萬里溪堰塞湖 季連成：10至20天內會溢流、警戒區預防性撤離
   representative_source_id: src-20260623-newtalk-b13baf7e
   source_ids:
   - src-20260623-newtalk-b13baf7e
-- id: ng-12
-  timeline_id: tl-02
+- id: ng-13
+  timeline_id: tl-03
   kind: report
   title: 倒數19天滿水！花蓮萬里溪堰塞湖難處置 2鄉鎮優先撤保全戶
   representative_source_id: src-20260623-chinatimes-be926d05
   source_ids:
   - src-20260623-chinatimes-be926d05
-- id: ng-13
-  timeline_id: tl-02
-  kind: report
-  title: 花蓮萬里溪堰塞湖「45公頃崩塌」 林保署：若潰決恐威脅4村里
-  representative_source_id: src-20260623-ettoday-96471ab1
-  source_ids:
-  - src-20260623-ettoday-96471ab1
 - id: ng-14
   timeline_id: tl-03
   kind: report
@@ -439,6 +438,10 @@ review:
   status: draft-review
 ---
 
+## 2026-06-21　1 則報導
+
+華視新聞以「花蓮萬里溪上游疑新增堰塞湖 林保署籲周邊勿活動」為題報導 [@src-20260621-cts-b9df07e9]。
+
 ## 2026-06-22　6 則報導
 
 華視新聞以「萬里溪堰塞湖空拍畫面曝光！蓄水量估達600萬立方公尺 尚未蓄滿溢流」為題報導 [@src-20260622-cts-deadcce8]。
@@ -451,7 +454,7 @@ review:
 
 ETtoday新聞雲以「萬里溪堰塞湖完成空中勘查！花蓮分署公布初判結果 持續監控警戒」為題報導 [@src-20260622-ettoday-471ec663]。
 
-## 2026-06-23　8 則報導
+## 2026-06-23　12 則報導
 
 華視新聞以「萬里溪堰塞湖 林保署花蓮分署估極端情境溢淹30公分」為題報導 [@src-20260623-cts-c3cd5eef]。
 
@@ -466,10 +469,6 @@ ETtoday新聞雲以「萬里溪堰塞湖完成空中勘查！花蓮分署公布�
 Newtalk以「花蓮萬里溪堰塞湖 季連成：10至20天內會溢流、警戒區預防性撤離」為題報導 [@src-20260623-newtalk-b13baf7e]。
 
 中時新聞網以「倒數19天滿水！花蓮萬里溪堰塞湖難處置 2鄉鎮優先撤保全戶」為題報導 [@src-20260623-chinatimes-be926d05]。
-
-ETtoday新聞雲以「花蓮萬里溪堰塞湖「45公頃崩塌」 林保署：若潰決恐威脅4村里」為題報導 [@src-20260623-ettoday-96471ab1]。
-
-## 2026-06-25　5 則報導
 
 華視新聞以「花蓮萬里溪堰塞湖黃色警戒 7村里啟動預防性撤離」為題報導 [@src-20260625-cts-2e07c568]。
 
