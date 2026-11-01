@@ -30,6 +30,7 @@ import unicodedata
 import urllib.parse
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 from pathlib import Path
 
 from tools.newsfetch.article import LTN_SECTIONS
@@ -153,12 +154,27 @@ except (OSError, ValueError):
     PUBLIC_FIGURES = ()
 
 
+_FIGURE_NAMES = tuple(name for name in PUBLIC_FIGURES if len(name) >= 2)
+
+
+@lru_cache(maxsize=1 << 17)
+def _names_figure(g):
+    """T82: the public figure test of a phrase is a pure function of the phrase; pick_key asks it many times for the same phrase."""
+    return any(name in g for name in _FIGURE_NAMES)
+
+
+@lru_cache(maxsize=1 << 17)
+def _speech_pattern(g):
+    """T82: the compiled pattern for a phrase; the re module cache holds 512 patterns only."""
+    return re.compile(re.escape(g) + SPEECH_AFTER)
+
+
 def _is_person_or_speaker(g, titles):
     """A phrase that names a person (public figure list) or a speaker in the seed titles is not a topic name."""
-    if any(name in g for name in PUBLIC_FIGURES if len(name) >= 2):
+    if _names_figure(g):
         return True
     if 2 <= len(g) <= 3 and not NOUN_END.search(g):
-        pattern = re.compile(re.escape(g) + SPEECH_AFTER)
+        pattern = _speech_pattern(g)
         return sum(1 for t in titles if pattern.search(t)) >= 1
     return False
 
