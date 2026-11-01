@@ -25,6 +25,7 @@ import json
 import logging
 import re
 import sys
+from bisect import bisect_left, bisect_right
 from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -609,6 +610,21 @@ has_sensitive_term = tp.has_sensitive_term
 
 def _day(d):
     return date.fromisoformat(str(d))
+
+
+class DayIndex:
+    """The items sorted by published_on, with their days. between(lo, hi) gives the items dated in [lo, hi], in the sorted order.
+    T82: one bisect replaces a scan of the whole corpus for each topic."""
+
+    def __init__(self, items):
+        self.items = sorted(items, key=lambda j: j["published_on"])
+        self.days = [_day(it["published_on"]) for it in self.items]
+        self.ordered = all(a <= b for a, b in zip(self.days, self.days[1:]))
+
+    def between(self, lo, hi):
+        if not self.ordered:  # a date in another form than YYYY-MM-DD: the old scan, same result
+            return [it for it, d in zip(self.items, self.days) if lo <= d <= hi]
+        return self.items[bisect_left(self.days, lo):bisect_right(self.days, hi)]
 
 
 def owner(item):
@@ -1696,12 +1712,12 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                 enriched_issues.append(entry)
     # Bigger topics first, so a duplicate keeps the larger one.
     ordered = sorted(merged.items(), key=lambda kv: (-len(kv[1]), kv[0][1], kv[0][0]))
-    window_items = sorted(corpus, key=lambda j: j["published_on"])
+    window_index = DayIndex(corpus)
     out_seeds, published, published_sets, published_issues = [], [], [], []
     for (key, lo, hi), seeds in ordered:
         members, seen_titles = [], set()
-        for it in window_items:
-            if lo <= _day(it["published_on"]) <= hi and key in it["title"] and not tp.DROP.search(it["title"]):
+        for it in window_index.between(lo, hi):
+            if key in it["title"] and not tp.DROP.search(it["title"]):
                 norm = tp.normalize_title(it["title"])
                 if norm not in seen_titles:
                     seen_titles.add(norm)
