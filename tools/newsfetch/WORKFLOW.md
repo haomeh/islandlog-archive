@@ -49,7 +49,7 @@
 1. 讀最新的每日報告。如果 `ALERT` 存在，先處理警報（第 3 節）。如果 `validate` 步驟是 `BLOCKED`，不要發布：在分支上自己執行 `islandlog validate --mode full .`（或在 `server/` 用 `go run . validate --mode full <分支路徑>`），通過後才繼續。
 2. 把當天的 `corpus.jsonl` 和 `runs/DATE/clusters-ng.json` 複製到 PM 的資料夾。記錄兩個檔案的 sha256。報告裡的 `origin/main` commit 要等於分支的起點。
 3. 在新分支上做真實的 `topics_full`（R150）：
-   `PYTHONHASHSEED=0 python3 -m tools.newsfetch.topics_full CORPUS CLUSTERS tools/newsfetch/topic_seeds.json . REPORT --today <臺北日期>`
+   `PYTHONHASHSEED=0 /usr/bin/python3 -m tools.newsfetch.topics_full CORPUS CLUSTERS tools/newsfetch/topic_seeds.json . REPORT --today <臺北日期>`
    - 只暫存有改動的 `events/`、`actors/`、`sources/`、`corrections/` 和 `topic_state.json`，逐一指名，不用 `git commit -a`（R189.5）。
    - 結果要等於當天的 dry run（R190.3）。不要用假日期（R150）。
 4. 精準度回合（R165）：一個唯讀 agent 對每個新主題判斷 (a)、(b)、(c)。目標是 80%。低於 80% 時，把閘門交回寫入 agent，不合併。
