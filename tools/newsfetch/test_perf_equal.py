@@ -42,6 +42,17 @@ class GramIndexTest(unittest.TestCase):
             self.assertEqual(gi.get(g, 0), df.get(g, 0), g)
         self.assertEqual(gi.get("鑫鑫", 5), df.get("鑫鑫", 5))
 
+    def test_a_full_memo_does_not_change_a_count(self):
+        rows = corpus()
+        df, gi = tp.document_frequency(rows), tp.GramIndex(rows)
+        old, tp.MAX_MEMO = tp.MAX_MEMO, 5
+        try:
+            for g in list(df) * 2:
+                self.assertEqual(gi.get(g, 0), df[g], g)
+            self.assertLessEqual(len(gi._total), 5)
+        finally:
+            tp.MAX_MEMO = old
+
     def test_window_counts_equal_the_month_counters(self):
         rows = corpus()
         old, new = old_months(rows), tf.MonthFrequency(rows)
@@ -109,9 +120,11 @@ class PersonCacheTest(unittest.TestCase):
 class SlimRowsTest(unittest.TestCase):
     def test_only_the_unused_fields_go(self):
         rows = corpus(20)
+        gone = ("snippet", "matched_terms", "negative", "clarification", "topics")
         for r in rows:
-            r["snippet"], r["matched_terms"] = "x" * 50, ["a"]
-        want = [{k: v for k, v in r.items() if k not in ("snippet", "matched_terms")} for r in rows]
+            r.update({k: "x" for k in gone})
+            r["sensitive"] = True
+        want = [{k: v for k, v in r.items() if k not in gone} for r in rows]
         self.assertEqual(tf.slim_rows(rows), want)
 
     def test_read_slim_equals_read_jsonl_then_slim(self):

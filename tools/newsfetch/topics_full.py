@@ -2008,7 +2008,7 @@ def read_approval_file(path):
     return {line.strip() for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()}
 
 
-UNUSED_ROW_FIELDS = ("snippet", "matched_terms")  # no code of this run reads them
+UNUSED_ROW_FIELDS = ("snippet", "matched_terms", "negative", "clarification", "topics")  # no code of this run reads them
 SHARED_ROW_FIELDS = ("publisher", "published_on", "source_class", "publisher_group", "fetched_on")
 
 
