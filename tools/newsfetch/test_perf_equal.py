@@ -1,12 +1,14 @@
 """T82: the optimized structures give the same counts and the same rows as the old methods, on a small corpus.
 
 The old methods are written out here: document_frequency with Counter, the month Counter table, the scan of the corpus."""
+import json
 import random
 import re
 import unittest
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 
+from tools.newsfetch import cluster as cl
 from tools.newsfetch import topics as tp
 from tools.newsfetch import topics_full as tf
 
@@ -229,6 +231,40 @@ class DailyClustersTest(unittest.TestCase):
             reduced = jsonlist.read_list(path, daily._keep_enrich_fields)
         key = lambda cs: [(c.get("cluster_id"), c.get("title"), sorted(daily.cluster_urls(c))) for c in cs]
         self.assertEqual(key(reduced), key(full))
+
+
+def cluster_rows(n, seed):
+    rng = random.Random(seed)
+    chars = [chr(0x4e00 + k * 7) for k in range(300)]
+    base = ["".join(rng.choice(chars) for _ in range(7)) for _ in range(40)]
+    rows = []
+    for i in range(n):
+        title = rng.choice(base)[: rng.randint(5, 7)] + "".join(rng.choice("甲乙丙丁戊己庚辛壬癸") for _ in range(rng.randint(0, 2))) + rng.choice(["", "澄清", "回應"])
+        day = date(2026, 4, 1) + timedelta(days=rng.randint(0, 120))
+        rows.append({"url": f"https://n{rng.randint(0, 4)}.example/{i}", "title": title, "published_on": day.isoformat(),
+                     "publisher": rng.choice(["自由時報", "中央通訊社", "公視"]), "source_class": rng.choice(["news", "news", "fact_check", "official_statement"]),
+                     "negative": rng.random() < 0.2, "clarification": rng.random() < 0.2, "sensitive": rng.random() < 0.1, "topics": rng.sample(["a", "b", "c"], rng.randint(0, 2))})
+    return rows
+
+
+class ClusterWindowTest(unittest.TestCase):
+    def test_the_day_window_of_the_postings_gives_the_same_clusters_as_the_full_postings(self):
+        def full_shared(self, grams, first=0):  # the old method: every node that shares a gram, the day test comes after
+            counts = Counter()
+            for gram in grams:
+                counts.update(self.postings.get(gram, ()))
+            return counts
+        for n, seed in [(300, 1), (700, 2)]:
+            rows = cluster_rows(n, seed)
+            new = cl.cluster_items([dict(r) for r in rows])
+            saved, cl._Index.shared = cl._Index.shared, full_shared
+            try:
+                old = cl.cluster_items([dict(r) for r in rows])
+            finally:
+                cl._Index.shared = saved
+            self.assertEqual(json.dumps(new, ensure_ascii=False), json.dumps(old, ensure_ascii=False))
+            self.assertGreater(len(new), 10)
+            self.assertLess(len(new), n)
 
 
 if __name__ == "__main__":
