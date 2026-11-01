@@ -4,7 +4,7 @@ id: ev-20261013-mol-migrant-worker-rumor
 kind: historical_event
 status: published
 title: 移工懷孕
-summary: 2026-10-08至2026-10-16，自由時報、中時新聞網、華視新聞等共 13 則報導提及移工懷孕 [@src-20261008-ltn-59ef117c]。勞動部等機關發布 3 則相關說明 [@src-20261013-mol-454380f3]。
+summary: 2026-10-08至2026-10-28，自由時報、中時新聞網、華視新聞等共 14 則報導提及移工懷孕 [@src-20261008-ltn-59ef117c]。勞動部等機關發布 3 則相關說明 [@src-20261013-mol-454380f3]。
 start_date: '2026-10-08'
 start_date_precision: day
 gov_levels:
@@ -61,6 +61,12 @@ timeline:
   attributed_to: ac-ministry-of-labor
   source_ids:
   - src-20261016-mol-09c6bb81
+- id: tl-06
+  date: '2026-10-28'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
+  - src-20261028-chinatimes-e9ad927b
 news_groups:
 - id: ng-01
   timeline_id: tl-01
@@ -126,45 +132,52 @@ news_groups:
 - id: ng-09
   timeline_id: tl-04
   kind: report
+  title: 移工懷孕「雇主養全家」瘋傳 勞動部揭真相
+  representative_source_id: src-20261015-ettoday-cbd439f7
+  source_ids:
+  - src-20261015-ettoday-cbd439f7
+- id: ng-10
+  timeline_id: tl-04
+  kind: report
   title: 移工政策惹民怨！雇主協會調查94％不滿意 近9成反對失聯移工就地合法
   representative_source_id: src-20261015-ltn-bd2a8209
   source_ids:
   - src-20261015-ltn-bd2a8209
-- id: ng-10
+- id: ng-11
   timeline_id: tl-04
   kind: report
   title: 逾9成家事移工雇主不滿移工政策要求改革 勞動部這麼說
   representative_source_id: src-20261015-ltn-65fa3b1b
   source_ids:
   - src-20261015-ltn-65fa3b1b
-- id: ng-11
+- id: ng-12
   timeline_id: tl-04
   kind: report
   title: 調查9成民眾不滿現行移工政策 雇主協會籲改革就業安定費
   representative_source_id: src-20261015-pts-d6da832d
   source_ids:
   - src-20261015-pts-d6da832d
-- id: ng-12
+- id: ng-13
   timeline_id: tl-04
   kind: report
   title: 移工政策不滿意度逾九成 雇主協會赴立院痛批政府忽視民怨
   representative_source_id: src-20261015-newtalk-7d3102ff
   source_ids:
   - src-20261015-newtalk-7d3102ff
-- id: ng-13
+- id: ng-14
   timeline_id: tl-04
   kind: report
   title: 勞動部移工政策不滿意度高達9成 僱主協會籲研議外國人特別法
   representative_source_id: src-20261015-chinatimes-352464e2
   source_ids:
   - src-20261015-chinatimes-352464e2
-- id: ng-14
-  timeline_id: tl-04
+- id: ng-15
+  timeline_id: tl-06
   kind: report
-  title: 移工懷孕「雇主養全家」瘋傳 勞動部揭真相
-  representative_source_id: src-20261015-ettoday-cbd439f7
+  title: 移工政策 雇主協會盼與勞動部對話
+  representative_source_id: src-20261028-chinatimes-e9ad927b
   source_ids:
-  - src-20261015-ettoday-cbd439f7
+  - src-20261028-chinatimes-e9ad927b
 privacy:
   contains_private_persons: false
   basis_source_ids: []
@@ -202,6 +215,8 @@ MyGoPen發布查核報告「【誤導】移工來臺費用最高19萬元全由�
 
 勞動部發布「民間團體於今日（15）針對移工雇主權益所召開之記者會，勞動部回應」 [@src-20261015-mol-126dced3]。
 
+ETtoday新聞雲以「移工懷孕「雇主養全家」瘋傳 勞動部揭真相」為題報導 [@src-20261015-ettoday-cbd439f7]。
+
 自由時報以「移工政策惹民怨！雇主協會調查94％不滿意 近9成反對失聯移工就地合法」為題報導 [@src-20261015-ltn-bd2a8209]。
 
 自由時報以「逾9成家事移工雇主不滿移工政策要求改革 勞動部這麼說」為題報導 [@src-20261015-ltn-65fa3b1b]。
@@ -212,8 +227,10 @@ Newtalk以「移工政策不滿意度逾九成 雇主協會赴立院痛批政府
 
 中時新聞網以「勞動部移工政策不滿意度高達9成 僱主協會籲研議外國人特別法」為題報導 [@src-20261015-chinatimes-352464e2]。
 
-ETtoday新聞雲以「移工懷孕「雇主養全家」瘋傳 勞動部揭真相」為題報導 [@src-20261015-ettoday-cbd439f7]。
-
 ## 2026-10-16　1 則官方發布
 
 勞動部發布「針對移工聯盟及台權會今(10/15)日召開「台灣離岸風電產業蓬勃發展，背後卻存在大規模剝削外籍專業技術工人的制度漏洞！」記者會，勞動部回應」 [@src-20261016-mol-09c6bb81]。
+
+## 2026-10-28　1 則報導
+
+中時新聞網以「移工政策 雇主協會盼與勞動部對話」為題報導 [@src-20261028-chinatimes-e9ad927b]。

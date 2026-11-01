@@ -8,7 +8,7 @@ from tools.newsfetch import topics_full as tf
 
 
 def item(url, title, day="2026-10-21", publisher="自由時報", cls="news", **extra):
-    d = {"url": url, "title": title, "published_on": day, "publisher": publisher, "source_class": cls}
+    d = {"url": url, "title": title, "published_on": day, "publisher": publisher, "source_class": cls, "fetched_on": f"{day}T12:00:00Z"}  # R359.4: a source file takes accessed_on from the row
     d.update(extra)
     return d
 
@@ -451,7 +451,7 @@ class ThemeWordTest(unittest.TestCase):
         self.assertFalse(tf.theme_word("鍵", self.months([0, 0, 0, 0, 0, 0, 0])))
 
     def test_the_gate_rejects_a_theme_word_of_a_new_topic_and_keeps_an_old_topic(self):
-        titles = ["政治獻金案二審首庭 柯文哲否認", "政治獻金案二審 檢方說明", "政治獻金案 法務部說明"]
+        titles = ["政治獻金案二審首庭 柯文哲否認", "政治獻金案二審 檢方說明", "政治獻金案 法務部公告"]
         members = items(titles)
         corpus = members + [item(f"f{i}", f"無關新聞{i}號 氣象消息", "2026-10-20") for i in range(40)]
         df = tp.document_frequency(corpus)

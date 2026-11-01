@@ -41,7 +41,8 @@ from tools.newsfetch.topic_config import (
     DUPLICATE_NEAR_DAYS, DUPLICATE_NEAR_TERM_LEN,
     ACT_MATCH_LEN, ACTOR_SHARE, SCOPE_MIN_SHARE, SCOPE_MIN_TITLES, TITLE_TERM_MIN_TITLES, TITLE_TERM_SHARE,
     MINISTRY_MAX_SHARE, MINISTRY_MIN_COUNT, MINISTRY_MIN_TITLES,
-    ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY)
+    ACT_MIN_TITLES, PHENOMENON_SHARE, PUBLIC_WORKS_ACT, AD_HOC_ACT, PUBLIC_BODY, NATIONAL_BODY, STRONG_KEY_MIN, STRONG_KEY_SHARE, BILL_SHARE,
+    MARKET_NOISE, LOTTERY_NOISE, DIGEST_NOISE, LIVE_NOISE)
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ ENTERTAINMENT = re.compile(r"演唱會|歌手|藝人|女星|男星|偶像|專輯
 ELECTION_LEGAL = re.compile(r"駁回|裁定|判決|高行|行政法院|法院|當選無效|選舉訴訟")  # R112.4: a court ruling on a candidacy is not campaign content
 LAW_PASSED = re.compile(r"三讀|條例》|修正草案|修法")  # R112.4: a law passed by the legislature is not sensitive by its subject alone
 CONSUMER = re.compile(r"優惠|折扣|現省|省[\d百千萬]|半價|折抵|票價|抵用|買一送一")  # R112.5: a discount is a consumer title, not entertainment news
-CASE_TITLE = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄")  # R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
+CASE_TITLE = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄|搶劫|槍殺|入獄|服刑|徒刑|判\d+(?:年|月|個月)")  # R363.5: a sentence or a prison title of a person. R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
 FOREIGN_ONLY = re.compile(r"美國|川普|中國|大陸|日本|南韓|北韓|俄羅斯|烏克蘭|伊朗|以色列|歐盟|英國|德國|法國|印度|菲律賓|越南|泰國|馬來西亞")
 FOREIGN_NEW = re.compile(FOREIGN_ONLY.pattern
                          + r"|萬那杜|索羅門|斐濟|印尼|土耳其|沙烏地|埃及|巴西|阿根廷|加拿大|澳洲|紐西蘭|新加坡|巴基斯坦|阿富汗|敘利亞|黎巴嫩|古巴|墨西哥|委內瑞拉|智利|秘魯|肯亞|奈及利亞|南非|蘇丹|葉門|伊拉克|緬甸|柬埔寨|寮國|尼泊爾|孟加拉|斯里蘭卡")  # R154: a country list, so a foreign quake or a foreign bank has a foreign label; R162 (N1): only a new topic reads it
@@ -175,6 +176,8 @@ def has_word_boundary(key, titles, df=None, new=False):
     for side in sides:
         if sum(c for _, c in side.most_common(3)) >= CONTINUATION_SHARE * n:
             return False
+    if new and key.endswith("法") and sum(c for ch, c in right.items() if ch in "庭院") >= CONTINUATION_SHARE * n:
+        return False  # R359.2: a new key that ends in 法 and is followed by 庭 or 院 in most uses is a cut of 憲法法庭 or 憲法法院 (波蘭憲法法)
     return True
 
 
@@ -475,10 +478,12 @@ def scope_levels(titles, national):
     return off, mixed
 
 
-def place_scope(titles, jids):
+def place_scope(titles, jids, most=False):
     """R196.5: a place stays in the name of the topic only when every title names it. The other places go out of the name. The topic keeps
-    its jurisdictions and its actors."""
-    kept = [j for j in jids if j != "jur-tw" and all(j in _title_jurisdictions(t) for t in titles)]
+    its jurisdictions and its actors. R363.7: `most` is for a rebuild of an old topic; the place must be in more than half of the titles."""
+    named = [_title_jurisdictions(t) for t in titles]
+    ok = (lambda j: sum(1 for n in named if j in n) * 2 > len(titles)) if most else (lambda j: all(j in n for n in named))
+    kept = [j for j in jids if j != "jur-tw" and ok(j)]
     return kept or ["jur-tw"]
 
 
@@ -543,9 +548,22 @@ NATIONAL_LAW = re.compile(r"修法|入法|立法|專法|子法|法案|草案|條
 FOREIGN_FIGURE = re.compile(r"川普|拜登|普丁|習近平|王毅|王滬寧|范斯|盧比歐|馬可仕|歐巴馬|趙小蘭|黎智英|戴恩斯|詹姆士|古天樂|郭文貴|澤倫斯基")  # names of public_figures.json that are not Taiwan officials
 TAIWAN_FIGURE_NAMES = frozenset(n for n in tp.PUBLIC_FIGURES if len(n) >= 2 and not FOREIGN_FIGURE.search(n))
 TAIWAN_FIGURE = re.compile("|".join(re.escape(n) for n in tp.PUBLIC_FIGURES if len(n) >= 2 and not FOREIGN_FIGURE.search(n)) or r"(?!)")  # R141.4: a mayor, legislator or minister of Taiwan
+GENERIC_BODY = re.compile(r"憲法法庭|憲法法院|大法官|司法院|外交部|國防部|財政部|教育部|內政部|法務部|經濟部|交通部|農業部|文化部|央行|中央銀行|國安局|國安會|總統府")  # R359.2: a body that every state has. Its name alone is no link to Taiwan: 波蘭憲法法庭 is not 憲法法庭.
+TW_POLITICS_NEW = re.compile(TW_POLITICS.pattern.replace("|部長", "").replace("|院長", ""))  # R359.2: a minister or a court president of any state
 TYPHOON = re.compile(r"颱風|颱|熱帶低壓|熱帶性低氣壓")
 TAIWAN_WORD = re.compile(r"台灣|臺灣|全台|[對近襲侵離登赴朝向]台")  # R141.4: a forecast that names Taiwan
 NATIONAL_ROAD = re.compile(r"台\d{1,2}線|國道\d|省道")
+
+
+PLACE_BEFORE_BODY = (r"(?:" + FOREIGN_NEW.pattern + r"|[\u4e00-\u9fff]{1,3}(?:共和國|王國|聯邦|公國)"  # a place word: a country of the list, a state form, or the end of a transliterated name
+                     r"|[\u4e00-\u9fff]{1,3}(?:蘭|亞|牙|坦|曼|麥|丹|威|瓦|維|尼|魯|哥|宛|克|牙利|大利|地利|利時))")
+FOREIGN_GENERIC = re.compile(PLACE_BEFORE_BODY + r"(?:" + GENERIC_BODY.pattern + r")")  # R363.3: 波蘭憲法法庭, 匈牙利憲法法庭, 立陶宛外交部
+
+
+def foreign_marked(title):
+    """R363.3: a place word stands directly before a body that every state has (憲法法庭, 外交部). The list of countries is not the only test:
+    the end of a transliterated name counts too, so a country that no list names is a marker."""
+    return bool(FOREIGN_GENERIC.search(title))
 
 
 def taiwan_relevant(titles, new=False):
@@ -559,13 +577,16 @@ def taiwan_relevant(titles, new=False):
     hits = storm = named = 0
     for t in titles:
         foreign = bool((FOREIGN_NEW if new else FOREIGN_ONLY).search(t))
+        politics = TW_POLITICS
         if new:
             t = home_text(t)
             if foreign:
                 t = t.replace("氣象署", "")  # a report of a foreign quake cites the Taiwan agency as its source
+            if foreign_marked(t):  # R363.3: a body that every state has loses its Taiwan link when a foreign marker stands directly before it
+                t, politics = FOREIGN_GENERIC.sub(" ", t), TW_POLITICS_NEW
         if any(term in (place_text(t) if new else t) for _, _, _, terms in JURS for term in terms) or (LOCAL_GOV.search(t) and not (new and foreign)) \
                 or any(re.search(p, t) for p, _, _, _ in CENTRAL) or NATIONAL_SYSTEMS.search(t) or re.search(r"台灣|臺灣|全台|國人", t) \
-                or TW_POLITICS.search(t) or (NATIONAL_LAW.search(t) and not foreign) \
+                or politics.search(t) or (NATIONAL_LAW.search(t) and not foreign) \
                 or (TAIWAN_FIGURE.search(t) and not foreign) or NATIONAL_ROAD.search(t):
             hits += 1
         if TYPHOON.search(t):
@@ -642,10 +663,27 @@ def _read_event(path):
     return yaml.safe_load(front), body
 
 
+HELD = {}  # R363.2: event id -> record of an event with review.sensitive true; a run changes no such event (CONTRIBUTING 5A.7, R336.3)
+
+
+def set_held(root):
+    """Reads the events under `root` once at the start of a run. None clears the list."""
+    HELD.clear()
+    if root is None:
+        return
+    for p in sorted((Path(root) / "events").glob("*/ev-*.md")):
+        doc, _ = _read_event(p)
+        if (doc.get("review") or {}).get("sensitive") is True:
+            HELD[doc["id"]] = {"id": doc["id"], "title": doc.get("title", ""), "gate": None,
+                               "in_file": sorted(set(re.findall(r"src-[0-9a-z-]+", p.read_text(encoding="utf-8")))), "candidates": []}
+
+
 def _write_event(path, doc, body):
     import yaml
     if tp.is_enriched(doc.get("id")):
         return  # R324.2: the last stop for every write of an event file
+    if doc.get("id") in HELD:
+        return  # R363.2: a sensitive event stays as it is
     path.write_text("---\n" + yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000) + "---\n" + body,
                     encoding="utf-8")
 
@@ -818,16 +856,26 @@ def set_candidates(names):
     _CANDIDATES = frozenset(names)
 
 
+CAMPAIGN_CLASS = re.compile(r"助講|宣講|競辦|競選辦公室|競總|點名.{0,4}候選人|候選人.{0,2}表態|參選人.{0,2}表態|陣營.{0,3}(?:交鋒|攻防|隔空|互嗆|對槓|喊話)")  # R363.4: the classes 助講, 競辦, 候選人表態, 陣營交鋒
+
+
 def candidate_talk(title):
-    """R154 (PRD 4.5 item 5): a title with a campaign act, or with two candidates and an attack word, judges candidates."""
+    """R154 (PRD 4.5 item 5): a title with a campaign act, or with two candidates and an attack word, judges candidates.
+    R363.4: the campaign classes 助講, 競辦, 候選人表態 and 陣營交鋒 count too. A policy statement of an official with no campaign word stays."""
     named = sum(1 for n in _CANDIDATES if n in title)
-    return bool(CAMPAIGN_ACT.search(title)) or (named > 1 and bool(ATTACK.search(title)))
+    return bool(CAMPAIGN_ACT.search(title)) or bool(CAMPAIGN_CLASS.search(title)) or (named > 1 and bool(ATTACK.search(title)))
+
+
+def drop_candidate_talk(members, keep_ids=frozenset()):
+    """R359.6 (PRD 4.5 item 5): the candidate-attack rule reads each member, not only the share of a candidate. A title of `keep_ids` (the
+    sources that the file of an old topic cites) stays, because an old topic keeps its sources (R155.4)."""
+    return [m for m in members if not candidate_talk(m["title"]) or tp.src_id(m, tp.HOSTS) in keep_ids]
 
 
 ACCIDENT = re.compile(r"車禍|肇事|撞(?!臉|期|名|衫)|[輾碾]|無呼吸心跳|捲入|墜樓|墜落|墜海|溺水|溺斃|落水|身亡|喪命|不治|命危|重傷|罹難|意外|工安|氣爆|爆炸|火警|火災|起火|落石|翻覆|翻車|倒塌|崩塌")  # R154 (PRD 4.5 item 2): the words of one accident
 ACCIDENT_POLICY = re.compile(r"規定|修法|條例|法規|制度|檢討|改善|預算|機制|政策|新制|辦法|草案|強化|加強|通報|補償|賠償")  # R154: a rule after an accident is a policy topic
-PUBLIC_ACT = re.compile(r"三讀|修法|條例|草案|預算|立法|法案|釋憲|公告|裁罰|罰款|罰鍰|開罰|補助|公投|官員|公所|稽查|函釋|核定|核准|核釋|審查|質詢|提案|朝野|藍白|在野|綠營|藍營|立院|議會|政府|主管機關|檢調|警方|海巡|消防|部會|法規|法令|規定|新制|政策|公務|公共|監察"
-                        r"|颱風|地震|豪雨|大雨|警報|停班|停課|放假|氣象|海嘯|磁暴|雨量|梅雨|防災|災害|疫情|疫苗|病毒|食安|捷運|鐵路|高鐵|道路|橋梁|機場|港口|電價|水庫|缺水|停電|學校|國小|國中|高中|醫院|診所")  # R154: a title that names a public act, a public body or a public service
+PUBLIC_ACT = re.compile(r"三讀|修法|條例|草案|預算|立法|法案|釋憲|公告|裁罰|罰款|罰鍰|開罰|補助|公投|官員|公所|稽查|函釋|核定|核准|核釋|審查|質詢|提案|朝野|藍白|在野|綠營|藍營|立院|議會|政府|主管機關|檢調|海巡|消防|部會|法規|法令|規定|新制|政策|公務|公共|監察"
+                        r"|颱風|地震|豪雨|大雨|警報|停班|停課|放假|氣象|海嘯|磁暴|雨量|梅雨|防災|災害|疫情|疫苗|病毒|食安|捷運|鐵路|高鐵|道路|橋梁|機場|港口|電價|水庫|缺水|停電|學校|國小|國中|高中|醫院|診所")  # R154: a title that names a public act, a public body or a public service. R359.3: 警方 alone is no public body or act
 OFFICIAL_PERSON = re.compile(r"市長|縣長|部長|署長|局長|院長|主委|總統|立委|議員|首長|閣揆|總長|議長")
 HEALTH = re.compile(r"住院|住進|開刀|手術|動刀|病倒|病情|罹癌|心臟病|中風|請假休養|確診")
 
@@ -839,7 +887,7 @@ def private_health_of_official(title):
 
 NATURAL_PHENOMENON = re.compile(r"地震|餘震|震度|海嘯|颱風|豪雨|大雨|暴雨|寒流|低溫|高溫|熱浪|降雪|下雪|霧霾|日蝕|月蝕|日食|月食|流星|彗星|極光|天象|超級月亮|彩虹|候鳥|黑面琵鷺|賞鳥|賞花|花季|櫻花|螢火蟲|蝴蝶|鯨豚|白海豚|鯨魚|鯊魚|野生動物")  # R229.2a: the words of an earthquake, weather, astronomy, animal or plant record
 CEREMONY = re.compile(r"剪綵|剪彩|啟用|通車|揭牌|動土|開幕|閉幕|典禮|儀式|遊行|遶境|繞境|嘉年華|慶典|燈會|煙火|跨年|音樂節|藝術節|文化節|花火|園遊會")  # R229.2b: the words of a ribbon-cutting, an opening, a parade or a festival
-PUBLIC_POWER_ACT = re.compile(r"停班|停課|放假|颱風假|應變中心|疏散|撤離|避難|救助|救災|慰助|履勘|驗收|勘查|查驗|環評|下令|搶修|搶通|搶險|賑災|罰單|處罰|開鍘|懲處|預算|經費|補助|補貼|津貼|三讀|修法|立法|條例|草案|法案|法規|新制|新規|規定|辦法|政策|函釋|裁罰|罰鍰|罰款|開罰|處分|稽查|查核|核定|核准|判決|裁定|釋憲|公告|決議|決定|禁令|管制|禁止|徵收|招標|採購|補償|賠償")  # R229.2c: a decision, a budget, a law or rule change, a ruling, a penalty, a subsidy or an emergency order; a remark (表示, 說明, 呼籲) is not an act
+PUBLIC_POWER_ACT = re.compile(r"停班|停課|放假|颱風假|應變中心|疏散|撤離|避難|救助|救災|慰助|履勘|驗收|勘查|查驗|環評|下令|搶修|搶通|搶險|賑災|罰單|處罰|開鍘|懲處|預算|經費|補助|補貼|津貼|三讀|修法|立法|條例|草案|法案|法規|新制|新規|規定|辦法|政策|函釋|裁罰|罰鍰|罰款|開罰|處分|稽查|查核|核定|核准|判決|裁定|釋憲|公告|決議|決定|禁令|(?<!交通)管制|禁止|徵收|招標|採購|補償|賠償")  # R229.2c: a decision, a budget, a law or rule change, a ruling, a penalty, a subsidy or an emergency order; a remark (表示, 說明, 呼籲) is not an act. R359.3: traffic control (交通管制) for a march is not an act
 
 def public_act_title(text):
     """R229.2c, R234.3: a title names a public-power act. The works and ad hoc words need a public body, so a private firm does not count (R234.5)."""
@@ -856,6 +904,24 @@ def no_public_act(titles):
     if sum(1 for t in texts if NATURAL_PHENOMENON.search(t) or CEREMONY.search(t)) < PHENOMENON_SHARE * n:
         return False
     return sum(1 for t in texts if public_act_title(t)) < ACT_MIN_TITLES
+
+
+def enrich_noise(title):
+    """R359.8: the label of a cluster title that is no candidate for an enrich step, or None. The quake and campaign rules are the rules of the gates
+    (no_public_act, ELECTION, CAMPAIGN_ACT, candidate_talk). The other labels are lists of words (topic_config)."""
+    if LOTTERY_NOISE.search(title):
+        return "lottery"
+    if MARKET_NOISE.search(title):
+        return "market"
+    if DIGEST_NOISE.search(title) or tp.DROP.search(title):
+        return "digest"
+    if LIVE_NOISE.search(title):
+        return "live"
+    if (ELECTION.search(title) and not ELECTION_LEGAL.search(title)) or CAMPAIGN_ACT.search(title) or candidate_talk(title):
+        return "campaign"
+    if no_public_act([title]):
+        return "quake"
+    return None
 
 
 NEW_TOPIC_ONLY = ("rejected_issue_name", "rejected_keyword_bundle", "rejected_candidate_attack", "rejected_single_accident", "rejected_official_health", "rejected_private_matter", "rejected_mixed_cluster", "rejected_government_scope", "rejected_mixed_ministry", "rejected_no_public_act")  # R154, R196, R215.3, R229: the labels of the rules that only a new topic must pass
@@ -1118,6 +1184,8 @@ def withdraw_topic(root, event_id, gate, ref="HEAD", today=None, note=None):
     path = root / "events" / year / f"{event_id}.md"
     if tp.is_enriched(event_id):
         return path  # R324.2: no restore, no status change, no record
+    if event_id in HELD:
+        return path  # R363.2: no status change, no record
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_event_text(root, event_id, ref), encoding="utf-8")
@@ -1265,6 +1333,18 @@ def recorded_name_passes(name, titles):
     return noun_phrase_name(name) and not generic_name(name) and not is_person_or_party(name, titles) and not is_place_name(name)
 
 
+BILL_NAME = re.compile(r"[\u4e00-\u9fff]{2,}法$")
+LEGISLATIVE_ACT = re.compile(r"修法|立法|入法|修正草案|草案|三讀|法案|修訂|增訂")
+
+
+def national_bill(name, titles):
+    """R359.5: a law name with no place in front, and BILL_SHARE of the titles name a legislative act. A place in the titles is the place of the
+    case that led to the bill (新北割頸案), not a jurisdiction of the bill."""
+    if not BILL_NAME.search(name) or PLACE_PREFIX.match(name):
+        return False
+    return sum(1 for t in titles if LEGISLATIVE_ACT.search(t)) >= BILL_SHARE * max(1, len(titles))
+
+
 def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, known=None, mf=None, rebuilds_old=False):
     """The gates of one member list, in order: name quality, foreign, existing event, exclusion, government actor, Taiwan,
     name. Returns (outcome, found). The outcome is "ok", "skipped_existing_event" or a rejected_* label. `found` holds the
@@ -1291,7 +1371,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
     reason = exclusion_reason(members, skip=("sensitive",) if known and known.get("sensitive") else (), new=new) or (new_topic_reason(members) if new else None)
     if reason:
         return "rejected_" + reason, None
-    jids = detect_jurisdictions(titles)
+    jids = ["jur-tw"] if new and national_bill(tp.display_name(key, [s["title"] for s in seeds]), titles) else detect_jurisdictions(titles)  # R359.5
     if jids == ["jur-tw"] and local_known:
         jids = local_known
     actors = detect_gov_actors(titles, jids, new)
@@ -1323,7 +1403,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
         return "rejected_mixed_ministry", None
     if not known and not t32_name_ok(key, name, titles):  # R196.1, R196.2, R196.3, R196.8: a rebuild of an old topic gets a new name from its key, so the name tests apply to it too
         return "rejected_issue_name", None
-    return "ok", {"jids": jids, "actors": actors, "name": name, "name_jids": place_scope(titles, jids) if new else jids, "off_level": {members[i]["url"] for i in off}}
+    return "ok", {"jids": jids, "actors": actors, "name": name, "name_jids": place_scope(titles, jids) if new else (jids if known else place_scope(titles, jids, most=True)), "off_level": {members[i]["url"] for i in off}}
 
 
 def build_checked(seed, corpus, df, members):
@@ -1342,6 +1422,9 @@ def write_topic(root, ev, seed, today):
     if tp.is_enriched(ev["id"]):
         return None  # R324.2: a candidate that would rebuild a listed event is skipped
     used = list(ev["used"].values())
+    if ev["id"] in HELD:  # R363.2: the file and its sources stay; the candidate members go to the report
+        HELD[ev["id"]]["candidates"] = [{"id": tp.src_id(it, tp.HOSTS), "title": it["title"]} for it in used]
+        return None
     ev["review"]["sensitive"] = "misconduct" in seed["controversy_types"] or has_sensitive_term([it["title"] for it in used])
     ensure_actor_files(root, [a for a, _ in ev["actors"]])
     prior = prior_event(root, ev["id"])
@@ -1397,6 +1480,8 @@ def file_items(root, ids):
             d = yaml.safe_load(p.read_text(encoding="utf-8"))
             item = {"url": d["url"], "title": d["title"], "published_on": str(d["published_on"]), "publisher": d["publisher"],
                     "source_class": d["source_class"], "quote": d.get("quote")}
+            if d.get("accessed_on"):
+                item["accessed_on"] = str(d["accessed_on"])  # R359.4: the date of the file stays
             group = index.group(d["publisher"])  # R344.3, PRD 4.4: one owner counts once
             if group != d["publisher"]:
                 item["publisher_group"] = group
@@ -1407,13 +1492,29 @@ def file_items(root, ids):
 GENRE_WORD = re.compile(tp.CLAR.pattern + r"|錯誤|誤導|謠言|網傳|資訊")  # R141.3: a word that names the kind of title (a clarification), not its issue
 
 
+def strong_key(keys, core, df):
+    """R359.1: the key names one issue when the on-topic titles are most of its uses in the corpus (外送專法, 南海仲裁案, 媒宣費)."""
+    uses = df.get(keys[0], 0) if keys else 0
+    return bool(uses) and len(core) >= STRONG_KEY_MIN and len(core) >= STRONG_KEY_SHARE * uses
+
+
+def foreign_body_only(title):
+    """R359.1, PRD 4.5 item 6: the title names a body of a foreign state (中國外交部) and no body of Taiwan."""
+    return bool(FOREIGN_OFFICE.search(title)) and not names_government(title, True)
+
+
 def second_anchor_members(members, core, keys, df, total):
     """R141.3: the members whose title has a second anchor of the on-topic titles (`core`: the members that the corpus confirms,
     after the case split). The key is in every member already. A seed title has no right of its own: the seeds of an old topic can
     hold an off-topic story, and a response (a clarification or a release) answers one issue only when it holds the anchor too.
-    A word that names the kind of title (錯誤, 澄清) is no anchor. The members stay as they are when the core shares no anchor."""
+    A word that names the kind of title (錯誤, 澄清) is no anchor. The members stay as they are when the core shares no anchor.
+    R359.1: a foreign body is no anchor, so 中國外交部 is not the 外交部 of Taiwan, and a title with only a foreign body leaves.
+    A strong key (strong_key) names one issue: the anchor does not remove its members, because a body that a minority of the
+    on-topic titles names (勞動部 in 2 of 29 titles of 外送專法) cannot tell the issue from other news."""
+    if strong_key(keys, core, df):
+        return [m for m in members if not foreign_body_only(m["title"])]
     second = {a for a in tp.second_anchors([m["title"] for m in core], keys, df, total) if not GENRE_WORD.search(a)}
-    return [m for m in members if not second or tp.has_anchor(m["title"], second)]
+    return [m for m in members if not second or tp.has_anchor(home_text(m["title"]), second)]
 
 
 def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
@@ -1450,6 +1551,7 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
     seed_urls = set(seed["seed_urls"])
     members = max(split_cases(members), key=lambda g: (sum(1 for m in g if m["url"] in seed_urls), len(g)))  # R112.3
     members = second_anchor_members(members, [m for m in members if m["url"] in by_url] or members, keys, df, len(corpus))  # R141.3
+    members = drop_candidate_talk(members, before)  # R359.6: a member that the re-gate adds passes the candidate-attack rule
     record["dropped"] = sorted(before - {tp.src_id(m, tp.HOSTS) for m in members})  # the file sources that the membership rule does not keep
     seeds = [by_url[u] for u in sorted(seed_urls, key=lambda u: (by_url[u]["published_on"], u))]
     known = {"name": name, "jids": doc.get("jurisdiction_ids", []),
@@ -1467,6 +1569,7 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
         record["gate"] = gate
         return record
     ev["title"] = doc["title"]  # the recorded name stays, so the title stays
+    record["capped"] = ev["capped"]  # R363.6
     relations = doc.get("relations")
     write_topic(root, ev, seed, today)
     if relations:
@@ -1503,6 +1606,7 @@ FRAGMENT_DEFER = ("rejected_name_quality", "rejected_foreign")  # R329.1: a frag
 def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve_withdraw=None):
     enriched = tp.load_enriched_topics()  # R324.2: a list that cannot be read stops the run before any write
     tp.ENRICHED_SKIPPED.clear()
+    set_held(root)  # R363.2
     removed = load_removed_sources(REMOVED_SOURCES)  # R256: a source that a ruling removed never comes back; it is dropped before clustering
     kept = [it for it in corpus if tp.src_id(it, tp.HOSTS) not in removed]
     dropped = len(corpus) - len(kept)
@@ -1637,6 +1741,13 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                     deferred.update(matching_published(published_ids, src_ids_of([m["url"] for m in members])))
                 continue
             jids, actors, name = found["jids"], found["actors"], found["name"]
+            attack = len(members) - len(drop_candidate_talk(members))
+            if attack:  # R359.6: the candidate-attack rule reads each member of a new topic
+                members = drop_candidate_talk(members)
+                stats["candidate_attack_members_removed"] += attack
+                if len(members) < SEED_MIN_ITEMS:
+                    stats["rejected_candidate_attack"] += 1
+                    continue
             if found["off_level"]:  # R196.6: a title of another government level fails (b)
                 members = [m for m in members if m["url"] not in found["off_level"]]
                 stats["scope_titles_removed"] += len(found["off_level"])
@@ -1675,6 +1786,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                 stats[gate] += 1
                 fail(gate, urls)
                 continue
+            stats["cap_dropped_items"] += ev["capped"]  # R363.6: members that the display cap leaves out of the file
             used = list(ev["used"].values())
             if write_topic(root, ev, seed, today or date.today().isoformat()):
                 stats["republished"] += 1
@@ -1707,10 +1819,15 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             stats["regate_passed"] += 1
             stats["regate_file_sources_kept"] += bool(rec.get("file_sources_kept"))
             stats["regate_members_removed"] += len(rec["removed"])
+            stats["regate_cap_dropped"] += rec.get("capped", 0)  # R363.6
             stats["regate_renamed"] += rec["title_after"] != rec["title_before"]
             covered.add(doc["id"])
             regate_keys[doc["id"]] = rec["key"]
     failing = {pid: gate for pid, gate in failed.items() if pid not in covered}
+    for pid, gate in failing.items():
+        if pid in HELD:
+            HELD[pid]["gate"] = gate  # R363.2: a sensitive event that fails a gate is held for the user, not withdrawn
+    failing = {pid: gate for pid, gate in failing.items() if pid not in HELD}
     kept_withdrawn = {pid: gate for pid, gate in failing.items() if prior_event(root, pid)[0] == "withdrawn"}
     day = today or taipei_day()
     old_state = read_topic_state(root)
@@ -1739,9 +1856,12 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
     links = apply_subtopic_links(root, keys)
     stats["part_of_links"] = len(links)
     stats["sensitive_from_sources"] = len(refresh_sensitive(root))
+    held = [dict(h, candidates=[dict(c, in_file=c["id"] in h["in_file"]) for c in h["candidates"]]) for h in HELD.values() if h["candidates"] or h["gate"]]
+    stats["held_sensitive"] = len(held)
     Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links, "withdrawn": withdrawn, "withdraw_blocked": blocked, "regate": regated,
-                                "withdraw_blocked_reason": blocked_reason, "approval_ignored": approval_ignored}, ensure_ascii=False, indent=1),
+                                "withdraw_blocked_reason": blocked_reason, "approval_ignored": approval_ignored, "held_sensitive": held}, ensure_ascii=False, indent=1),
                                  encoding="utf-8")
+    HELD.clear()
     return stats, published, out_seeds
 
 
@@ -1786,6 +1906,8 @@ def refresh_sensitive(root, seeds_path=None):
         review = doc.get("review", {})
         if not str(review.get("reason", "")).startswith(SYSTEM_REASON):
             continue
+        if doc["id"] in HELD:
+            continue  # R363.2
         cited = set(re.findall(r"src-[0-9a-z-]+", p.read_text(encoding="utf-8")))
         want = (seed_flags.get(doc["id"], False) or "misconduct" in doc.get("controversy_types", [])
                 or tp.has_sensitive_term([t for s in cited for t in texts.get(s, [])]))
@@ -1808,6 +1930,9 @@ def enrich_sources(root, corpus, enrich_path):
         doc = tp._source_doc(by_url[m.group(1)], enrich, tp.HOSTS)
         if doc["id"] != p.stem:
             continue
+        old_access = re.search(r"^accessed_on: '?(\d{4}-\d{2}-\d{2})'?$", p.read_text(encoding="utf-8"), re.M)
+        if old_access:
+            doc["accessed_on"] = old_access.group(1)  # R359.4: an existing file keeps its date of access
         p.write_text(tp._dump(doc), encoding="utf-8")
         done += 1
     return done

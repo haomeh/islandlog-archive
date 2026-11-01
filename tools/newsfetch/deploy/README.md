@@ -12,7 +12,9 @@ The service runs `python3 -m tools.newsfetch.daily`. Read `../WORKFLOW.md` for t
 
 ## Install (after approval)
 
-1. Copy `newsfetch.env.example` to `~/.config/islandlog-newsfetch.env`. Set `ISLANDLOG_ARCHIVE_REPO` to the archive clone and set the `PATH=` line to the real tool paths of the host. The clone needs `tools/newsfetch/node_modules` and the Playwright browser.
+1. Copy `newsfetch.env.example` to `~/.config/islandlog-newsfetch.env`. Set `ISLANDLOG_ARCHIVE_REPO` to the archive clone and set the `PATH=` line to the real tool paths of the host. The clone needs `tools/newsfetch/node_modules` and the Playwright browser. Keep `GIT_SSH_COMMAND` and `GOCACHE` in the file (R358):
+   - `GIT_SSH_COMMAND=ssh -F /dev/null -o BatchMode=yes`. Under the sandbox, `ssh` reads `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf` and rejects it with "Bad owner or permissions". The fetch step then fails with rc 128 before the crawl. The command skips that file. The ssh key needs no passphrase.
+   - `GOCACHE=/home/USER/islandlog-news/gocache` (a full path). The validator runs with `go run`. The sandbox writes only below `ReadWritePaths`, so the Go cache must be below `~/islandlog-news` or in a folder that you add there.
 2. Run `mkdir -p ~/islandlog-news/corpus`. The unit fails to start when `~/islandlog-news` does not exist (`ReadWritePaths`). The PM then copies `data/all7.jsonl` to `~/islandlog-news/corpus/corpus.jsonl` once (R346.3).
 3. Run `loginctl enable-linger "$USER"`. Without it, the user manager and both timers stop when the user logs out.
 4. Make the sandbox paths right. `ReadWritePaths=%h/islandlog-news` is fixed in the unit.

@@ -67,9 +67,9 @@ timeline:
   date_precision: day
   title: 5 則報導
   source_ids:
-  - src-20260728-ltn-6147f710
   - src-20260728-cts-9f5106e1
   - src-20260728-ltn-0d849ede
+  - src-20260728-ltn-6147f710
 - id: tl-06
   date: '2026-07-29'
   date_precision: day
@@ -164,25 +164,25 @@ news_groups:
 - id: ng-12
   timeline_id: tl-05
   kind: report
-  title: 彰化生命園區抗議聲中動土！王惠美堅持一定要做：這裡最適合
-  representative_source_id: src-20260728-ltn-6147f710
-  source_ids:
-  - src-20260728-ltn-6147f710
-  - src-20260729-ltn-c589b9de
-- id: ng-13
-  timeline_id: tl-05
-  kind: report
   title: 彰化生命園區動土 反火葬場自救會場外抗議推擠
   representative_source_id: src-20260728-cts-9f5106e1
   source_ids:
   - src-20260728-cts-9f5106e1
-- id: ng-14
+- id: ng-13
   timeline_id: tl-05
   kind: report
   title: 彰化火葬場動工 逾百民眾聚集、與警衝突推擠
   representative_source_id: src-20260728-ltn-0d849ede
   source_ids:
   - src-20260728-ltn-0d849ede
+- id: ng-14
+  timeline_id: tl-05
+  kind: report
+  title: 彰化生命園區抗議聲中動土！王惠美堅持一定要做：這裡最適合
+  representative_source_id: src-20260728-ltn-6147f710
+  source_ids:
+  - src-20260728-ltn-6147f710
+  - src-20260729-ltn-c589b9de
 - id: ng-15
   timeline_id: tl-05
   kind: report
@@ -238,11 +238,11 @@ ETtoday新聞雲以「彰化火葬場7/28提前開工 自救會集結300人「�
 
 ## 2026-07-28　5 則報導
 
-自由時報以「彰化生命園區抗議聲中動土！王惠美堅持一定要做：這裡最適合」為題報導 [@src-20260728-ltn-6147f710]。
-
 華視新聞以「彰化生命園區動土 反火葬場自救會場外抗議推擠」為題報導 [@src-20260728-cts-9f5106e1]。
 
 自由時報以「彰化火葬場動工 逾百民眾聚集、與警衝突推擠」為題報導 [@src-20260728-ltn-0d849ede]。
+
+自由時報以「彰化生命園區抗議聲中動土！王惠美堅持一定要做：這裡最適合」為題報導 [@src-20260728-ltn-6147f710]。
 
 中時新聞網以「突圍加硬闖均無功而返 彰化生命園區抗議聲中動土」為題報導 [@src-20260728-chinatimes-87d4bd4f]。
 

@@ -4,6 +4,11 @@
       "id": "src-20261023-ltn-ef4f6708",
       "ruling": "R217, R225, R226, R256",
       "reason": "Injury text with no public issue and no policy cause. It fails the R225.2 test."
+    },
+    {
+      "id": "src-20261029-ltn-0db0ff7c",
+      "ruling": "R363.1",
+      "reason": "The title names a minor who is the victim of a case. It breaks PRD 4.5 item 4 and CONTRIBUTING 4 item 2. The topic stays with its other members."
     }
   ]
 }

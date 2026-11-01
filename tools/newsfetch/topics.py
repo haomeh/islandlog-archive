@@ -29,7 +29,7 @@ import sys
 import unicodedata
 import urllib.parse
 from collections import Counter
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from tools.newsfetch.article import LTN_SECTIONS
@@ -409,7 +409,9 @@ def anchored(cands, seed_titles, keys, df, total=0):
     kept = [c for c in cands if c["title"] in seeds or has_anchor(c["title"], anchors)]
     companions = companion_terms(kept, keys, df, total)
     if len(kept) >= ONE_ISSUE_MIN_CORE and companions and max(companions.values()) >= ONE_ISSUE_SHARE and not is_place_key(keys[0]):
-        return list(cands)  # the key names one story: every title with it is on topic (淡江大橋 + 通車). R112.1 does not apply: the companion word is the second anchor of the whole core
+        # The key names one story (淡江大橋 + 通車). R112.1 does not apply: the companion word is the second anchor of the whole core.
+        # R363.6: a title with the key but with no anchor and no companion word is another story (小虎鯨擱淺, 古根漢, 鋼構研討), so it leaves.
+        return [c for c in cands if c["title"] in seeds or is_response(c) or has_anchor(c["title"], anchors) or has_anchor(c["title"], companions)]
     return on_issue([c for c in cands if c["title"] in seeds
                      or is_response(c) or has_anchor(c["title"], anchors) or has_anchor(c["title"], companions)], companions)
 
@@ -505,9 +507,12 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
     groups = group_items([it for it in items
                           if it.get("source_class") not in ("official_statement", "official_record")
                           or (urllib.parse.urlparse(it["url"]).hostname or "") in actors_by_host])
+    pool = {it["url"] for g in groups for it in g["items"]}
     official = [g for g in groups if g["kind"] == "official"][:MAX_OFFICIAL]
     keep = [g for g in groups if g["kind"] in ("clarification", "post")][:MAX_GROUPS]
-    reports = sorted([g for g in groups if g["kind"] == "report"], key=lambda g: -len(g["items"]))
+    key = (seed.get("_keys") or [""])[0]
+    # R363.6: the display cap keeps first the groups with a title that holds the event key, then the bigger groups. The sort is stable: an equal pair keeps the order of the groups.
+    reports = sorted([g for g in groups if g["kind"] == "report"], key=lambda g: (not (key and any(key in it["title"] for it in g["items"])), -len(g["items"])))
     keep += reports[:max(0, MAX_GROUPS - len(keep))]
     groups = sorted(keep + official, key=lambda g: (g["items"][0]["published_on"], g["kind"]))
     for g in groups:
@@ -580,6 +585,7 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
         "summary": summary, "start_date": stations[0], "keys": keys,
         "actors": actors, "question": f"{seed['_name']}的經過與各方說明為何？", "positions": positions,
         "timeline": timeline, "news_groups": news_groups, "body": body, "used": used,
+        "capped": len(pool - set(used)),  # R363.6: the members that the display cap left out of the file
         "review": {"sensitive": bool(seed.get("sensitive")), "reason": REVIEW_REASON, "status": "draft-review"},
     }
 
@@ -612,6 +618,21 @@ def _dump(doc):
     return yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000, default_flow_style=False)
 
 
+TAIPEI = timezone(timedelta(hours=8))
+
+
+def accessed_on(it):
+    """R359.4: the Taipei date on which the crawler fetched the item (the corpus field fetched_on, UTC). It is never before the publication date.
+    A row without fetched_on is an error: the date of access must not be a guess."""
+    if it.get("accessed_on"):
+        return str(it["accessed_on"])  # an item that was read back from its source file (file_items) keeps the date of the file
+    fetched = it.get("fetched_on")
+    if not fetched:
+        raise ValueError(f"item has no fetched_on: {it.get('url')}")
+    day = datetime.fromisoformat(str(fetched).replace("Z", "+00:00")).astimezone(TAIPEI).date().isoformat()
+    return max(day, str(it["published_on"]))
+
+
 def _source_doc(it, enrich, actors_by_host):
     cls = it.get("source_class", "news")
     d = {"schema_version": 1, "id": src_id(it, actors_by_host), "source_class": cls,
@@ -625,7 +646,7 @@ def _source_doc(it, enrich, actors_by_host):
     quote = e.get("quote") or ""
     if not quote or CAPTION.search(quote):
         quote = it["title"]
-    d.update({"url": it["url"], "published_on": it["published_on"], "accessed_on": "2026-10-25",
+    d.update({"url": it["url"], "published_on": it["published_on"], "accessed_on": accessed_on(it),
               "has_archive_url": False, "quote": quote[:150]})
     section = LTN_SECTIONS.get(e.get("section", ""), e.get("section", ""))
     if section and not re.fullmatch(r"[A-Za-z]+", section):

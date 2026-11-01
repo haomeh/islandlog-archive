@@ -30,7 +30,7 @@ timeline:
 - id: tl-01
   date: '2026-09-23'
   date_precision: day
-  title: 9 則報導、8 則回應或澄清
+  title: 11 則報導、8 則回應或澄清
   source_ids:
   - src-20260923-cts-85d259ba
   - src-20260923-cts-73253f40
@@ -38,7 +38,7 @@ timeline:
 - id: tl-02
   date: '2026-09-24'
   date_precision: day
-  title: 5 則報導
+  title: 6 則報導
   source_ids:
   - src-20260924-cts-b87bc7fd
   - src-20260924-ltn-81b5b58c
@@ -62,11 +62,10 @@ timeline:
 - id: tl-05
   date: '2026-09-29'
   date_precision: day
-  title: 5 則報導
+  title: 2 則報導
   source_ids:
-  - src-20260929-ltn-68b2df92
-  - src-20260929-ltn-d760c8f9
-  - src-20260929-newtalk-54fdfef3
+  - src-20260929-ltn-05f6b55d
+  - src-20260929-ltn-be54d05c
 news_groups:
 - id: ng-01
   timeline_id: tl-01
@@ -150,81 +149,102 @@ news_groups:
 - id: ng-11
   timeline_id: tl-01
   kind: report
+  title: 金華國中師生上吐下瀉被要求「被動處理」 簡舒培：午餐樣本還丟了
+  representative_source_id: src-20260923-ltn-ea7e8be3
+  source_ids:
+  - src-20260923-ltn-ea7e8be3
+- id: ng-12
+  timeline_id: tl-01
+  kind: report
   title: 簡舒培爆金華國中午餐疑食物中毒 北市衛生局：未接獲通報
   representative_source_id: src-20260923-ltn-22254f1b
   source_ids:
   - src-20260923-ltn-22254f1b
-- id: ng-12
+- id: ng-13
+  timeline_id: tl-01
+  kind: report
+  title: 疑吃小卷釀腹瀉！金華國中營養午餐爆爭議 餐盒公會：業者皆戰戰兢兢
+  representative_source_id: src-20260923-ltn-320d5f59
+  source_ids:
+  - src-20260923-ltn-320d5f59
+- id: ng-14
   timeline_id: tl-01
   kind: report
   title: 金華國中傳多人吃小卷吐瀉！簡舒培指北市教育局疑回「暫不處理」
   representative_source_id: src-20260923-newtalk-6d0120c7
   source_ids:
   - src-20260923-newtalk-6d0120c7
-- id: ng-13
+- id: ng-15
   timeline_id: tl-01
   kind: report
   title: 金華國中營養午餐後多人吐瀉？樣本早被丟棄？衛生局稱：沒人通報
   representative_source_id: src-20260923-newtalk-fe9b7fb5
   source_ids:
   - src-20260923-newtalk-fe9b7fb5
-- id: ng-14
+- id: ng-16
   timeline_id: tl-01
   kind: report
   title: 金華國中傳食物中毒 遭指示「暫不處理」？北市教育局還原真相打臉簡舒培
   representative_source_id: src-20260923-udn-c80e7411
   source_ids:
   - src-20260923-udn-c80e7411
-- id: ng-15
+- id: ng-17
   timeline_id: tl-01
   kind: report
   title: 北市金華國中傳食物中毒遭暫不處理？餐盒公會：應以查證結果為準
   representative_source_id: src-20260923-udn-cf61310a
   source_ids:
   - src-20260923-udn-cf61310a
-- id: ng-16
+- id: ng-18
   timeline_id: tl-01
   kind: report
   title: 議員爆金華國中食物中毒 教育局反擊：根本是烏龍爆料
   representative_source_id: src-20260923-ettoday-65e1b327
   source_ids:
   - src-20260923-ettoday-65e1b327
-- id: ng-17
+- id: ng-19
   timeline_id: tl-02
   kind: report
   title: 北市金華國中食安事件 教育局重申依流程確認非食品中毒
   representative_source_id: src-20260924-cts-b87bc7fd
   source_ids:
   - src-20260924-cts-b87bc7fd
-- id: ng-18
+- id: ng-20
   timeline_id: tl-02
   kind: report
   title: 金華國中爆午餐食安爭議！詹凌瑀：留樣被丟、教育局最後反批「造謠」
   representative_source_id: src-20260924-ltn-81b5b58c
   source_ids:
   - src-20260924-ltn-81b5b58c
-- id: ng-19
+- id: ng-21
   timeline_id: tl-02
   kind: report
   title: 簡舒培批金華國中午餐案處理怠慢 蔣萬安力挺教育局：指控必須有所本
   representative_source_id: src-20260924-ltn-177aafe9
   source_ids:
   - src-20260924-ltn-177aafe9
-- id: ng-20
+- id: ng-22
+  timeline_id: tl-02
+  kind: report
+  title: 金華國中營養午餐食安爭議！學生曝「詭異紅色小卷」：吃完腹瀉不止
+  representative_source_id: src-20260924-ltn-1197dfae
+  source_ids:
+  - src-20260924-ltn-1197dfae
+- id: ng-23
   timeline_id: tl-02
   kind: report
   title: 金華國中食安事件》簡舒培嗆北市府可悲 沈伯洋：不攤開討論卻被說造謠
   representative_source_id: src-20260924-newtalk-5d3c67bb
   source_ids:
   - src-20260924-newtalk-5d3c67bb
-- id: ng-21
+- id: ng-24
   timeline_id: tl-02
   kind: report
   title: 金華國中營養午餐爭議！沈伯洋批沒講清楚 教育局嗆：看到翻車還上車
   representative_source_id: src-20260924-newtalk-7be9cdad
   source_ids:
   - src-20260924-newtalk-7be9cdad
-- id: ng-22
+- id: ng-25
   timeline_id: tl-03
   kind: clarification
   title: 《議員揭金華國中爆食安問題 市府批不實指控》教局砲口對沈伯洋︰翻車了還上車
@@ -232,132 +252,111 @@ news_groups:
   source_ids:
   - src-20260925-ltn-0fdd4415
   note: 報導中的回應或澄清
-- id: ng-23
+- id: ng-26
   timeline_id: tl-03
   kind: report
   title: 北市金華國中食安事件 沈伯洋籲檢體應送驗
   representative_source_id: src-20260925-cts-4e6f6bd9
   source_ids:
   - src-20260925-cts-4e6f6bd9
-- id: ng-24
+- id: ng-27
   timeline_id: tl-03
   kind: report
   title: 金華國中食安疑雲 沈伯洋批北市府急喊造謠：採檢公布結果就好
   representative_source_id: src-20260925-ltn-d350c402
   source_ids:
   - src-20260925-ltn-d350c402
-- id: ng-25
+- id: ng-28
   timeline_id: tl-03
   kind: report
   title: 北市駁金華國中食物中毒「僅1人不適」 公衛師：未完全釐清 別妄下定論
   representative_source_id: src-20260925-udn-098993b3
   source_ids:
   - src-20260925-udn-098993b3
-- id: ng-26
+- id: ng-29
   timeline_id: tl-04
   kind: report
   title: 北市金華國中午餐爭議 校長公開信承諾檢視食安
   representative_source_id: src-20260928-cts-8479c3c5
   source_ids:
   - src-20260928-cts-8479c3c5
-- id: ng-27
+- id: ng-30
   timeline_id: tl-04
   kind: report
   title: 金華國中願檢視食安 北市教育局：與校方說法一致
   representative_source_id: src-20260928-cts-ac595238
   source_ids:
   - src-20260928-cts-ac595238
-- id: ng-28
+- id: ng-31
   timeline_id: tl-04
   kind: report
   title: 北市金華國中營養午餐爭議延燒 校長公開道歉承諾檢討
   representative_source_id: src-20260928-ltn-276be23e
   source_ids:
   - src-20260928-ltn-276be23e
-- id: ng-29
+- id: ng-32
   timeline_id: tl-04
   kind: report
   title: 金華國中營養午餐腹瀉案校長道歉 北市教育局：莫再讓師生承受壓力
   representative_source_id: src-20260928-ltn-9cddbbb5
   source_ids:
   - src-20260928-ltn-9cddbbb5
-- id: ng-30
+- id: ng-33
   timeline_id: tl-04
   kind: report
   title: 金華國中學生4日食用午餐出現不適狀況 北市衛生局：改抽驗24日餐食
   representative_source_id: src-20260928-ltn-126420c9
   source_ids:
   - src-20260928-ltn-126420c9
-- id: ng-31
+- id: ng-34
   timeline_id: tl-04
   kind: report
   title: 金華國中午餐風波延燒 校長拍影片：學校與教育局立場一致
   representative_source_id: src-20260928-ltn-0fca0f62
   source_ids:
   - src-20260928-ltn-0fca0f62
-- id: ng-32
+- id: ng-35
   timeline_id: tl-04
   kind: report
   title: 金華國中校長證實學生腹瀉致歉！網轟蔣市府「翻車」：出來打球
   representative_source_id: src-20260928-ltn-731a1d27
   source_ids:
   - src-20260928-ltn-731a1d27
-- id: ng-33
+- id: ng-36
   timeline_id: tl-04
   kind: report
   title: 金華國中校長為營養午餐食安致歉 簡舒培批市府：何時才要跟孩子道歉？
   representative_source_id: src-20260928-ltn-e309f240
   source_ids:
   - src-20260928-ltn-e309f240
-- id: ng-34
+- id: ng-37
   timeline_id: tl-04
   kind: report
   title: 金華國中營養午餐戰火延燒 律師示警蔣萬安、北市府恐遭懲戒
   representative_source_id: src-20260928-newtalk-c5ff19ba
   source_ids:
   - src-20260928-newtalk-c5ff19ba
-- id: ng-35
+- id: ng-38
   timeline_id: tl-04
   kind: report
   title: 綠營要求北市府為金華國中事件道歉 教育局反咬議員先改口
   representative_source_id: src-20260928-ettoday-e773291a
   source_ids:
   - src-20260928-ettoday-e773291a
-- id: ng-36
-  timeline_id: tl-05
-  kind: report
-  title: 通報時間差？教育局稱9/11、金華國中說9/9？吳欣岱痛批蔣市府「急貼標籤」
-  representative_source_id: src-20260929-ltn-68b2df92
-  source_ids:
-  - src-20260929-ltn-68b2df92
-- id: ng-37
-  timeline_id: tl-05
-  kind: report
-  title: 金華國中校長道歉後又拍片挺市府 簡舒培轟：需要這麼冷血？
-  representative_source_id: src-20260929-ltn-d760c8f9
-  source_ids:
-  - src-20260929-ltn-d760c8f9
-- id: ng-38
-  timeline_id: tl-05
-  kind: report
-  title: 金華國中校長致歉！詹凌瑀：一個台北市長把學校食安當成選戰攻防
-  representative_source_id: src-20260929-newtalk-54fdfef3
-  source_ids:
-  - src-20260929-newtalk-54fdfef3
 - id: ng-39
   timeline_id: tl-05
   kind: report
-  title: 北市金華國中營養午餐風波 校長致歉又拍片挺市府 簡舒培轟：有需要這麼冷血？
-  representative_source_id: src-20260929-newtalk-ce52229a
+  title: 金華國中午餐食安風波是否表達關切？ 蔣萬安：我會的
+  representative_source_id: src-20260929-ltn-05f6b55d
   source_ids:
-  - src-20260929-newtalk-ce52229a
+  - src-20260929-ltn-05f6b55d
 - id: ng-40
   timeline_id: tl-05
   kind: report
-  title: 北市府曾稱議員「烏龍、翻車」 營養午餐釀不安 金華國中校長道歉
-  representative_source_id: src-20260929-ltn-8ac3e406
+  title: 金華國中營養午餐風波校長致歉 沈伯洋嘆反映人民聲音被說造謠
+  representative_source_id: src-20260929-ltn-be54d05c
   source_ids:
-  - src-20260929-ltn-8ac3e406
+  - src-20260929-ltn-be54d05c
 privacy:
   contains_private_persons: false
   basis_source_ids: []
@@ -367,7 +366,7 @@ review:
   status: draft-review
 ---
 
-## 2026-09-23　9 則報導、8 則回應或澄清
+## 2026-09-23　11 則報導、8 則回應或澄清
 
 華視新聞以「簡舒培爆金華國中營養午餐出包被要求「被動處理」 教育局駁斥不實指控」為題報導 [@src-20260923-cts-85d259ba]。
 
@@ -389,7 +388,11 @@ ETtoday新聞雲以「營養午餐又出包！金華國中師生吐瀉 北市教
 
 華視新聞以「議員揭北市金華國中食安事件 教育局：非集體食物中毒」為題報導 [@src-20260923-cts-fd19cad5]。
 
+自由時報以「金華國中師生上吐下瀉被要求「被動處理」 簡舒培：午餐樣本還丟了」為題報導 [@src-20260923-ltn-ea7e8be3]。
+
 自由時報以「簡舒培爆金華國中午餐疑食物中毒 北市衛生局：未接獲通報」為題報導 [@src-20260923-ltn-22254f1b]。
+
+自由時報以「疑吃小卷釀腹瀉！金華國中營養午餐爆爭議 餐盒公會：業者皆戰戰兢兢」為題報導 [@src-20260923-ltn-320d5f59]。
 
 Newtalk以「金華國中傳多人吃小卷吐瀉！簡舒培指北市教育局疑回「暫不處理」」為題報導 [@src-20260923-newtalk-6d0120c7]。
 
@@ -401,13 +404,15 @@ Newtalk以「金華國中營養午餐後多人吐瀉？樣本早被丟棄？衛�
 
 ETtoday新聞雲以「議員爆金華國中食物中毒 教育局反擊：根本是烏龍爆料」為題報導 [@src-20260923-ettoday-65e1b327]。
 
-## 2026-09-24　5 則報導
+## 2026-09-24　6 則報導
 
 華視新聞以「北市金華國中食安事件 教育局重申依流程確認非食品中毒」為題報導 [@src-20260924-cts-b87bc7fd]。
 
 自由時報以「金華國中爆午餐食安爭議！詹凌瑀：留樣被丟、教育局最後反批「造謠」」為題報導 [@src-20260924-ltn-81b5b58c]。
 
 自由時報以「簡舒培批金華國中午餐案處理怠慢 蔣萬安力挺教育局：指控必須有所本」為題報導 [@src-20260924-ltn-177aafe9]。
+
+自由時報以「金華國中營養午餐食安爭議！學生曝「詭異紅色小卷」：吃完腹瀉不止」為題報導 [@src-20260924-ltn-1197dfae]。
 
 Newtalk以「金華國中食安事件》簡舒培嗆北市府可悲 沈伯洋：不攤開討論卻被說造謠」為題報導 [@src-20260924-newtalk-5d3c67bb]。
 
@@ -445,14 +450,8 @@ Newtalk以「金華國中營養午餐戰火延燒 律師示警蔣萬安、北市
 
 ETtoday新聞雲以「綠營要求北市府為金華國中事件道歉 教育局反咬議員先改口」為題報導 [@src-20260928-ettoday-e773291a]。
 
-## 2026-09-29　5 則報導
+## 2026-09-29　2 則報導
 
-自由時報以「通報時間差？教育局稱9/11、金華國中說9/9？吳欣岱痛批蔣市府「急貼標籤」」為題報導 [@src-20260929-ltn-68b2df92]。
+自由時報以「金華國中午餐食安風波是否表達關切？ 蔣萬安：我會的」為題報導 [@src-20260929-ltn-05f6b55d]。
 
-自由時報以「金華國中校長道歉後又拍片挺市府 簡舒培轟：需要這麼冷血？」為題報導 [@src-20260929-ltn-d760c8f9]。
-
-Newtalk以「金華國中校長致歉！詹凌瑀：一個台北市長把學校食安當成選戰攻防」為題報導 [@src-20260929-newtalk-54fdfef3]。
-
-Newtalk以「北市金華國中營養午餐風波 校長致歉又拍片挺市府 簡舒培轟：有需要這麼冷血？」為題報導 [@src-20260929-newtalk-ce52229a]。
-
-自由時報以「北市府曾稱議員「烏龍、翻車」 營養午餐釀不安 金華國中校長道歉」為題報導 [@src-20260929-ltn-8ac3e406]。
+自由時報以「金華國中營養午餐風波校長致歉 沈伯洋嘆反映人民聲音被說造謠」為題報導 [@src-20260929-ltn-be54d05c]。

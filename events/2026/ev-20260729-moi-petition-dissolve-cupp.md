@@ -4,7 +4,7 @@ id: ev-20260729-moi-petition-dissolve-cupp
 kind: historical_event
 status: published
 title: 統促黨
-summary: 2026-07-29至2026-09-18，自由時報、華視新聞、Newtalk等共 32 則報導提及統促黨 [@src-20260729-moi-17f0d2ab]。內政部等機關發布 1 則相關說明 [@src-20260729-moi-17f0d2ab]。
+summary: 2026-07-29至2026-09-18，自由時報、華視新聞、Newtalk等共 35 則報導提及統促黨 [@src-20260729-moi-17f0d2ab]。內政部等機關發布 1 則相關說明 [@src-20260729-moi-17f0d2ab]。
 start_date: '2026-07-29'
 start_date_precision: day
 gov_levels:
@@ -46,7 +46,7 @@ timeline:
 - id: tl-02
   date: '2026-07-30'
   date_precision: day
-  title: 18 則報導、1 則回應或澄清
+  title: 19 則報導、1 則回應或澄清
   source_ids:
   - src-20260730-ltn-e05be3a8
   - src-20260730-cts-ba1e6d1a
@@ -87,11 +87,11 @@ timeline:
 - id: tl-08
   date: '2026-09-18'
   date_precision: day
-  title: 4 則報導
+  title: 6 則報導
   source_ids:
   - src-20260918-ltn-03144a2e
-  - src-20260918-ltn-350c318b
-  - src-20260918-ettoday-68c3344c
+  - src-20260918-ltn-4eae96e2
+  - src-20260918-ltn-fb05e061
 news_groups:
 - id: ng-01
   timeline_id: tl-02
@@ -160,88 +160,95 @@ news_groups:
 - id: ng-10
   timeline_id: tl-02
   kind: report
+  title: 根本是中共在台分支！揭統促黨4大黑幕：披著政黨外衣黑道幫派
+  representative_source_id: src-20260730-ltn-818466cf
+  source_ids:
+  - src-20260730-ltn-818466cf
+- id: ng-11
+  timeline_id: tl-02
+  kind: report
   title: 內政部聲請解散統促黨 學者：切斷中國在台協力者執行體系
   representative_source_id: src-20260730-ltn-3f80449e
   source_ids:
   - src-20260730-ltn-3f80449e
-- id: ng-11
+- id: ng-12
   timeline_id: tl-02
   kind: report
   title: 內政部聲請解散統促黨 憲法法庭恐遇兩大關卡
   representative_source_id: src-20260730-ltn-965756f7
   source_ids:
   - src-20260730-ltn-965756f7
-- id: ng-12
+- id: ng-13
   timeline_id: tl-02
   kind: report
   title: 8月初聲請解散統促黨！內政部曝3理由：若能處理就能應對中國對台壓迫
   representative_source_id: src-20260730-newtalk-d329cfe0
   source_ids:
   - src-20260730-newtalk-d329cfe0
-- id: ng-13
+- id: ng-14
   timeline_id: tl-02
   kind: report
   title: 統促黨若解散能否成立新政黨？內政部給答案
   representative_source_id: src-20260730-newtalk-1f2eb85b
   source_ids:
   - src-20260730-newtalk-1f2eb85b
-- id: ng-14
+- id: ng-15
   timeline_id: tl-02
   kind: report
   title: 民主國家解散政黨案例曝光 國安人士：解散統促黨才能讓國人安心
   representative_source_id: src-20260730-newtalk-d1f17937
   source_ids:
   - src-20260730-newtalk-d1f17937
-- id: ng-15
+- id: ng-16
   timeline_id: tl-02
   kind: report
   title: 公布解散統促黨3大理由與事證 劉世芳：下周函送憲法法庭
   representative_source_id: src-20260730-chinatimes-aea4e881
   source_ids:
   - src-20260730-chinatimes-aea4e881
-- id: ng-16
+- id: ng-17
   timeline_id: tl-02
   kind: report
   title: 內政部聲請解散統促黨 張安樂反嗆：將聲請解散民進黨
   representative_source_id: src-20260730-chinatimes-d8c319d6
   source_ids:
   - src-20260730-chinatimes-d8c319d6
-- id: ng-17
+- id: ng-18
   timeline_id: tl-02
   kind: report
   title: 黑幫披政黨外衣、配合中共介選 內政部聲請解散統促黨
   representative_source_id: src-20260730-ettoday-118cac3b
   source_ids:
   - src-20260730-ettoday-118cac3b
-- id: ng-18
+- id: ng-19
   timeline_id: tl-02
   kind: report
   title: 內政部聲請解散統促黨 張安樂：早知就去踢館！出招解散民進黨
   representative_source_id: src-20260730-ettoday-4ecb6548
   source_ids:
   - src-20260730-ettoday-4ecb6548
-- id: ng-19
+- id: ng-20
   timeline_id: tl-02
   kind: report
   title: 聲請解散統促黨是「戰略問題」 內政部：嚇阻類似活動在台發生
   representative_source_id: src-20260730-ettoday-d8b4d006
   source_ids:
   - src-20260730-ettoday-d8b4d006
-- id: ng-20
+- id: ng-21
   timeline_id: tl-03
   kind: report
   title: 內政部聲請解散統促黨 創首例
   representative_source_id: src-20260731-chinatimes-05fefc40
   source_ids:
   - src-20260731-chinatimes-05fefc40
-- id: ng-21
+- id: ng-22
   timeline_id: tl-04
   kind: report
   title: 台灣解散統促黨非首例 西班牙、南韓昔解散巴塔蘇納、統合進步黨
   representative_source_id: src-20260802-ettoday-a46f51bb
   source_ids:
   - src-20260802-ettoday-a46f51bb
-- id: ng-22
+- id: ng-23
   timeline_id: tl-05
   kind: report
   title: 內政部聲請解散統促黨 國台辦氣炸嗆「綠色恐怖」
@@ -249,42 +256,42 @@ news_groups:
   source_ids:
   - src-20260805-ltn-97ad58b7
   - src-20260805-chinatimes-33a86c92
-- id: ng-23
+- id: ng-24
   timeline_id: tl-05
   kind: report
   title: 陸批解散統促黨 陸委會：維護台灣社會秩序
   representative_source_id: src-20260805-cts-ad759bfc
   source_ids:
   - src-20260805-cts-ad759bfc
-- id: ng-24
+- id: ng-25
   timeline_id: tl-05
   kind: report
   title: 國台辦嗆解散統促黨是「綠色恐怖」 陸委會斥：混淆視聽
   representative_source_id: src-20260805-newtalk-c8fdf667
   source_ids:
   - src-20260805-newtalk-c8fdf667
-- id: ng-25
+- id: ng-26
   timeline_id: tl-06
   kind: report
   title: 內政部向憲法法庭遞狀 聲請解散統促黨
   representative_source_id: src-20260807-cts-9539dc15
   source_ids:
   - src-20260807-cts-9539dc15
-- id: ng-26
+- id: ng-27
   timeline_id: tl-06
   kind: report
   title: 機關解散政黨首例！內政部赴憲法法庭 正式遞狀聲請解散統促黨
   representative_source_id: src-20260807-ltn-90b9db88
   source_ids:
   - src-20260807-ltn-90b9db88
-- id: ng-27
+- id: ng-28
   timeline_id: tl-07
   kind: report
   title: 內政部聲請解散統促黨惹國台辦跳腳 台灣基進：簡直笑話
   representative_source_id: src-20260811-newtalk-d1b03754
   source_ids:
   - src-20260811-newtalk-d1b03754
-- id: ng-28
+- id: ng-29
   timeline_id: tl-08
   kind: report
   title: 南北全滲透！統促黨才被聲請解散 15人洗白參選「逾8成有案底」
@@ -292,14 +299,28 @@ news_groups:
   source_ids:
   - src-20260918-ltn-03144a2e
   - src-20260918-ltn-11cf9ecb
-- id: ng-29
+- id: ng-30
+  timeline_id: tl-08
+  kind: report
+  title: 年底選舉15名統促黨人士參選  學者林佳和：須由選民發揮政治智慧
+  representative_source_id: src-20260918-ltn-4eae96e2
+  source_ids:
+  - src-20260918-ltn-4eae96e2
+- id: ng-31
+  timeline_id: tl-08
+  kind: report
+  title: 潑漆何韻詩到收中資介選 盤點統促黨4大離譜黑暴史
+  representative_source_id: src-20260918-ltn-fb05e061
+  source_ids:
+  - src-20260918-ltn-fb05e061
+- id: ng-32
   timeline_id: tl-08
   kind: report
   title: 統促黨2人選里長 內政部尊重資格審查：若判決解散、不得推候選人
   representative_source_id: src-20260918-ltn-350c318b
   source_ids:
   - src-20260918-ltn-350c318b
-- id: ng-30
+- id: ng-33
   timeline_id: tl-08
   kind: report
   title: 統促黨無懼遭聲請解散 仍推派15位參選人角逐村里長、民代
@@ -319,7 +340,7 @@ review:
 
 內政部發布「內政部完成依法蒐整事證 將向憲法法庭聲請解散統促黨」 [@src-20260729-moi-17f0d2ab]。
 
-## 2026-07-30　18 則報導、1 則回應或澄清
+## 2026-07-30　19 則報導、1 則回應或澄清
 
 自由時報以「內政部聲請解散統促黨...怕白狼報復？警政署長霸氣回應」為題報導 [@src-20260730-ltn-e05be3a8]。
 
@@ -338,6 +359,8 @@ review:
 自由時報以「挺內政部聲請解散統促黨 綠委：盼憲法法庭切除國安毒瘤」為題報導 [@src-20260730-ltn-d978d8b2]。
 
 自由時報以「統促黨為何該解散？西班牙、南韓有前例：危害國安不是言論自由」為題報導 [@src-20260730-ltn-d61b29fa]。
+
+自由時報以「根本是中共在台分支！揭統促黨4大黑幕：披著政黨外衣黑道幫派」為題報導 [@src-20260730-ltn-818466cf]。
 
 自由時報以「內政部聲請解散統促黨 學者：切斷中國在台協力者執行體系」為題報導 [@src-20260730-ltn-3f80449e]。
 
@@ -385,9 +408,13 @@ Newtalk以「國台辦嗆解散統促黨是「綠色恐怖」 陸委會斥：混
 
 Newtalk以「內政部聲請解散統促黨惹國台辦跳腳 台灣基進：簡直笑話」為題報導 [@src-20260811-newtalk-d1b03754]。
 
-## 2026-09-18　4 則報導
+## 2026-09-18　6 則報導
 
 自由時報以「南北全滲透！統促黨才被聲請解散 15人洗白參選「逾8成有案底」」為題報導 [@src-20260918-ltn-03144a2e]。
+
+自由時報以「年底選舉15名統促黨人士參選  學者林佳和：須由選民發揮政治智慧」為題報導 [@src-20260918-ltn-4eae96e2]。
+
+自由時報以「潑漆何韻詩到收中資介選 盤點統促黨4大離譜黑暴史」為題報導 [@src-20260918-ltn-fb05e061]。
 
 自由時報以「統促黨2人選里長 內政部尊重資格審查：若判決解散、不得推候選人」為題報導 [@src-20260918-ltn-350c318b]。
 

@@ -7,7 +7,7 @@ __pycache__/
 .claude/launch.json
 .venv/
 venv*/
-node_modules/
+node_modules
 *.log
 .DS_Store
 

@@ -296,12 +296,15 @@ def published_urls(root):
 def enrich_candidates(clusters, meta, dry_root, today, recent_days=RECENT_DAYS, limit=ENRICH_LIMIT):
     """The largest clusters with a recent row and no published event. A list for a person: nothing is written."""
     cutoff = (datetime.date.fromisoformat(today) - datetime.timedelta(days=recent_days)).isoformat()
+    from tools.newsfetch import topics_full  # R359.8: the gates decide what is noise
     published = published_urls(dry_root)
     out = []
     for c in clusters:
         urls = cluster_urls(c)
         if len(urls) < 2 or any(canonical_url(u) in published for u in urls):
             continue
+        if topics_full.enrich_noise(c.get("title") or ""):
+            continue  # a market report, a lottery draw, a quake record, a digest, a live stream or a campaign story
         rows = [meta[u] for u in urls if u in meta]
         if not rows or max(d for _, d in rows) < cutoff:
             continue
