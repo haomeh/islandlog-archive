@@ -11,8 +11,10 @@ CODE = "\n".join(line for line in TEXT.splitlines() if not line.lstrip().startsw
 
 class ReportLabelWorkflowTest(unittest.TestCase):
     def test_the_trigger_is_issues_opened_only(self):
-        self.assertRegex(CODE, r"(?m)^on:\n  issues:\n    types: \[opened\]\n")
         self.assertEqual(len(re.findall(r"(?m)^on:", CODE)), 1)
+        match = re.search(r"(?m)^on:\n((?:[ ]+.*\n|\n)*)", CODE)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1).strip("\n"), "  issues:\n    types: [opened]")
 
     def test_the_top_permissions_are_issues_write_only(self):
         match = re.search(r"(?m)^permissions:\n((?:  .+\n)+)", CODE)
@@ -31,6 +33,11 @@ class ReportLabelWorkflowTest(unittest.TestCase):
     def test_the_condition_reads_the_app_slug_and_a_non_empty_variable(self):
         self.assertIn("vars.REPORT_APP_SLUG != ''", CODE)
         self.assertIn("github.event.issue.performed_via_github_app.slug == vars.REPORT_APP_SLUG", CODE)
+        self.assertIn(
+            "if: vars.REPORT_APP_SLUG != '' && github.event.issue.performed_via_github_app.slug == vars.REPORT_APP_SLUG\n",
+            CODE,
+        )
+        self.assertNotIn("||", CODE)
 
     def test_the_runner_version_is_pinned(self):
         self.assertRegex(CODE, r"runs-on: ubuntu-\d+\.\d+")

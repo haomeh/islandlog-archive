@@ -3,6 +3,7 @@
 # The workflow reads the App field performed_via_github_app.slug. A text marker in the issue cannot forge it.
 # Issue title and body are untrusted data. Never put them in a step expression or in a shell.
 # Setting: repo variable REPORT_APP_SLUG holds the slug of the site App. An empty variable turns the job off.
+# Before you set the variable, create the label news-report in the repo. Without the label, the job fails.
 
 name: report-label
 
