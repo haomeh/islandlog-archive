@@ -63,6 +63,7 @@ CONCENTRATION = 4.0  # A key may have at most this many times more uses in the c
 BOUNDARY_SHARE = 0.8  # A neighbor character is added to a key when this share of its uses has it (脫大稽查). Case (R85).
 CONTINUATION_SHARE = 0.8  # A key is a fragment when at most 3 characters follow it in this share of its uses. Case: 降速演 (R85).
 QUOTED_SLOGAN_SHARE = 0.5  # A key inside 「」 in this share of its uses is a quote or slogan. Case (R85).
+LAW_OBJECT_SHARE = 0.3  # The share of titles in which the key stands directly next to an issue noun. A name that ends with a generic act noun passes with it (R384.7).
 RELEVANCE_SHARE = 0.5  # A topic is about Taiwan when this share of its titles has a Taiwan term. Start (R68, R84).
 JURISDICTION_SHARE = 0.3  # A place is a jurisdiction of the topic when this share of its titles names it. Start (R68).
 CLASSIFY_SHARE = 0.2  # A controversy type or policy domain is set when this share of the titles matches it. Start (R68).

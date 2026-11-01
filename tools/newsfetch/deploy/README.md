@@ -1,7 +1,7 @@
 # newsfetch deploy files (R90, T79)
 
 These files are a proposal. Nothing here is installed. Install needs the user's approval (task T80, R346.4).
-The service runs `python3 -m tools.newsfetch.daily`. Read `../WORKFLOW.md` for the steps, the alerts and the recovery.
+The service runs `/usr/bin/python3 -m tools.newsfetch.daily`. Read `../WORKFLOW.md` for the steps, the alerts and the recovery.
 
 | File | Use |
 |---|---|

@@ -43,7 +43,7 @@ timeline:
   source_ids:
   - src-20260825-ltn-788114ac
   - src-20260825-cts-ecfa9c6b
-  - src-20260825-cts-03997306
+  - src-20260825-ltn-33bf8ae7
 - id: tl-02
   date: '2026-08-26'
   date_precision: day
@@ -83,17 +83,17 @@ news_groups:
 - id: ng-03
   timeline_id: tl-01
   kind: report
-  title: 「統籌分配款」新北人均墊底 蘇巧慧：不公平 李四川批：兩手策略
-  representative_source_id: src-20260825-cts-03997306
-  source_ids:
-  - src-20260825-cts-03997306
-- id: ng-04
-  timeline_id: tl-01
-  kind: report
   title: 明年統籌分配款新北人均最低 侯友宜：中央真的要好好支援地方
   representative_source_id: src-20260825-ltn-33bf8ae7
   source_ids:
   - src-20260825-ltn-33bf8ae7
+- id: ng-04
+  timeline_id: tl-01
+  kind: report
+  title: 「統籌分配款」新北人均墊底 蘇巧慧：不公平 李四川批：兩手策略
+  representative_source_id: src-20260825-cts-03997306
+  source_ids:
+  - src-20260825-cts-03997306
 - id: ng-05
   timeline_id: tl-02
   kind: report
@@ -152,9 +152,9 @@ review:
 
 華視新聞以「2027年統籌分配款台北市1264億居冠 新北人均配額最低」為題報導 [@src-20260825-cts-ecfa9c6b]。
 
-華視新聞以「「統籌分配款」新北人均墊底 蘇巧慧：不公平 李四川批：兩手策略」為題報導 [@src-20260825-cts-03997306]。
-
 自由時報以「明年統籌分配款新北人均最低 侯友宜：中央真的要好好支援地方」為題報導 [@src-20260825-ltn-33bf8ae7]。
+
+華視新聞以「「統籌分配款」新北人均墊底 蘇巧慧：不公平 李四川批：兩手策略」為題報導 [@src-20260825-cts-03997306]。
 
 ## 2026-08-26　5 則報導
 

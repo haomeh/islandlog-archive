@@ -267,10 +267,6 @@ class ClusterWindowTest(unittest.TestCase):
             self.assertLess(len(new), n)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class WindowCorpusIdentityTest(unittest.TestCase):
     def test_a_view_of_another_corpus_of_the_same_length_is_not_used(self):  # T82b, T82-V G4
         a, b = corpus(60, seed=1), corpus(60, seed=2)
@@ -280,3 +276,7 @@ class WindowCorpusIdentityTest(unittest.TestCase):
         self.assertIsInstance(same, tp._IndexWindow)
         other = tp.window_counts(index, b, lo, hi)
         self.assertEqual(other, tp.window_frequency(b, lo, hi))
+
+
+if __name__ == "__main__":
+    unittest.main()

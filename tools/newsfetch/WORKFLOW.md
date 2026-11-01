@@ -75,7 +75,7 @@
 | `new rows N are under the floor F` | 新列總數低於下限 `NEWSFETCH_MIN_NEW_ROWS`（預設 300）。 | 看各媒體新增列數。如果多數媒體是零，查網路或路線。 |
 | `stale: the newest report ... is N hours old` | 最新報告超過 26 小時。計時器沒跑，或執行卡住。 | 用 `systemctl --user status` 和 `ps` 檢查。不要用名稱殺程序（R102）。 |
 
-新鮮度檢查是 `python3 -m tools.newsfetch.daily --check-freshness`。計時器 `islandlog-newsfetch-fresh.timer` 每 6 小時執行一次。
+新鮮度檢查是 `/usr/bin/python3 -m tools.newsfetch.daily --check-freshness`。計時器 `islandlog-newsfetch-fresh.timer` 每 6 小時執行一次。
 
 ## 4. 中斷後復原
 
@@ -84,7 +84,7 @@
    - 重跑前，先停止這次執行的 child PID（用 `ps -o pid,ppid,pgid,cmd` 找出 `tools.newsfetch.backfill` 的 PID，逐一用 PID 停止，不用名稱，R102）。否則同一主機會有兩個程序同時請求（R61 風險）。
    - 收到 SIGTERM、SIGINT 或 SIGHUP 時，程式會停止所有 child 的程序群組後結束。在 systemd 下，cgroup 會一起停止。
 2. 看 `ALERT` 和最新報告，找出最後完成的步驟。
-3. 如果中斷發生在 `promote` 之前：語料和 `state.json` 沒變。直接重跑 `python3 -m tools.newsfetch.daily`。同一天重跑會清掉 `runs/DATE/` 重來。
+3. 如果中斷發生在 `promote` 之前：語料和 `state.json` 沒變。直接重跑 `/usr/bin/python3 -m tools.newsfetch.daily`。同一天重跑會清掉 `runs/DATE/` 重來。
 4. 如果中斷發生在 `promote` 之後（`dry_run` 或 `validate` 失敗）：語料已含當天新列，`last_good_date` 已前進。重跑會得到很少的新列，所以可能出現「under the floor」警報。這是已知現象。dry run 的結果以重跑為準。下一次完整的每日執行會清除警報。
 5. 如果語料有疑慮：比對 `reports/` 中 `merge` 步驟的 sha256。語料是追加式檔案：舊列逐位元不變，可以用舊檔當前綴比對。
 6. 重跑後確認 `reports/DATE.json` 的 `status` 是 `ok`，而且 `ALERT` 已不存在。

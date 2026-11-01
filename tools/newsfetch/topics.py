@@ -642,6 +642,21 @@ def _station_title(gs):
     return "、".join(parts)
 
 
+def is_campaign_title(title):
+    """R384.5: set by topics_full to candidate_talk. A campaign title does not rank first in the display cap."""
+    return False
+
+
+def key_forms(key):
+    """R384.5: the key, its prefixes of 2 characters or more and its suffixes of 3 characters or more (中聯油脂: 中聯, 中聯油, 聯油脂). A key of 2 characters has none."""
+    if not key:
+        return []
+    forms = [key]
+    forms += [key[:n] for n in range(len(key) - 1, 1, -1)]
+    forms += [key[i:] for i in range(1, len(key) - 2)]
+    return forms
+
+
 def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
     """Builds one topic. `items` skips the member search when the caller already has the members
     (the full run); then `seed` must already hold `_keys` and `_name`."""
@@ -654,9 +669,22 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
     official = [g for g in groups if g["kind"] == "official"][:MAX_OFFICIAL]
     keep = [g for g in groups if g["kind"] in ("clarification", "post")][:MAX_GROUPS]
     key = (seed.get("_keys") or [""])[0]
-    # R363.6: the display cap keeps first the groups with a title that holds the event key, then the bigger groups. The sort is stable: an equal pair keeps the order of the groups.
-    reports = sorted([g for g in groups if g["kind"] == "report"], key=lambda g: (not (key and any(key in it["title"] for it in g["items"])), -len(g["items"])))
-    keep += reports[:max(0, MAX_GROUPS - len(keep))]
+    forms = key_forms(key)
+    # R363.6, R384.5: the display cap keeps first the groups with a title that holds the event key or a short form of it (a campaign title does not count),
+    # then the bigger groups. The sort is stable: an equal pair keeps the order of the groups.
+    def rank(g):
+        hit = [min((forms.index(f) for f in forms if f in it["title"]), default=None) for it in g["items"] if not is_campaign_title(it["title"])]
+        hit = [h for h in hit if h is not None]
+        return (not hit, bool(hit) and min(hit) > 0, -len(g["items"]))  # no form last; the exact key (form 0) before a short form
+    reports = sorted([g for g in groups if g["kind"] == "report"], key=rank)
+    room = max(0, MAX_GROUPS - len(keep))
+    earliest = min((g["items"][0]["published_on"] for g in groups), default="")
+    if reports and not any(g["items"][0]["published_on"] == earliest for g in keep + official):
+        # R384.5: the first report stays, so start_date does not move. It is the best ranked group of the first day.
+        first = min((g for g in reports if g["items"][0]["published_on"] == earliest), key=rank, default=None)
+        if first is not None and room and first not in reports[:room]:
+            reports = [first] + [g for g in reports if g is not first]
+    keep += reports[:room]
     groups = sorted(keep + official, key=lambda g: (g["items"][0]["published_on"], g["kind"]))
     for g in groups:
         g["items"] = g["items"][:MAX_REPORT_MEMBERS]

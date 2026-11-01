@@ -34,7 +34,7 @@ from tools.newsfetch import jsonlist
 from tools.newsfetch import topics as tp
 from tools.newsfetch.topic_config import (
     BODY_VERB_NAME_MAX_LEN, BOUNDARY_SHARE, CAMPAIGN_DAYS, CLASSIFY_SHARE, ELECTION_DAY, ELECTION_DISPUTE_MIN_GRADE_A, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
-    CONTINUATION_MIN_USES, DISEASE_NAME_MAX_LEN, FOREIGN_NAMED_SHARE, GENERIC_NAME_MAX_LEN, GOV_NAME_SHARE, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
+    CONTINUATION_MIN_USES, DISEASE_NAME_MAX_LEN, FOREIGN_NAMED_SHARE, GENERIC_NAME_MAX_LEN, GOV_NAME_SHARE, LAW_OBJECT_SHARE, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
     BARE_PERSON_MAX_LEN, BARE_PERSON_MIN_LEN, BARE_PERSON_SHARE, OFFICIAL_MIN_TITLES, RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SPLIT_MIN_TITLES, SUBTOPIC_SHARE,
     TAIWAN_MIN_SHARE, TAIWAN_MIN_TITLES, WITHDRAW_AFTER_FAILS, WITHDRAW_MAX_COUNT, WITHDRAW_MAX_SHARE,
     ACCIDENT_POLICY_SHARE, ACCIDENT_SHARE, CANDIDATE_MIN_TITLES, CANDIDATE_SHARE, DUPLICATE_GAP_DAYS, DUPLICATE_MIN_TITLES,
@@ -67,10 +67,25 @@ ENTERTAINMENT = re.compile(r"演唱會|歌手|藝人|女星|男星|偶像|專輯
 ELECTION_LEGAL = re.compile(r"駁回|裁定|判決|高行|行政法院|法院|當選無效|選舉訴訟")  # R112.4: a court ruling on a candidacy is not campaign content
 LAW_PASSED = re.compile(r"三讀|條例》|修正草案|修法")  # R112.4: a law passed by the legislature is not sensitive by its subject alone
 CONSUMER = re.compile(r"優惠|折扣|現省|省[\d百千萬]|半價|折抵|票價|抵用|買一送一")  # R112.5: a discount is a consumer title, not entertainment news
-CASE_TITLE = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄|搶劫|槍殺|入獄|服刑|徒刑|判\d+(?:年|月|個月)")  # R363.5: a sentence or a prison title of a person. R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
+_CASE_WORDS = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄|搶劫|槍殺|入獄|徒刑|判\d+(?:年|月|個月)")  # R363.5: a sentence or a prison title of a person. R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
+_SERVE = re.compile(r"服刑")
+LAW_TITLE = re.compile(r"法案|草案|修法|條例|修正案|三讀|《[^》]*法》|少年事件處理法|少事法|[\u4e00-\u9fff]{1,6}法(?=修正|草案|三讀|通過|條文|增訂|研議)")  # R384.3: a law or an act word
+
+
+class _CaseTitle:
+    """R384.3: _CASE_WORDS make a case title. 服刑 does too, unless the title holds a law or an act word (a bill about people who serve a term)."""
+
+    pattern = _CASE_WORDS.pattern + "|服刑"
+
+    @staticmethod
+    def search(title):
+        return _CASE_WORDS.search(title) or (_SERVE.search(title) if not LAW_TITLE.search(title) else None)
+
+
+CASE_TITLE = _CaseTitle()
 FOREIGN_ONLY = re.compile(r"美國|川普|中國|大陸|日本|南韓|北韓|俄羅斯|烏克蘭|伊朗|以色列|歐盟|英國|德國|法國|印度|菲律賓|越南|泰國|馬來西亞")
 FOREIGN_NEW = re.compile(FOREIGN_ONLY.pattern
-                         + r"|萬那杜|索羅門|斐濟|印尼|土耳其|沙烏地|埃及|巴西|阿根廷|加拿大|澳洲|紐西蘭|新加坡|巴基斯坦|阿富汗|敘利亞|黎巴嫩|古巴|墨西哥|委內瑞拉|智利|秘魯|肯亞|奈及利亞|南非|蘇丹|葉門|伊拉克|緬甸|柬埔寨|寮國|尼泊爾|孟加拉|斯里蘭卡")  # R154: a country list, so a foreign quake or a foreign bank has a foreign label; R162 (N1): only a new topic reads it
+                         + r"|韓國(?!瑜)|萬那杜|索羅門|斐濟|印尼|土耳其|沙烏地|埃及|巴西|阿根廷|加拿大|澳洲|紐西蘭|新加坡|巴基斯坦|阿富汗|敘利亞|黎巴嫩|古巴|墨西哥|委內瑞拉|智利|秘魯|肯亞|奈及利亞|南非|蘇丹|葉門|伊拉克|緬甸|柬埔寨|寮國|尼泊爾|孟加拉|斯里蘭卡")  # R154: a country list, so a foreign quake or a foreign bank has a foreign label; R162 (N1): only a new topic reads it
 
 JURS = [  # id, government actor id, actor name, place terms
     ("jur-63000000", "ac-taipei-city-government", "臺北市政府", ["臺北市", "台北市", "北市", "臺北", "台北"]),
@@ -337,6 +352,28 @@ def issue_name(name):
         and not FACILITY_EVENT.search(name) and not NEGATED_PREDICATE.search(name)
 
 
+ISSUE_NEIGHBOR = re.compile(ISSUE_HEAD.pattern[:-1])  # ISSUE_HEAD without its end anchor
+
+
+def law_object_name(name, key, titles):
+    """R384.7: a name that ends with a generic act noun (校事會議) has no issue noun in front of it, so issue_name fails it. It is still the name of
+    an issue when the key stands directly before or after an issue noun (改革校事會議, 校事會議修正草案, 校事會議爭議) in LAW_OBJECT_SHARE of its titles.
+    The core before the act noun has 2 characters or more. A verb lead, a sentence word, a facility or a negated verb still fail."""
+    core = strip_generic_act(name)
+    if core == name or not core[1:] or not key or not titles:
+        return False
+    if VERB_LEAD.search(name) or SENTENCE_WORD.search(name) or FACILITY_EVENT.search(name) or NEGATED_PREDICATE.search(name):
+        return False
+    k = re.escape(key)
+    near = re.compile(k + ISSUE_NEIGHBOR.pattern + "|" + ISSUE_NEIGHBOR.pattern + k)
+    return sum(1 for t in titles if near.search(t)) >= LAW_OBJECT_SHARE * len(titles)
+
+
+def issue_name_ok(name, key, titles):
+    """R154, R162, R384.7: the name of a new topic ends with an issue noun, or it is a law object (law_object_name)."""
+    return issue_name(name) or law_object_name(name, key, titles)
+
+
 SPEECH_BEFORE = re.compile(r"(?:喊|高喊|喊出|主張|倡議|倡導|提倡|倡|直呼|宣稱|標榜)[「『]?$")  # R162: a verb that brings a slogan
 
 
@@ -557,8 +594,11 @@ TAIWAN_WORD = re.compile(r"台灣|臺灣|全台|[對近襲侵離登赴朝向]台
 NATIONAL_ROAD = re.compile(r"台\d{1,2}線|國道\d|省道")
 
 
+HOME_PREFIX = "我本全各外該貴民兩多友"  # 我國, 本國, 全國, 各國, 外國, 中華民國: a word of Taiwan or of no one state, not a country
 PLACE_BEFORE_BODY = (r"(?:" + FOREIGN_NEW.pattern + r"|[\u4e00-\u9fff]{1,3}(?:共和國|王國|聯邦|公國)"  # a place word: a country of the list, a state form, or the end of a transliterated name
-                     r"|[\u4e00-\u9fff]{1,3}(?:蘭|亞|牙|坦|曼|麥|丹|威|瓦|維|尼|魯|哥|宛|克|牙利|大利|地利|利時))")
+                     r"|[\u4e00-\u9fff]{1,3}(?:蘭|亞|牙|坦|曼|麥|丹|威|瓦|維|尼|魯|哥|宛|克|牙利|大利|地利|利時|馬|拉|斯|圭|爾)"
+                     r"|(?:(?![" + HOME_PREFIX + r"])[\u4e00-\u9fff]){1,2}國"  # R384.2: the form "X國" is a country when X is no word of Taiwan
+                     r"|希臘|瑞典|瑞士|冰島|海地|盧森堡|蒙古|約旦|卡達|科威特|汶萊|迦納|剛果|巴林|烏干達)")  # R384.2: names that the class rule does not reach
 FOREIGN_GENERIC = re.compile(PLACE_BEFORE_BODY + r"(?:" + GENERIC_BODY.pattern + r")")  # R363.3: 波蘭憲法法庭, 匈牙利憲法法庭, 立陶宛外交部
 
 
@@ -854,7 +894,7 @@ def school_name_only(title):
 
 
 CAMPAIGN_ACT = re.compile(r"站台|助選|後援會|辯論會|電視辯論|選市長|選縣長|選議員|競選看板|競選總部")  # R154 (PRD 4.5 item 5): an act of a campaign
-ATTACK = re.compile(r"酸|嗆|轟|開砲|反擊|回擊|槓|打臉|嘲|諷|反酸|批|指控|抹黑|攻擊|霸凌")  # R154: a candidate attacks or answers another
+ATTACK = re.compile(r"酸|嗆|轟|開砲|反擊|回擊|槓|打臉|嘲|諷|反酸|批|指控|抹黑|攻擊|霸凌|下台")  # R154: a candidate attacks or answers another
 CANDIDATE_NAME = re.compile(r"([\u4e00-\u9fff]{3})(?:宣布|表態|確定|登記|成立競辦|爭取|角逐)?(?:參選|競選|連任|角逐|出線|選市長|選縣長)|(?:提名|候選人|參選人)([\u4e00-\u9fff]{3})")
 _CANDIDATES = frozenset()
 
@@ -876,11 +916,23 @@ def set_candidates(names):
 CAMPAIGN_CLASS = re.compile(r"助講|宣講|競辦|競選辦公室|競總|點名.{0,4}候選人|候選人.{0,2}表態|參選人.{0,2}表態|陣營.{0,3}(?:交鋒|攻防|隔空|互嗆|對槓|喊話)")  # R363.4: the classes 助講, 競辦, 候選人表態, 陣營交鋒
 
 
+CAMPAIGN_SIDE = re.compile(r"陣營質疑|對手陣營|[藍綠白]營?選將|[藍綠白]營?選將.{0,4}喊")  # R384.4: a side of a campaign speaks
+CANDIDATE_DUEL = re.compile(r"交鋒|反問|攻防|選情|猛打|下台負責|要求.{0,8}下台")  # R384.4: with a named candidate these words judge a candidate
+CHANGE_SLOGAN = re.compile(r"換人做")
+PARTY_WORD = re.compile(r"國民黨|民進黨|民眾黨|[藍綠白]營|[藍綠白]選將|[藍綠白]委|[藍綠白]議員")
+
+
 def candidate_talk(title):
     """R154 (PRD 4.5 item 5): a title with a campaign act, or with two candidates and an attack word, judges candidates.
     R363.4: the campaign classes 助講, 競辦, 候選人表態 and 陣營交鋒 count too. A policy statement of an official with no campaign word stays."""
     named = sum(1 for n in _CANDIDATES if n in title)
-    return bool(CAMPAIGN_ACT.search(title)) or bool(CAMPAIGN_CLASS.search(title)) or (named > 1 and bool(ATTACK.search(title)))
+    if CAMPAIGN_ACT.search(title) or CAMPAIGN_CLASS.search(title) or CAMPAIGN_SIDE.search(title) or (named > 1 and ATTACK.search(title)):
+        return True
+    # R384.4: 交鋒 and 反問 judge a candidate; 換人做 is a slogan of a side, not of a firm
+    return bool((named and CANDIDATE_DUEL.search(title)) or (CHANGE_SLOGAN.search(title) and (named or PARTY_WORD.search(title))))
+
+
+tp.is_campaign_title = candidate_talk  # R384.5: the display cap of topics.py gives a campaign title no priority
 
 
 def drop_candidate_talk(members, keep_ids=frozenset()):
@@ -1431,7 +1483,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
     name = known["name"] if known else tp.display_name(key, [s["title"] for s in seeds])
     if not noun_phrase_name(name) or generic_name(name):
         return "rejected_name_quality", None
-    if not known and not (issue_name(name) and new_name_ok(key, titles)):
+    if not known and not (issue_name_ok(name, key, titles) and new_name_ok(key, titles)):
         return "rejected_issue_name", None
     if not known and mf is not None and theme_word(key, mf.months):
         return "rejected_keyword_bundle", None  # R162: the key is a theme word that joins many cases
