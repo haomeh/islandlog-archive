@@ -67,5 +67,32 @@ class ForeignCountryTest(unittest.TestCase):
         self.assertFalse(tf.FOREIGN_NEW.search("韓國瑜宣布"))
 
 
+class ServeTermTest(unittest.TestCase):
+    """R384.3: 服刑 makes a case title only when the title holds no law or act word. The neutral 少事法 title returns."""
+
+    def test_a_prison_title_with_no_law_word_is_still_a_case(self):
+        for title in ("統促黨幹部入獄服刑", "某某某服刑期滿出獄", "詐團首腦服刑中再被訴"):
+            self.assertTrue(tf.CASE_TITLE.search(title), title)
+
+    def test_a_bill_or_act_title_with_the_word_is_no_case(self):
+        for title in ("少事法修正草案 行政院：服刑少年另設矯正機構", "政院通過少年事件處理法 虞犯服刑條文修正", "修法縮短假釋門檻 服刑滿一年可申請",
+                      "矯正署：服刑人權益保障條例草案送立院", "《受刑人更生保護法》三讀 出獄服刑人可申請補助"):
+            self.assertFalse(tf.CASE_TITLE.search(title), title)
+
+    def test_other_case_words_are_not_cleared_by_a_law_word(self):
+        self.assertTrue(tf.CASE_TITLE.search("修法討論中 某某某判3年 入獄"))
+        self.assertTrue(tf.CASE_TITLE.search("毒品條例 某某某遭起訴"))
+
+    def test_a_court_or_justice_ministry_word_is_no_law_word(self):
+        self.assertTrue(tf.CASE_TITLE.search("法院判決確定 某某某今入獄服刑"))
+        self.assertTrue(tf.CASE_TITLE.search("法務部：某某某移監服刑"))
+
+    def test_the_bill_title_stays_in_the_topic_list(self):
+        from tools.newsfetch.test_topics_full import item
+        titles = ["少事法 行政院通過修正草案", "少事法 服刑少年另設矯正機構條文", "少事法 立院一讀"]
+        members = [item(f"b{i}", t, "2026-10-24", f"報{i}") for i, t in enumerate(titles)]
+        self.assertEqual(len(tf.split_cases(members)), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

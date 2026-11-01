@@ -67,7 +67,22 @@ ENTERTAINMENT = re.compile(r"演唱會|歌手|藝人|女星|男星|偶像|專輯
 ELECTION_LEGAL = re.compile(r"駁回|裁定|判決|高行|行政法院|法院|當選無效|選舉訴訟")  # R112.4: a court ruling on a candidacy is not campaign content
 LAW_PASSED = re.compile(r"三讀|條例》|修正草案|修法")  # R112.4: a law passed by the legislature is not sensitive by its subject alone
 CONSUMER = re.compile(r"優惠|折扣|現省|省[\d百千萬]|半價|折抵|票價|抵用|買一送一")  # R112.5: a discount is a consumer title, not entertainment news
-CASE_TITLE = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄|搶劫|槍殺|入獄|服刑|徒刑|判\d+(?:年|月|個月)")  # R363.5: a sentence or a prison title of a person. R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
+_CASE_WORDS = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄|搶劫|槍殺|入獄|徒刑|判\d+(?:年|月|個月)")  # R363.5: a sentence or a prison title of a person. R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
+_SERVE = re.compile(r"服刑")
+LAW_TITLE = re.compile(r"法案|草案|修法|條例|修正案|三讀|《[^》]*法》|少年事件處理法|少事法|[\u4e00-\u9fff]{1,6}法(?=修正|草案|三讀|通過|條文|增訂|研議)")  # R384.3: a law or an act word
+
+
+class _CaseTitle:
+    """R384.3: _CASE_WORDS make a case title. 服刑 does too, unless the title holds a law or an act word (a bill about people who serve a term)."""
+
+    pattern = _CASE_WORDS.pattern + "|服刑"
+
+    @staticmethod
+    def search(title):
+        return _CASE_WORDS.search(title) or (_SERVE.search(title) if not LAW_TITLE.search(title) else None)
+
+
+CASE_TITLE = _CaseTitle()
 FOREIGN_ONLY = re.compile(r"美國|川普|中國|大陸|日本|南韓|北韓|俄羅斯|烏克蘭|伊朗|以色列|歐盟|英國|德國|法國|印度|菲律賓|越南|泰國|馬來西亞")
 FOREIGN_NEW = re.compile(FOREIGN_ONLY.pattern
                          + r"|韓國(?!瑜)|萬那杜|索羅門|斐濟|印尼|土耳其|沙烏地|埃及|巴西|阿根廷|加拿大|澳洲|紐西蘭|新加坡|巴基斯坦|阿富汗|敘利亞|黎巴嫩|古巴|墨西哥|委內瑞拉|智利|秘魯|肯亞|奈及利亞|南非|蘇丹|葉門|伊拉克|緬甸|柬埔寨|寮國|尼泊爾|孟加拉|斯里蘭卡")  # R154: a country list, so a foreign quake or a foreign bank has a foreign label; R162 (N1): only a new topic reads it
