@@ -53,6 +53,7 @@ CLAR = re.compile(r"澄清|駁斥|更正|嚴正|假訊息|不實|闢謠|否認|�
 POST = re.compile(r"臉書|PO文|PO出|發文|貼文|FB|IG|Threads|社群平台|直播|YouTube|曬出|曬")
 PLACE = re.compile(r"[臺台]北|新北|桃園|[臺台]中|[臺台]南|高雄|基隆|新竹|苗栗|彰化|南投|雲林|嘉義|屏東|宜蘭|花蓮|[臺台]東|澎湖|金門|馬祖|連江|北市|中市|南市|高市|竹市|竹縣")
 CJK_RUN = re.compile(r"[一-鿿]+")
+MAX_MEMO = 1 << 20  # entries of the GramIndex memo
 GRAM_TEXT = re.compile(r"[一-鿿]{2,8}")  # the text of a gram: the same sizes as _grams
 # Government actors named in a title: local offices (LOCAL_GOV) and central bodies (CENTRAL: regex, actor id, name, type).
 LOCAL_GOV = re.compile(r"市府|縣府|市政府|縣政府|市長|縣長|議會|議員|局長|衛生局|教育局|環保局|消防局|交通局|社會局|工務局|公園處|鄉公所|鎮公所|區公所")
@@ -251,6 +252,8 @@ class GramIndex:
                 texts = self.texts
                 n = sum(1 for a, b in spans for t in rare[a:b] if g in texts[t])
         if ranges is None:
+            if len(self._total) >= MAX_MEMO:  # the memo holds about 100 MB at this size
+                self._total.clear()
             self._total[g] = n
         return n
 
