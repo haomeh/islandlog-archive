@@ -126,5 +126,54 @@ class ReadClustersTest(unittest.TestCase):
         self.assertEqual(urls(got), urls(data))
 
 
+def merge_old(items):
+    merged = {}
+    for key, lo, hi, its in items:
+        slot = None
+        for (k, a, b), v in merged.items():
+            if k == key and a <= hi and lo <= b:
+                slot = (k, a, b)
+                break
+        if slot:
+            v = merged.pop(slot)
+            merged[(key, min(lo, slot[1]), max(hi, slot[2]))] = v + its
+        else:
+            merged[(key, lo, hi)] = its
+    return merged
+
+
+def merge_new(items):  # the loop of run(), with the slots index
+    merged, slots = {}, {}
+    for key, lo, hi, its in items:
+        slot = None
+        for k, a, b in slots.get(key, ()):
+            if a <= hi and lo <= b:
+                slot = (k, a, b)
+                break
+        if slot:
+            v = merged.pop(slot)
+            slots[key].remove(slot)
+            new_slot = (key, min(lo, slot[1]), max(hi, slot[2]))
+            if new_slot not in merged:
+                slots[key].append(new_slot)
+            merged[new_slot] = v + its
+        else:
+            merged[(key, lo, hi)] = its
+            slots.setdefault(key, []).append((key, lo, hi))
+    return merged
+
+
+class MergeSlotsTest(unittest.TestCase):
+    def test_the_slot_index_gives_the_same_merged_dict_in_the_same_order(self):
+        rng = random.Random(3)
+        for keys, spread in [(3, 40), (8, 400), (60, 200)]:
+            items = []
+            for i in range(600):
+                lo = date(2026, 4, 1) + timedelta(days=rng.randint(0, spread))
+                items.append((f"k{rng.randint(0, keys)}", lo, lo + timedelta(days=rng.randint(0, 6)), [i]))
+            old, new = merge_old(items), merge_new(items)
+            self.assertEqual(list(old.items()), list(new.items()))
+
+
 if __name__ == "__main__":
     unittest.main()

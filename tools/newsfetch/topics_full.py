@@ -1684,6 +1684,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
     stats["seed_clusters"] = len(raw)
     # 2. keys and merge
     merged = {}
+    slots = {}  # T82: key -> its slots in merged, in the order of merged; the search does not read the other keys
     for urls in raw:
         its = sorted((by_url[u] for u in urls), key=lambda j: (j["published_on"], j["url"]))
         lo = _day(its[0]["published_on"]) - timedelta(days=tp.WINDOW_BEFORE)
@@ -1694,15 +1695,20 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             fail("rejected_no_key", urls)
             continue
         slot = None
-        for (k, a, b), v in merged.items():
-            if k == key and a <= hi and lo <= b:
+        for k, a, b in slots.get(key, ()):  # the slots of this key in the order of merged
+            if a <= hi and lo <= b:
                 slot = (k, a, b)
                 break
         if slot:
             v = merged.pop(slot)
-            merged[(key, min(lo, slot[1]), max(hi, slot[2]))] = v + its
+            slots[key].remove(slot)
+            new_slot = (key, min(lo, slot[1]), max(hi, slot[2]))
+            if new_slot not in merged:
+                slots[key].append(new_slot)
+            merged[new_slot] = v + its
         else:
             merged[(key, lo, hi)] = its
+            slots.setdefault(key, []).append((key, lo, hi))
     stats["merged_topics"] = len(merged)
     # 3. existing events
     taken = published_source_urls(root)
