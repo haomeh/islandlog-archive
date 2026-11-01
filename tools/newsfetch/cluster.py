@@ -38,6 +38,7 @@ import logging
 import re
 import sys
 import unicodedata
+from array import array
 from bisect import bisect_left
 from collections import Counter
 from datetime import date, timedelta
@@ -45,6 +46,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 LOGGER = logging.getLogger(__name__)
+NO_TOPICS = frozenset()
 
 SAME_CONTENT_THRESHOLD = 0.55
 TOPIC_THRESHOLD = 0.25
@@ -132,15 +134,16 @@ def _source_group(item):
 
 
 class _Prepared:
-    """An item with its day, bigrams and clarification flag computed once."""
-    __slots__ = ("item", "day", "bigrams", "order", "has_word",
+    """An item with its day, normalized title and clarification flag computed once.
+    T82b: the bigrams are made when the item is placed in a group, not held for every item (norm is the short text; it is dropped there)."""
+    __slots__ = ("item", "day", "norm", "order", "has_word",
                  "source_group", "routine", "is_clar", "legacy", "negative",
                  "clarification", "sensitive", "topics")
 
     def __init__(self, item):
         self.item = item
         self.day = _day(item)
-        self.bigrams = _bigrams_of(normalize_title(item["title"]))
+        self.norm = normalize_title(item["title"])
         self.order = (self.day, _publisher_rank(item), item["url"])
         self.has_word = any(word in item["title"] for word in CLARIFICATION_WORDS)
         self.source_group = _source_group(item)
@@ -149,7 +152,7 @@ class _Prepared:
         self.clarification = item.get("clarification") is True
         self.sensitive = item.get("sensitive") is True
         topics = item.get("topics")
-        self.topics = {t for t in topics if isinstance(t, str)} if isinstance(topics, list) else set()
+        self.topics = (frozenset(t for t in topics if isinstance(t, str)) if isinstance(topics, list) else NO_TOPICS)
         self.legacy = "clarification" not in item
         self.is_clar = self.clarification and (self.source_group == "official" or self.has_word)
 
@@ -162,7 +165,10 @@ class _Index:
 
     def add(self, node_id, grams):
         for gram in grams:
-            self.postings.setdefault(gram, []).append(node_id)
+            posting = self.postings.get(gram)
+            if posting is None:
+                posting = self.postings[gram] = array("I")  # T82b: 4 bytes an entry; a list holds a pointer and an int object
+            posting.append(node_id)
 
     def shared(self, grams, first=0):
         """Count, for each node with id >= first, the grams that it shares. The posting lists are in the order of the ids (T82)."""
@@ -187,38 +193,49 @@ def _prepare(items):
     return prepared
 
 
+def _interned_bigrams(normalized, table):
+    """The bigrams of a title as a set whose strings are shared with every other title (T82b: one string object for each distinct bigram)."""
+    return {table.setdefault(gram, gram) for gram in _bigrams_of(normalized)}
+
+
 def _report_groups(prepared):
-    groups = []  # each: {"rep": _Prepared, "members": [_Prepared]}
+    groups = []  # each: {"rep": _Prepared, "members": [_Prepared], "n": bigrams of rep, "bigrams": union of the members}
     rep_days = []  # the day of each group's representative; the entries come in day order, so the list is sorted
     indexes = {}
+    table = {}
+    closed = 0
     for entry in prepared:
         index = indexes.setdefault((entry.source_group, entry.is_clar), _Index())
+        grams = _interned_bigrams(entry.norm, table)
+        entry.norm = None
         best, best_score = None, 0.0
         # T82: a group whose representative is more than SAME_CONTENT_DAYS before the entry is skipped below, so it is not counted at all.
         first = bisect_left(rep_days, entry.day - timedelta(days=SAME_CONTENT_DAYS))
-        for group_id, shared in index.shared(entry.bigrams, first).items():
+        for group_id in range(closed, first):  # T82b: no later entry joins these groups; the union of the members is final
+            groups[group_id]["bigrams"] = tuple(groups[group_id]["bigrams"])
+        closed = max(closed, first)
+        for group_id, shared in index.shared(grams, first).items():
             rep = groups[group_id]["rep"]
             if abs((entry.day - rep.day).days) > SAME_CONTENT_DAYS:
                 continue
             if (entry.source_group == "news" and entry.legacy and entry.has_word
                     and not rep.has_word):
                 continue
-            score = shared / (len(entry.bigrams) + len(rep.bigrams) - shared)
+            score = shared / (len(grams) + groups[group_id]["n"] - shared)
             if score >= SAME_CONTENT_THRESHOLD and (score > best_score or (
                     score == best_score and group_id < best)):
                 best, best_score = group_id, score
         if best is None:
-            index.add(len(groups), entry.bigrams)
+            index.add(len(groups), grams)
             rep_days.append(entry.day)
-            groups.append({"rep": entry, "members": [entry]})
+            groups.append({"rep": entry, "members": [entry], "n": len(grams), "bigrams": grams})
         else:
             groups[best]["members"].append(entry)
+            groups[best]["bigrams"] |= grams
+    for group in groups[closed:]:
+        group["bigrams"] = tuple(group["bigrams"])
     for group in groups:
         group["clar"] = group["rep"].is_clar
-        group["bigrams"] = set().union(*(member.bigrams for member in group["members"]))
-    for group in groups:  # T82: the member bigrams are not read again; the group keeps the union
-        for member in group["members"]:
-            member.bigrams = ()
     return groups
 
 
