@@ -650,10 +650,27 @@ def _read_event(path):
     return yaml.safe_load(front), body
 
 
+HELD = {}  # R363.2: event id -> record of an event with review.sensitive true; a run changes no such event (CONTRIBUTING 5A.7, R336.3)
+
+
+def set_held(root):
+    """Reads the events under `root` once at the start of a run. None clears the list."""
+    HELD.clear()
+    if root is None:
+        return
+    for p in sorted((Path(root) / "events").glob("*/ev-*.md")):
+        doc, _ = _read_event(p)
+        if (doc.get("review") or {}).get("sensitive") is True:
+            HELD[doc["id"]] = {"id": doc["id"], "title": doc.get("title", ""), "gate": None,
+                               "in_file": sorted(set(re.findall(r"src-[0-9a-z-]+", p.read_text(encoding="utf-8")))), "candidates": []}
+
+
 def _write_event(path, doc, body):
     import yaml
     if tp.is_enriched(doc.get("id")):
         return  # R324.2: the last stop for every write of an event file
+    if doc.get("id") in HELD:
+        return  # R363.2: a sensitive event stays as it is
     path.write_text("---\n" + yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=1000) + "---\n" + body,
                     encoding="utf-8")
 
@@ -1150,6 +1167,8 @@ def withdraw_topic(root, event_id, gate, ref="HEAD", today=None, note=None):
     path = root / "events" / year / f"{event_id}.md"
     if tp.is_enriched(event_id):
         return path  # R324.2: no restore, no status change, no record
+    if event_id in HELD:
+        return path  # R363.2: no status change, no record
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_event_text(root, event_id, ref), encoding="utf-8")
@@ -1386,6 +1405,9 @@ def write_topic(root, ev, seed, today):
     if tp.is_enriched(ev["id"]):
         return None  # R324.2: a candidate that would rebuild a listed event is skipped
     used = list(ev["used"].values())
+    if ev["id"] in HELD:  # R363.2: the file and its sources stay; the candidate members go to the report
+        HELD[ev["id"]]["candidates"] = [{"id": tp.src_id(it, tp.HOSTS), "title": it["title"]} for it in used]
+        return None
     ev["review"]["sensitive"] = "misconduct" in seed["controversy_types"] or has_sensitive_term([it["title"] for it in used])
     ensure_actor_files(root, [a for a, _ in ev["actors"]])
     prior = prior_event(root, ev["id"])
@@ -1566,6 +1588,7 @@ FRAGMENT_DEFER = ("rejected_name_quality", "rejected_foreign")  # R329.1: a frag
 def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve_withdraw=None):
     enriched = tp.load_enriched_topics()  # R324.2: a list that cannot be read stops the run before any write
     tp.ENRICHED_SKIPPED.clear()
+    set_held(root)  # R363.2
     removed = load_removed_sources(REMOVED_SOURCES)  # R256: a source that a ruling removed never comes back; it is dropped before clustering
     kept = [it for it in corpus if tp.src_id(it, tp.HOSTS) not in removed]
     dropped = len(corpus) - len(kept)
@@ -1781,6 +1804,10 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             covered.add(doc["id"])
             regate_keys[doc["id"]] = rec["key"]
     failing = {pid: gate for pid, gate in failed.items() if pid not in covered}
+    for pid, gate in failing.items():
+        if pid in HELD:
+            HELD[pid]["gate"] = gate  # R363.2: a sensitive event that fails a gate is held for the user, not withdrawn
+    failing = {pid: gate for pid, gate in failing.items() if pid not in HELD}
     kept_withdrawn = {pid: gate for pid, gate in failing.items() if prior_event(root, pid)[0] == "withdrawn"}
     day = today or taipei_day()
     old_state = read_topic_state(root)
@@ -1809,9 +1836,12 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
     links = apply_subtopic_links(root, keys)
     stats["part_of_links"] = len(links)
     stats["sensitive_from_sources"] = len(refresh_sensitive(root))
+    held = [dict(h, candidates=[dict(c, in_file=c["id"] in h["in_file"]) for c in h["candidates"]]) for h in HELD.values() if h["candidates"] or h["gate"]]
+    stats["held_sensitive"] = len(held)
     Path(report_path).write_text(json.dumps({"stats": stats, "published": published, "part_of": links, "withdrawn": withdrawn, "withdraw_blocked": blocked, "regate": regated,
-                                "withdraw_blocked_reason": blocked_reason, "approval_ignored": approval_ignored}, ensure_ascii=False, indent=1),
+                                "withdraw_blocked_reason": blocked_reason, "approval_ignored": approval_ignored, "held_sensitive": held}, ensure_ascii=False, indent=1),
                                  encoding="utf-8")
+    HELD.clear()
     return stats, published, out_seeds
 
 
@@ -1856,6 +1886,8 @@ def refresh_sensitive(root, seeds_path=None):
         review = doc.get("review", {})
         if not str(review.get("reason", "")).startswith(SYSTEM_REASON):
             continue
+        if doc["id"] in HELD:
+            continue  # R363.2
         cited = set(re.findall(r"src-[0-9a-z-]+", p.read_text(encoding="utf-8")))
         want = (seed_flags.get(doc["id"], False) or "misconduct" in doc.get("controversy_types", [])
                 or tp.has_sensitive_term([t for s in cited for t in texts.get(s, [])]))

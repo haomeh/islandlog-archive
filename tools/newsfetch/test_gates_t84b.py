@@ -1,11 +1,13 @@
 """T84b tests (R363). No test or data here holds the name of a minor or of a victim."""
 
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from tools.newsfetch import run_report
+from tools.newsfetch import test_topics_full as base
 from tools.newsfetch import topics as tp
 from tools.newsfetch import topics_full as tf
 
@@ -47,6 +49,80 @@ class RemovedSourceVictimTest(unittest.TestCase):
         self.assertIn("某某某父親籲公聽會", row["flagged_titles"])
         self.assertNotIn("三讀", row["flagged_titles"])
         self.assertIn("flagged_titles", run_report.NEW_COLUMNS)
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "the writer needs PyYAML")
+class HeldSensitiveTest(base.RunHelper, unittest.TestCase):
+    """R363.2: a run does not change an event with review.sensitive true. The file stays byte-equal and the report lists it."""
+
+    def make_sensitive(self, root):
+        path = root / "events/2026" / f"{self.EVENT_ID}.md"
+        path.write_text(path.read_text(encoding="utf-8").replace("sensitive: false", "sensitive: true"), encoding="utf-8")
+        return path
+
+    def report(self, root):
+        return json.loads((root / "report.json").read_text(encoding="utf-8"))
+
+    def test_a_run_that_would_rewrite_a_sensitive_event_keeps_the_file_byte_equal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=True, today="2026-10-25")
+            path = self.make_sensitive(root)
+            before = path.read_bytes()
+            stats, _ = self.run_in(root, second_news_publisher=True, today="2026-10-26")
+            self.assertEqual(path.read_bytes(), before)
+            self.assertEqual(stats["held_sensitive"], 1)
+
+    def test_the_report_lists_the_held_event_and_its_candidate_members(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=True, today="2026-10-25")
+            self.make_sensitive(root)
+            self.run_in(root, second_news_publisher=True, today="2026-10-26")
+            held = self.report(root)["held_sensitive"]
+            self.assertEqual([h["id"] for h in held], [self.EVENT_ID])
+            self.assertGreaterEqual(len(held[0]["candidates"]), 2)
+            self.assertTrue(all(c["id"].startswith("src-") and c["title"] for c in held[0]["candidates"]))
+
+    def test_a_sensitive_event_that_fails_a_gate_is_not_withdrawn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=False, today="2026-10-25")
+            path = self.make_sensitive(root)
+            before = path.read_bytes()
+            stats, _ = self.run_in(root, second_news_publisher=False, today="2026-10-26", approved={self.EVENT_ID})
+            self.assertEqual(path.read_bytes(), before)
+            self.assertEqual(stats["withdrawn"], 0)
+            self.assertEqual(self.records(root), [])
+
+    def test_a_sensitive_event_flag_is_not_refreshed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=True, today="2026-10-25")
+            path = self.make_sensitive(root)
+            before = path.read_bytes()
+            tf.set_held(root)
+            self.assertEqual(tf.refresh_sensitive(root), [])
+            self.assertEqual(path.read_bytes(), before)
+            tf.set_held(None)
+
+    def test_an_event_that_is_not_sensitive_is_rewritten_as_before(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.run_in(root, second_news_publisher=True, today="2026-10-25")
+            path = root / "events/2026" / f"{self.EVENT_ID}.md"
+            before = path.read_bytes()
+            stats, _ = self.run_in(root, second_news_publisher=True, today="2026-10-26")
+            self.assertNotEqual(path.read_bytes(), before)
+            self.assertEqual(stats["held_sensitive"], 0)
+
+    def test_the_tsv_lists_the_event_and_its_candidates(self):
+        report = {"held_sensitive": [{"id": "ev-1", "title": "甲", "gate": None, "in_file": 2,
+                                      "candidates": [{"id": "src-1", "title": "標題一", "in_file": True}, {"id": "src-2", "title": "標題二", "in_file": False}]}]}
+        rows = run_report.held_rows(report)
+        self.assertEqual([r["candidate_id"] for r in rows], ["src-1", "src-2"])
+        self.assertEqual([r["in_file"] for r in rows], ["yes", "no"])
+        self.assertEqual(run_report.HELD_COLUMNS[:2], ["id", "title"])
 
 
 if __name__ == "__main__":

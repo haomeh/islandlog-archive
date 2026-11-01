@@ -6,7 +6,7 @@ Usage: python3 -m tools.newsfetch.run_report BASE_ROOT NEW_ROOT REPORT.json OUT_
 CORPUS.jsonl lets the candidate-attack check know the candidates of the corpus (as in the run).
 
 Reads the archive tree before the run (BASE_ROOT, for example a git archive of the base commit) and after it (NEW_ROOT), and the report JSON of
-topics_full. Writes OUT_DIR/new-topics.tsv, changed.tsv and regate.tsv. It reads files only and changes nothing in the two trees.
+topics_full. Writes OUT_DIR/new-topics.tsv, changed.tsv, regate.tsv and held-sensitive.tsv (R363.2). It reads files only and changes nothing in the two trees.
 changed.tsv lists each event that changed: the title before and after with a rename flag, the members before and after, the added and
 removed members with their titles, the latest news date before and after (a date that goes back is flagged), and a flag for each added
 member that fails a check: no_key (the title lacks the event name), foreign_body (only a foreign body), candidate_attack, case (an arrest,
@@ -123,6 +123,20 @@ def regate_rows(report):
              "members_before": r.get("before"), "members_after": r.get("after"), "removed": len(r.get("removed") or [])} for r in report.get("regate", [])]
 
 
+HELD_COLUMNS = ["id", "title", "gate", "members_in_file", "candidates", "candidate_id", "in_file", "candidate_title"]
+
+
+def held_rows(report):
+    """R363.2: one row for each candidate member of an event with review.sensitive true that the run left as it is."""
+    rows = []
+    for h in report.get("held_sensitive", []):
+        base = {"id": h["id"], "title": h.get("title", ""), "gate": h.get("gate") or "", "members_in_file": len(h.get("in_file", [])) if isinstance(h.get("in_file"), list) else h.get("in_file", 0),
+                "candidates": len(h.get("candidates", []))}
+        for c in h.get("candidates") or [{}]:
+            rows.append(dict(base, candidate_id=c.get("id", ""), in_file="yes" if c.get("in_file") else ("no" if c else ""), candidate_title=c.get("title", "")))
+    return rows
+
+
 def write_tsv(path, columns, rows):
     def cell(v):
         return str(v).replace("\t", " ").replace("\n", " ")
@@ -141,6 +155,7 @@ def main(argv):
     write_tsv(out / "changed.tsv", CHANGED_COLUMNS, changed_rows(before, after))
     write_tsv(out / "new-topics.tsv", NEW_COLUMNS, new_rows(before, after))
     write_tsv(out / "regate.tsv", REGATE_COLUMNS, regate_rows(report))
+    write_tsv(out / "held-sensitive.tsv", HELD_COLUMNS, held_rows(report))
     return 0
 
 
