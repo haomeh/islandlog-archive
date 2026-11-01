@@ -218,5 +218,66 @@ class CriminalCaseTest(unittest.TestCase):
         self.assertEqual(len(tf.split_cases(self.members(titles))), 1)
 
 
+def _group(urls_titles, kind="report"):
+    items = [{"url": u, "title": t, "published_on": "2026-05-05", "publisher": f"報{i}", "source_class": "news", "fetched_on": "2026-05-05T12:00:00Z"}
+             for i, (u, t) in enumerate(urls_titles)]
+    return {"kind": kind, "items": items, "urls": [i["url"] for i in items]}
+
+
+class DisplayCapTest(unittest.TestCase):
+    """R363.6 (G4): the display cap keeps first the groups with a title that holds the event key, then the bigger groups. It counts what it cuts."""
+
+    def build(self, groups, key="淡江大橋"):
+        seed = {"event_id": "ev-20260504-x", "seed_urls": [], "_keys": [key], "_name": key, "jurisdiction_names": [], "jurisdiction_ids": ["jur-tw"],
+                "gov_levels": [], "controversy_types": [], "policy_domains": [], "actors": []}
+        items = [i for g in groups for i in g["items"]]
+        with mock.patch.object(tp, "group_items", lambda its: groups), mock.patch.object(tp, "MAX_GROUPS", 2):
+            return tp.build_event(seed, items, {}, items=items)
+
+    def test_a_group_with_the_key_ranks_before_a_bigger_group_without_it(self):
+        big = _group([("https://x.example/a1", "小虎鯨擱淺 海巡搶救"), ("https://x.example/a2", "小虎鯨擱淺 動保搶救"), ("https://x.example/a3", "鯨豚擱淺 安置")])
+        key1 = _group([("https://x.example/k1", "淡江大橋通車 典禮")])
+        key2 = _group([("https://x.example/k2", "淡江大橋機車道 設計")])
+        ev = self.build([big, key1, key2])
+        self.assertEqual(sorted(ev["used"]), ["https://x.example/k1", "https://x.example/k2"])
+
+    def test_among_groups_with_the_key_the_bigger_group_ranks_first(self):
+        small = _group([("https://x.example/s1", "淡江大橋 小事")])
+        big = _group([("https://x.example/b1", "淡江大橋 大事一"), ("https://x.example/b2", "淡江大橋 大事二")])
+        mid = _group([("https://x.example/m1", "淡江大橋 中事一"), ("https://x.example/m2", "淡江大橋 中事二")])
+        ev = self.build([small, big, mid])
+        self.assertEqual(sorted(ev["used"]), ["https://x.example/b1", "https://x.example/b2", "https://x.example/m1", "https://x.example/m2"])
+
+    def test_the_event_counts_the_items_that_the_cap_cuts(self):
+        a = _group([("https://x.example/a1", "淡江大橋 甲")])
+        b = _group([("https://x.example/b1", "淡江大橋 乙")])
+        c = _group([("https://x.example/c1", "淡江大橋 丙")])
+        ev = self.build([a, b, c])
+        self.assertEqual((len(ev["used"]), ev["capped"]), (2, 1))
+
+
+class OneStoryBranchTest(unittest.TestCase):
+    """R363.6 (G4): the key names one story (淡江大橋 + 通車). A title with the key but with no anchor and no companion word is another story (a whale, a model, a lecture)."""
+
+    def corpus(self):
+        core = [f"淡江大橋通車第{n}報 新北市府未受邀祈福典禮 公路局回應" for n in range(24)]
+        off = ["淡江大橋下4小虎鯨擱淺 海巡動保搶救安置", "不只淡江大橋 札哈哈蒂古根漢美術館留模型", "鋼結構建材可回收 中龍鋼鐵邀淡江大橋團隊研討"]
+        filler = [f"無關新聞{n}號 氣象消息" for n in range(60)] + [f"淡江大橋周邊商圈第{n}號 美食消息" for n in range(100)]  # the key has other uses: the key alone names no issue
+        rows = []
+        for i, t in enumerate(core + off + filler):
+            rows.append({"url": f"https://x.example/{i}", "title": t, "published_on": "2026-05-05", "publisher": f"報{i % 7}", "source_class": "news",
+                         "fetched_on": "2026-05-05T12:00:00Z"})
+        return rows, core, off
+
+    def test_the_off_story_titles_leave_and_the_story_stays(self):
+        rows, core, off = self.corpus()
+        df = tp.document_frequency(rows)
+        cands = [r for r in rows if "淡江大橋" in r["title"] and "商圈" not in r["title"]]
+        kept = {c["title"] for c in tp.anchored(cands, core[:3], ["淡江大橋"], df, len(rows))}
+        for t in off:
+            self.assertNotIn(t, kept, t)
+        self.assertTrue(set(core) <= kept)
+
+
 if __name__ == "__main__":
     unittest.main()

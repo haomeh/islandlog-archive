@@ -25,7 +25,7 @@ SEP = "｜"
 CHANGED_COLUMNS = ["id", "title_before", "title_after", "renamed", "members_before", "members_after", "added", "removed", "latest_news_before",
                    "latest_news_after", "latest_moves_back", "added_flags", "added_titles", "removed_titles"]
 NEW_COLUMNS = ["id", "name", "members", "news_publishers", "first_date", "last_date", "sample_titles", "flagged_titles"]
-REGATE_COLUMNS = ["id", "gate", "title_before", "title_after", "members_before", "members_after", "removed"]
+REGATE_COLUMNS = ["id", "gate", "title_before", "title_after", "members_before", "members_after", "removed", "capped"]
 
 
 def _scalar(text, key):
@@ -120,7 +120,7 @@ def new_rows(before, after):
 
 def regate_rows(report):
     return [{"id": r["id"], "gate": r.get("gate"), "title_before": r.get("title_before"), "title_after": r.get("title_after"),
-             "members_before": r.get("before"), "members_after": r.get("after"), "removed": len(r.get("removed") or [])} for r in report.get("regate", [])]
+             "members_before": r.get("before"), "members_after": r.get("after"), "removed": len(r.get("removed") or []), "capped": r.get("capped", 0)} for r in report.get("regate", [])]
 
 
 HELD_COLUMNS = ["id", "title", "gate", "members_in_file", "candidates", "candidate_id", "in_file", "candidate_title"]

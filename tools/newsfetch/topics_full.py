@@ -1567,6 +1567,7 @@ def regate_topic(root, doc, text, seed, corpus, df, by_url, urls_by_id, today):
         record["gate"] = gate
         return record
     ev["title"] = doc["title"]  # the recorded name stays, so the title stays
+    record["capped"] = ev["capped"]  # R363.6
     relations = doc.get("relations")
     write_topic(root, ev, seed, today)
     if relations:
@@ -1783,6 +1784,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                 stats[gate] += 1
                 fail(gate, urls)
                 continue
+            stats["cap_dropped_items"] += ev["capped"]  # R363.6: members that the display cap leaves out of the file
             used = list(ev["used"].values())
             if write_topic(root, ev, seed, today or date.today().isoformat()):
                 stats["republished"] += 1
@@ -1815,6 +1817,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             stats["regate_passed"] += 1
             stats["regate_file_sources_kept"] += bool(rec.get("file_sources_kept"))
             stats["regate_members_removed"] += len(rec["removed"])
+            stats["regate_cap_dropped"] += rec.get("capped", 0)  # R363.6
             stats["regate_renamed"] += rec["title_after"] != rec["title_before"]
             covered.add(doc["id"])
             regate_keys[doc["id"]] = rec["key"]

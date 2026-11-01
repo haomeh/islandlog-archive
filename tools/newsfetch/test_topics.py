@@ -193,8 +193,6 @@ class TopicTest(unittest.TestCase):
         ("opening", "淡江大橋5/12通車 卓揆：打造臺灣最新名片 展現國家實力與文明的新地標", "2026-05-07"),
         ("before", "扯！淡江大橋通車前機車硬闖挨罰扣車 異想天開偷貨車來載", "2026-05-19"),
         ("week", "淡江大橋通車滿1週！ 洪孟楷緊盯淡水端交織回堵、螺絲鬆動問題", "2026-05-20"),
-        ("steel", "鋼結構建材90％可回收 中龍鋼鐵邀淡江大橋、綠美圖團隊研討", "2026-04-29"),
-        ("typhoon", "輕颱薔蜜恐貼東部外海北上  淡江大橋「封橋」條件曝", "2026-05-27"),
     ]
 
     DANJIANG_OUTSIDE = [  # other months: the key is also in later news (typhoon closures, accidents), so it is not specific
@@ -213,11 +211,21 @@ class TopicTest(unittest.TestCase):
     ]
 
     def test_a_key_of_one_story_keeps_its_own_titles(self):
-        """淡江大橋: 通車 is in most core titles, so every title with the key is on topic."""
+        """淡江大橋: 通車 is in most core titles, so a title with the key and a companion or an anchor is on topic."""
         seeds = self.DANJIANG
         urls = self._issue(seeds, self.DANJIANG_LOST + self.DANJIANG_OUTSIDE, ["新北市"], ["jur-65000000"])
         for u, *_ in self.DANJIANG_LOST:
             self.assertIn(u, urls)
+
+    def test_r363_6_a_title_with_the_key_of_another_story_leaves(self):
+        """R363.6 changes two T15 cases: the steel lecture and the typhoon closure condition hold the key 淡江大橋 but have no anchor and no companion word (通車),
+        so they are other stories than the opening."""
+        steel = ("steel", "鋼結構建材90％可回收 中龍鋼鐵邀淡江大橋、綠美圖團隊研討", "2026-04-29")
+        typhoon = ("typhoon", "輕颱薔蜜恐貼東部外海北上  淡江大橋「封橋」條件曝", "2026-05-27")
+        urls = self._issue(self.DANJIANG, self.DANJIANG_LOST + [steel, typhoon] + self.DANJIANG_OUTSIDE, ["新北市"], ["jur-65000000"])
+        self.assertNotIn("steel", urls)
+        self.assertNotIn("typhoon", urls)
+        self.assertIn("opening", urls)
 
     def test_a_title_with_a_companion_word_joins(self):
         """安南區 is a place, so it needs a companion: 爆炸 is in most core titles. The three titles about the
