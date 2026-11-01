@@ -64,6 +64,16 @@
       "id": "ev-20260821-tainan-annan-waste-fire",
       "ruling": "R344",
       "reason": "rebuilt by an agent in T75 by the D36 route (sources from other outlets, neutral title, id unchanged); draft-review; listed so a run does not restore the system name; review.sensitive true by the user decision of 2026-10-31 (R349), a one-event exception; as of 2026-10-25 the case is under investigation, with no indictment found; T81, T81b and T81c fixed the gaps of the verifiers at b806ce1 and 36cccdc; waits for 2 independent verifiers (R336)"
+    },
+    {
+      "id": "ev-20261027-tainan-station-public-piano",
+      "ruling": "R392",
+      "reason": "created by an agent by web search in T90, not by the system clustering; draft-review; not editor-approved; waits for 2 independent verifiers (R336)"
+    },
+    {
+      "id": "ev-20261014-kuo-kuang-bus-trip-cancellations",
+      "ruling": "R392",
+      "reason": "created by an agent by web search in T90, not by the system clustering; draft-review; not editor-approved; waits for 2 independent verifiers (R336)"
     }
   ]
 }
