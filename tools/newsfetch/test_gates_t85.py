@@ -268,7 +268,7 @@ class PythonNameTest(unittest.TestCase):
 
     def test_the_env_example_holds_no_home_path_of_a_user(self):
         text = (ROOT / "deploy/newsfetch.env.example").read_text(encoding="utf-8")
-        self.assertNotRegex(text, r"/home/zh|\.config/nvm")
+        self.assertNotRegex(text, r"/home/(?!USER/|linuxbrew/)[^/\s]+|\.config/nvm")
 
     def test_the_perf_test_class_stands_before_unittest_main(self):
         text = (ROOT / "test_perf_equal.py").read_text(encoding="utf-8")

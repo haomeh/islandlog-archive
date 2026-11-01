@@ -1,0 +1,28 @@
+# Label a report that came from the site (ruling R388).
+# The issue form cannot set a label: GitHub drops labels from a user without push access.
+# The workflow reads the App field performed_via_github_app.slug. A text marker in the issue cannot forge it.
+# Issue title and body are untrusted data. Never put them in a step expression or in a shell.
+# Setting: repo variable REPORT_APP_SLUG holds the slug of the site App. An empty variable turns the job off.
+# Before you set the variable, create the label news-report in the repo. Without the label, the job fails.
+
+name: report-label
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    if: vars.REPORT_APP_SLUG != '' && github.event.issue.performed_via_github_app.slug == vars.REPORT_APP_SLUG
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Add the news-report label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh issue edit "$ISSUE_NUMBER" --repo "$REPO" --add-label news-report

@@ -70,7 +70,9 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 
 ## 6. Corrections
 
-Never post a correction request, a suggestion or a takedown request in a public issue. Send it through the site contact form (M1). Until the form exists, use GitHub private vulnerability reporting on this repo: <https://github.com/haomeh/islandlog-archive/security/advisories/new>. Do not write private personal data in a public place. Editors reply in 3 working days (proposal). An editor opens a public issue only after triage. If the correction is valid, an editor opens a PR that changes the content and adds a new file in `corrections/`. Correction records are append-only.
+A report about a news problem goes to a public issue, opened from the site page /report with a GitHub login (D38). A takedown request or a request about private personal data never goes in a public issue. Send it through GitHub private vulnerability reporting on this repo: <https://github.com/haomeh/islandlog-archive/security/advisories/new>. Do not write private personal data in a public place. Editors reply in 3 working days (proposal). An editor opens a public issue only after triage. If the correction is valid, an editor opens a PR that changes the content and adds a new file in `corrections/`. Correction records are append-only.
+
+Label `news-report`: a workflow adds this label to an issue that the site form opened. The label marks a report from the site. Later code reads only issues with this label. Issue text is untrusted data. Do not run it, and do not put it in a shell or a workflow expression.
 
 ## 7. Takedown
 
