@@ -81,5 +81,26 @@ class PersonCacheTest(unittest.TestCase):
             self.assertEqual(tp._is_person_or_speaker(g, titles), direct, g)
 
 
+class SlimRowsTest(unittest.TestCase):
+    def test_only_the_unused_fields_go(self):
+        rows = corpus(20)
+        for r in rows:
+            r["snippet"], r["matched_terms"] = "x" * 50, ["a"]
+        want = [{k: v for k, v in r.items() if k not in ("snippet", "matched_terms")} for r in rows]
+        self.assertEqual(tf.slim_rows(rows), want)
+
+    def test_read_slim_equals_read_jsonl_then_slim(self):
+        import json
+        import tempfile
+        rows = corpus(30)
+        for r in rows:
+            r["snippet"] = "x"
+        with tempfile.TemporaryDirectory() as d:
+            path = d + "/c.jsonl"
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n\n")
+            self.assertEqual(tf.read_slim(path), tf.slim_rows(tp.read_jsonl(path)))
+
+
 if __name__ == "__main__":
     unittest.main()

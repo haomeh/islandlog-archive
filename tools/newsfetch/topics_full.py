@@ -2002,6 +2002,33 @@ def read_approval_file(path):
     return {line.strip() for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()}
 
 
+UNUSED_ROW_FIELDS = ("snippet", "matched_terms")  # no code of this run reads them
+SHARED_ROW_FIELDS = ("publisher", "published_on", "source_class", "publisher_group", "fetched_on")
+
+
+def slim_rows(rows, shared=None):
+    """T82: drops the row fields that this run never reads and keeps one string object for equal values of the small-vocabulary fields."""
+    shared = {} if shared is None else shared
+    for it in rows:
+        for name in UNUSED_ROW_FIELDS:
+            it.pop(name, None)
+        for name in SHARED_ROW_FIELDS:
+            v = it.get(name)
+            if isinstance(v, str):
+                it[name] = shared.setdefault(v, v)
+    return rows
+
+
+def read_slim(path):
+    """The rows of tp.read_jsonl(path), slimmed one by one, so the unused fields never stay in memory together."""
+    shared, out = {}, []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                out.extend(slim_rows([json.loads(line)], shared))
+    return out
+
+
 def main(argv):
     try:
         args, today = parse_today(list(argv[1:]))
@@ -2012,7 +2039,7 @@ def main(argv):
     if len(args) != 5:
         print(__doc__.splitlines()[2], file=sys.stderr)
         return 2
-    corpus = tp.read_jsonl(args[0])
+    corpus = read_slim(args[0])
     clusters = json.load(open(args[1], encoding="utf-8"))
     existing = json.load(open(args[2], encoding="utf-8"))
     stats, published, _ = run(corpus, clusters, existing, args[3], args[4], today=today,
