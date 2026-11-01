@@ -265,5 +265,31 @@ class PythonNameTest(unittest.TestCase):
         self.assertGreater(text.index("unittest.main()"), text.index("class WindowCorpusIdentityTest"))
 
 
+class LawObjectNameTest(unittest.TestCase):
+    """R384.7: a name that ends with a generic act noun (校事會議) is an issue name when the key stands next to an issue noun in a share of its titles."""
+
+    ISSUE = ["校事會議修正草案送立院 團體呼籲退回", "教育部改革校事會議 案量下降", "校事會議引爭議 議員提案廢除", "校事會議風暴 教師工會抗議", "強化校事會議制度 縣市跟進",
+             "教師不堪校事會議壓力", "校事會議開啟惡訴之門？", "校事會議案量降至兩成", "學校啟動校事會議", "校事會議調查報告出爐"]
+
+    def test_the_name_with_issue_neighbors_is_an_issue_name(self):
+        self.assertFalse(tf.issue_name("校事會議"))
+        self.assertTrue(tf.law_object_name("校事會議", "校事會議", self.ISSUE))
+
+    def test_a_bare_meeting_name_with_no_issue_neighbor_fails(self):
+        titles = ["部務會議召開 部長主持", "部務會議今登場", "部務會議後記者會", "出席部務會議 討論人事", "部務會議紀要公布"]
+        self.assertFalse(tf.law_object_name("部務會議", "部務會議", titles))
+
+    def test_a_generic_act_noun_alone_fails(self):
+        self.assertFalse(tf.law_object_name("協商會議", "協商會議", ["協商會議修正草案", "改革協商會議"] * 3))
+        self.assertFalse(tf.law_object_name("記者會", "記者會", ["改革記者會"] * 5))
+
+    def test_a_name_that_is_not_a_noun_phrase_fails(self):
+        self.assertFalse(tf.law_object_name("要求校事會議", "要求校事會議", self.ISSUE))
+
+    def test_the_name_with_issue_neighbors_passes_the_gate_test(self):
+        self.assertTrue(tf.issue_name_ok("校事會議", "校事會議", self.ISSUE))
+        self.assertFalse(tf.issue_name_ok("台英國會外交首例", "台英國會外交首例", ["台英國會外交首例 一", "台英國會外交首例 二", "台英國會外交首例 三"]))
+
+
 if __name__ == "__main__":
     unittest.main()

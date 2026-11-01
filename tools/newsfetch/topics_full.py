@@ -34,7 +34,7 @@ from tools.newsfetch import jsonlist
 from tools.newsfetch import topics as tp
 from tools.newsfetch.topic_config import (
     BODY_VERB_NAME_MAX_LEN, BOUNDARY_SHARE, CAMPAIGN_DAYS, CLASSIFY_SHARE, ELECTION_DAY, ELECTION_DISPUTE_MIN_GRADE_A, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
-    CONTINUATION_MIN_USES, DISEASE_NAME_MAX_LEN, FOREIGN_NAMED_SHARE, GENERIC_NAME_MAX_LEN, GOV_NAME_SHARE, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
+    CONTINUATION_MIN_USES, DISEASE_NAME_MAX_LEN, FOREIGN_NAMED_SHARE, GENERIC_NAME_MAX_LEN, GOV_NAME_SHARE, LAW_OBJECT_SHARE, MERGE_OVERLAP, MIN_KEY_LEN, NEWS_RULE_MIN_ITEMS, NEWS_RULE_MIN_PUBLISHERS, QUOTED_SLOGAN_SHARE,
     BARE_PERSON_MAX_LEN, BARE_PERSON_MIN_LEN, BARE_PERSON_SHARE, OFFICIAL_MIN_TITLES, RELEVANCE_SHARE, SAME_EVENT_SHARE, SEED_MIN_ITEMS, SOURCE_RULE_MIN_PUBLISHERS, SPLIT_MIN_TITLES, SUBTOPIC_SHARE,
     TAIWAN_MIN_SHARE, TAIWAN_MIN_TITLES, WITHDRAW_AFTER_FAILS, WITHDRAW_MAX_COUNT, WITHDRAW_MAX_SHARE,
     ACCIDENT_POLICY_SHARE, ACCIDENT_SHARE, CANDIDATE_MIN_TITLES, CANDIDATE_SHARE, DUPLICATE_GAP_DAYS, DUPLICATE_MIN_TITLES,
@@ -350,6 +350,28 @@ def issue_name(name):
     core = strip_generic_act(name)
     return bool(ISSUE_HEAD.search(core)) and not VERB_LEAD.search(name) and not SENTENCE_WORD.search(name) \
         and not FACILITY_EVENT.search(name) and not NEGATED_PREDICATE.search(name)
+
+
+ISSUE_NEIGHBOR = re.compile(ISSUE_HEAD.pattern[:-1])  # ISSUE_HEAD without its end anchor
+
+
+def law_object_name(name, key, titles):
+    """R384.7: a name that ends with a generic act noun (校事會議) has no issue noun in front of it, so issue_name fails it. It is still the name of
+    an issue when the key stands directly before or after an issue noun (改革校事會議, 校事會議修正草案, 校事會議爭議) in LAW_OBJECT_SHARE of its titles.
+    The core before the act noun has 2 characters or more. A verb lead, a sentence word, a facility or a negated verb still fail."""
+    core = strip_generic_act(name)
+    if core == name or not core[1:] or not key or not titles:
+        return False
+    if VERB_LEAD.search(name) or SENTENCE_WORD.search(name) or FACILITY_EVENT.search(name) or NEGATED_PREDICATE.search(name):
+        return False
+    k = re.escape(key)
+    near = re.compile(k + ISSUE_NEIGHBOR.pattern + "|" + ISSUE_NEIGHBOR.pattern + k)
+    return sum(1 for t in titles if near.search(t)) >= LAW_OBJECT_SHARE * len(titles)
+
+
+def issue_name_ok(name, key, titles):
+    """R154, R162, R384.7: the name of a new topic ends with an issue noun, or it is a law object (law_object_name)."""
+    return issue_name(name) or law_object_name(name, key, titles)
 
 
 SPEECH_BEFORE = re.compile(r"(?:喊|高喊|喊出|主張|倡議|倡導|提倡|倡|直呼|宣稱|標榜)[「『]?$")  # R162: a verb that brings a slogan
@@ -1461,7 +1483,7 @@ def gate_topic(key, members, seeds, df, corpus, existing_keys=(), window=None, k
     name = known["name"] if known else tp.display_name(key, [s["title"] for s in seeds])
     if not noun_phrase_name(name) or generic_name(name):
         return "rejected_name_quality", None
-    if not known and not (issue_name(name) and new_name_ok(key, titles)):
+    if not known and not (issue_name_ok(name, key, titles) and new_name_ok(key, titles)):
         return "rejected_issue_name", None
     if not known and mf is not None and theme_word(key, mf.months):
         return "rejected_keyword_bundle", None  # R162: the key is a theme word that joins many cases
