@@ -30,6 +30,7 @@ from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+from tools.newsfetch import jsonlist
 from tools.newsfetch import topics as tp
 from tools.newsfetch.topic_config import (
     BODY_VERB_NAME_MAX_LEN, BOUNDARY_SHARE, CAMPAIGN_DAYS, CLASSIFY_SHARE, ELECTION_DAY, ELECTION_DISPUTE_MIN_GRADE_A, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
@@ -2047,39 +2048,13 @@ def _keep_cluster_urls(d):
 def read_clusters(path, block=1 << 22):
     """The clusters of json.load(path), reduced to what run() reads (T82): the URL lists. The full load takes 429 MB and a spike of 1.6 GB
     (the text of the file as one string). A file whose top level is a list is read one cluster at a time from blocks of `block` characters."""
-    decoder = json.JSONDecoder(object_hook=_keep_cluster_urls)
-    with open(path, encoding="utf-8") as f:
-        buf = f.read(block)
-        start = len(buf) - len(buf.lstrip())
-        if buf[start:start + 1] != "[":
-            return decoder.decode(buf + f.read())
-        out, pos, eof = [], start + 1, False
-        while True:
-            while True:  # skip white space and commas; read more when the buffer ends
-                while pos < len(buf) and buf[pos] in " \t\r\n,":
-                    pos += 1
-                if pos < len(buf) or eof:
-                    break
-                more = f.read(block)
-                eof = not more
-                buf, pos = buf[pos:] + more, 0
-            if pos >= len(buf):
-                raise ValueError("clusters file: the list does not end")
-            if buf[pos] == "]":
-                if buf[pos + 1:].strip() or f.read(1).strip():
-                    raise ValueError("clusters file: text after the list")
-                return out
-            while True:
-                try:
-                    value, end = decoder.raw_decode(buf, pos)
-                    break
-                except json.JSONDecodeError:
-                    more = f.read(block)
-                    if not more:
-                        raise
-                    buf, pos = buf[pos:] + more, 0
-            out.append(value)
-            pos = end
+    try:
+        return jsonlist.read_list(path, _keep_cluster_urls, block)
+    except ValueError as error:
+        if str(error) != "the top level of the file is not a list":
+            raise
+        with open(path, encoding="utf-8") as f:
+            return json.load(f, object_hook=_keep_cluster_urls)
 
 
 def main(argv):
