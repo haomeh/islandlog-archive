@@ -1,7 +1,14 @@
 """T85 tests (R384). No test or data here holds the name of a minor or of a victim. Names are fake."""
 
+import json
+import os
+import re
+import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
+
+from tools.newsfetch import cluster as cl
 
 from tools.newsfetch import run_report
 from tools.newsfetch import topics as tp
@@ -190,6 +197,72 @@ class DisplayCapShortFormTest(unittest.TestCase):
 
     def test_topics_full_sets_the_campaign_hook(self):
         self.assertIs(tp.is_campaign_title, tf.candidate_talk)
+
+
+class ClusterTempFileTest(unittest.TestCase):
+    """R384.6 (T82b-V G1): cluster writes to a temp file, then renames. A write that stops leaves no partial output and keeps an old output."""
+
+    def rows(self, bad=False):
+        title = "測試標題\ud800" if bad else "測試標題"
+        return [{"url": f"https://x.example/{i}", "title": f"{title} {i}", "published_on": "2026-10-01", "publisher": f"報{i}", "source_class": "news"} for i in range(3)]
+
+    def write_input(self, d, rows):
+        src = os.path.join(d, "in.jsonl")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write("\n".join(json.dumps(r) for r in rows) + "\n")
+        return src
+
+    def test_a_good_run_leaves_the_output_and_no_temp_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "o.json")
+            cl.main([self.write_input(d, self.rows()), out, "--as-news-groups"])
+            self.assertEqual(sorted(os.listdir(d)), ["in.jsonl", "o.json", "o.json.sources.json"])
+
+    def test_a_write_that_stops_leaves_no_output_and_no_temp_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "o.json")
+            with self.assertRaises(UnicodeEncodeError):
+                cl.main([self.write_input(d, self.rows(bad=True)), out, "--as-news-groups"])
+            self.assertEqual(os.listdir(d), ["in.jsonl"])
+
+    def test_a_write_that_stops_keeps_an_old_output_and_old_sources(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "o.json")
+            Path(out).write_text("old\n", encoding="utf-8")
+            Path(out + ".sources.json").write_text("old-sources\n", encoding="utf-8")
+            with self.assertRaises(UnicodeEncodeError):
+                cl.main([self.write_input(d, self.rows(bad=True)), out, "--as-news-groups"])
+            self.assertEqual(Path(out).read_text(encoding="utf-8"), "old\n")
+            self.assertEqual(Path(out + ".sources.json").read_text(encoding="utf-8"), "old-sources\n")
+            self.assertEqual(sorted(os.listdir(d)), ["in.jsonl", "o.json", "o.json.sources.json"])
+
+    def test_the_plain_mode_is_atomic_too(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "o.json")
+            with self.assertRaises(UnicodeEncodeError):
+                cl.main([self.write_input(d, self.rows(bad=True)), out])
+            self.assertEqual(os.listdir(d), ["in.jsonl"])
+
+
+ROOT = Path(__file__).resolve().parent
+
+
+class PythonNameTest(unittest.TestCase):
+    """R384.6 (T82b-V G3, G2): the WORKFLOW.md lines and deploy/README.md name /usr/bin/python3. The env example holds no local path of a user."""
+
+    def test_no_bare_python3_command_in_the_workflow_or_the_deploy_readme(self):
+        for name in ("WORKFLOW.md", "deploy/README.md"):
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertIsNone(re.search(r"(?<![/\w])python3 -m", text), name)
+
+    def test_the_env_example_holds_no_home_path_of_a_user(self):
+        text = (ROOT / "deploy/newsfetch.env.example").read_text(encoding="utf-8")
+        self.assertNotRegex(text, r"/home/zh|\.config/nvm")
+
+    def test_the_perf_test_class_stands_before_unittest_main(self):
+        text = (ROOT / "test_perf_equal.py").read_text(encoding="utf-8")
+        self.assertEqual(text.count("unittest.main()"), 1)
+        self.assertGreater(text.index("unittest.main()"), text.index("class WindowCorpusIdentityTest"))
 
 
 if __name__ == "__main__":

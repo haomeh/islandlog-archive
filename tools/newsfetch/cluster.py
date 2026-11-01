@@ -35,6 +35,7 @@ import argparse
 import hashlib
 import json
 import logging
+import os
 import re
 import sys
 import unicodedata
@@ -423,13 +424,32 @@ def main(argv=None):
     items = read_jsonl(args.input, ITEM_FIELDS)
     clusters = cluster_items(items)
     out = Path(args.output)
-    if args.as_news_groups:
-        mapping = {}
-        write_json_list(out, iter_news_groups(clusters, _days_by_url(items), mapping))
-        Path(str(out) + ".sources.json").write_text(
-            json.dumps(mapping, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    else:
-        write_json_list(out, clusters)
+    # R384.6 (T82b-V G1): write to temp files next to the outputs, then rename. A write that stops leaves the old files and no partial file.
+    temps = []
+    try:
+        if args.as_news_groups:
+            mapping = {}
+            tmp = _temp_for(out, temps)
+            write_json_list(tmp, iter_news_groups(clusters, _days_by_url(items), mapping))
+            sources = Path(str(out) + ".sources.json")
+            tmp_sources = _temp_for(sources, temps)
+            tmp_sources.write_text(json.dumps(mapping, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            pairs = [(tmp, out), (tmp_sources, sources)]
+        else:
+            tmp = _temp_for(out, temps)
+            write_json_list(tmp, clusters)
+            pairs = [(tmp, out)]
+        for src, dest in pairs:
+            os.replace(src, dest)
+    finally:
+        for tmp in temps:
+            tmp.unlink(missing_ok=True)
+
+
+def _temp_for(path, temps):
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temps.append(tmp)
+    return tmp
 
 
 def _valid_day(item):
