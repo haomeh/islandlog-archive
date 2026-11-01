@@ -70,7 +70,7 @@ CONSUMER = re.compile(r"優惠|折扣|現省|省[\d百千萬]|半價|折抵|票�
 CASE_TITLE = re.compile(CRIME.pattern + r"|賄選|涉賄|羈押|追捕|查獲|查緝|查抄|落網|通緝|逃竄|搶劫|槍殺|入獄|服刑|徒刑|判\d+(?:年|月|個月)")  # R363.5: a sentence or a prison title of a person. R141.3: a title of an arrest, a search or a vote-buying case is another case than the issue of the topic
 FOREIGN_ONLY = re.compile(r"美國|川普|中國|大陸|日本|南韓|北韓|俄羅斯|烏克蘭|伊朗|以色列|歐盟|英國|德國|法國|印度|菲律賓|越南|泰國|馬來西亞")
 FOREIGN_NEW = re.compile(FOREIGN_ONLY.pattern
-                         + r"|萬那杜|索羅門|斐濟|印尼|土耳其|沙烏地|埃及|巴西|阿根廷|加拿大|澳洲|紐西蘭|新加坡|巴基斯坦|阿富汗|敘利亞|黎巴嫩|古巴|墨西哥|委內瑞拉|智利|秘魯|肯亞|奈及利亞|南非|蘇丹|葉門|伊拉克|緬甸|柬埔寨|寮國|尼泊爾|孟加拉|斯里蘭卡")  # R154: a country list, so a foreign quake or a foreign bank has a foreign label; R162 (N1): only a new topic reads it
+                         + r"|韓國(?!瑜)|萬那杜|索羅門|斐濟|印尼|土耳其|沙烏地|埃及|巴西|阿根廷|加拿大|澳洲|紐西蘭|新加坡|巴基斯坦|阿富汗|敘利亞|黎巴嫩|古巴|墨西哥|委內瑞拉|智利|秘魯|肯亞|奈及利亞|南非|蘇丹|葉門|伊拉克|緬甸|柬埔寨|寮國|尼泊爾|孟加拉|斯里蘭卡")  # R154: a country list, so a foreign quake or a foreign bank has a foreign label; R162 (N1): only a new topic reads it
 
 JURS = [  # id, government actor id, actor name, place terms
     ("jur-63000000", "ac-taipei-city-government", "臺北市政府", ["臺北市", "台北市", "北市", "臺北", "台北"]),
@@ -557,8 +557,11 @@ TAIWAN_WORD = re.compile(r"台灣|臺灣|全台|[對近襲侵離登赴朝向]台
 NATIONAL_ROAD = re.compile(r"台\d{1,2}線|國道\d|省道")
 
 
+HOME_PREFIX = "我本全各外該貴民兩多友"  # 我國, 本國, 全國, 各國, 外國, 中華民國: a word of Taiwan or of no one state, not a country
 PLACE_BEFORE_BODY = (r"(?:" + FOREIGN_NEW.pattern + r"|[\u4e00-\u9fff]{1,3}(?:共和國|王國|聯邦|公國)"  # a place word: a country of the list, a state form, or the end of a transliterated name
-                     r"|[\u4e00-\u9fff]{1,3}(?:蘭|亞|牙|坦|曼|麥|丹|威|瓦|維|尼|魯|哥|宛|克|牙利|大利|地利|利時))")
+                     r"|[\u4e00-\u9fff]{1,3}(?:蘭|亞|牙|坦|曼|麥|丹|威|瓦|維|尼|魯|哥|宛|克|牙利|大利|地利|利時|馬|拉|斯|圭|爾)"
+                     r"|(?:(?![" + HOME_PREFIX + r"])[\u4e00-\u9fff]){1,2}國"  # R384.2: the form "X國" is a country when X is no word of Taiwan
+                     r"|希臘|瑞典|瑞士|冰島|海地|盧森堡|蒙古|約旦|卡達|科威特|汶萊|迦納|剛果|巴林|烏干達)")  # R384.2: names that the class rule does not reach
 FOREIGN_GENERIC = re.compile(PLACE_BEFORE_BODY + r"(?:" + GENERIC_BODY.pattern + r")")  # R363.3: 波蘭憲法法庭, 匈牙利憲法法庭, 立陶宛外交部
 
 
