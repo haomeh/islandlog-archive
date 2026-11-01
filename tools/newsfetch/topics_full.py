@@ -1275,13 +1275,32 @@ def stable_id(published, title, first_day, last_day, new_id):
     return new_id
 
 
-class MonthFrequency:
-    """Window document frequency from month buckets. A window counts every month it touches."""
+class _MonthView:
+    """The counter of one month, read from the gram index. update() adds counts on top (a test sets counts by hand)."""
 
-    def __init__(self, corpus):
-        self.months = defaultdict(Counter)
-        for it in corpus:
-            self.months[it["published_on"][:7]].update(tp._grams(it["title"]))
+    def __init__(self, index, span):
+        self.index = index
+        self.span = span
+        self.extra = Counter()
+
+    def get(self, gram, default=0):
+        return (self.index.count(gram, [self.span]) + self.extra.get(gram, 0)) or default
+
+    __getitem__ = get
+
+    def update(self, counts):
+        self.extra.update(counts)
+
+
+class MonthFrequency:
+    """Window document frequency from month buckets. A window counts every month it touches.
+    T82: the counts come from the GramIndex (shared with the total document frequency), not from a counter of every n-gram per month."""
+
+    def __init__(self, corpus, index=None):
+        self.index = index if index is not None else tp.GramIndex(corpus)
+        self.months = defaultdict(lambda: _MonthView(self.index, (0, 0)))
+        for month, span in self.index.month_ids.items():
+            self.months[month] = _MonthView(self.index, tuple(span))
 
     def window(self, lo, hi):
         keys = []
@@ -1629,8 +1648,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
     corpus = kept
     set_officials(office_holders(corpus))  # R141.5
     set_candidates(candidate_names(corpus))  # R154
-    df = tp.document_frequency(corpus)
-    mf = MonthFrequency(corpus)
+    df = tp.GramIndex(corpus)  # T82: the same counts as document_frequency(corpus), without the table of every n-gram
+    mf = MonthFrequency(corpus, df)
     by_url = {it["url"]: it for it in corpus}
     stats = Counter()
     stats["dropped_removed_sources"] = dropped

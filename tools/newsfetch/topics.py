@@ -28,6 +28,8 @@ import re
 import sys
 import unicodedata
 import urllib.parse
+from array import array
+from bisect import bisect_left
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
@@ -51,6 +53,7 @@ CLAR = re.compile(r"澄清|駁斥|更正|嚴正|假訊息|不實|闢謠|否認|�
 POST = re.compile(r"臉書|PO文|PO出|發文|貼文|FB|IG|Threads|社群平台|直播|YouTube|曬出|曬")
 PLACE = re.compile(r"[臺台]北|新北|桃園|[臺台]中|[臺台]南|高雄|基隆|新竹|苗栗|彰化|南投|雲林|嘉義|屏東|宜蘭|花蓮|[臺台]東|澎湖|金門|馬祖|連江|北市|中市|南市|高市|竹市|竹縣")
 CJK_RUN = re.compile(r"[一-鿿]+")
+GRAM_TEXT = re.compile(r"[一-鿿]{2,8}")  # the text of a gram: the same sizes as _grams
 # Government actors named in a title: local offices (LOCAL_GOV) and central bodies (CENTRAL: regex, actor id, name, type).
 LOCAL_GOV = re.compile(r"市府|縣府|市政府|縣政府|市長|縣長|議會|議員|局長|衛生局|教育局|環保局|消防局|交通局|社會局|工務局|公園處|鄉公所|鎮公所|區公所")
 CENTRAL = [  # regex, actor id, name, actor type
@@ -181,6 +184,69 @@ def _is_person_or_speaker(g, titles):
 
 def _is_place(g):
     return bool(PLACE.fullmatch(g)) or bool(re.fullmatch(r"(?:" + PLACE.pattern + r")[市縣]?", g))
+
+
+class GramIndex:
+    """T82: document frequency of the n-grams of _grams, without a table of every n-gram.
+
+    get(g) and g[...] give what document_frequency(corpus).get(g, 0) gives: the number of titles that have g among their grams.
+    A phrase with 2 to 8 CJK characters is a gram of a title exactly when the title text holds it, so the index keeps, for each
+    CJK bigram, the sorted ids of the titles that hold it. A bigram answers at once. A longer phrase is checked on the titles of
+    its rarest bigram only. The ids follow the month of published_on, so a range of months is a range of ids (counts(g, ranges))."""
+
+    def __init__(self, corpus):
+        order = sorted(range(len(corpus)), key=lambda i: str(corpus[i]["published_on"])[:7])
+        self.texts = []
+        self.post = {}
+        self.month_ids = {}  # month -> [first id, end id)
+        month = None
+        for new_id, i in enumerate(order):
+            it = corpus[i]
+            m = str(it["published_on"])[:7]
+            if m != month:
+                if month is not None:
+                    self.month_ids[month][1] = new_id
+                self.month_ids[m] = [new_id, new_id]
+                month = m
+            runs = CJK_RUN.findall(unicodedata.normalize("NFKC", it["title"] or ""))
+            self.texts.append(" ".join(runs))
+            for b in {run[k:k + 2] for run in runs for k in range(len(run) - 1)}:
+                arr = self.post.get(b)
+                if arr is None:
+                    arr = self.post[b] = array("I")
+                arr.append(new_id)
+        if month is not None:
+            self.month_ids[month][1] = len(self.texts)
+        self._total = {}
+
+    def count(self, g, ranges=None):
+        """Titles that hold g, among the ids in the half-open `ranges` (all titles when None)."""
+        if not (isinstance(g, str) and GRAM_TEXT.fullmatch(g)):
+            return 0
+        if ranges is None:
+            hit = self._total.get(g)
+            if hit is not None:
+                return hit
+        posts = [self.post.get(g[k:k + 2]) for k in range(len(g) - 1)]
+        if any(p is None for p in posts):
+            n = 0
+        else:
+            rare = min(posts, key=len)
+            spans = [(0, len(rare))] if ranges is None else [(bisect_left(rare, a), bisect_left(rare, b)) for a, b in ranges]
+            if not g[2:]:  # a bigram: the posting is the answer
+                n = sum(b - a for a, b in spans)
+            else:
+                texts = self.texts
+                n = sum(1 for a, b in spans for t in rare[a:b] if g in texts[t])
+        if ranges is None:
+            self._total[g] = n
+        return n
+
+    def get(self, gram, default=0):
+        return self.count(gram) or default
+
+    def __getitem__(self, gram):
+        return self.count(gram)
 
 
 def window_frequency(corpus, lo, hi):
