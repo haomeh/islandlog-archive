@@ -115,7 +115,8 @@ class CampaignNamesTest(unittest.TestCase):
                 "新竹爆食安事件 藍選將也喊：做不好就換人做",
                 "「食安」疑慮說不清 陳小安要求王小明下台負責",
                 "長者健保補助 李大華交鋒王小明",
-                "王小明反問：長者健保補助為何不一致？"]
+                "王小明反問：長者健保補助為何不一致？",
+                "快新聞／李大華選情急了？猛打王小明長者健保費態度不一", "長者健保免費排富議題攻防 李大華籲王小明：不要說一套做一套"]
     POLICY = ["兩部會協商長者健保費 交鋒焦點在財源", "行政院長卓榮泰：長者健保費補助將修法", "衛福部反問業者：標示為何不全？",
               "國手選將名單公布 教練團說明", "廠商不行就換人做 工程會：採購法有規定", "王小明：長者健保費補助將於明年上路",
               "立法院交鋒 國防預算三讀", "市府說明長者健保補助新制"]
@@ -131,6 +132,16 @@ class CampaignNamesTest(unittest.TestCase):
     def test_the_words_alone_do_not_judge_without_a_candidate_or_a_party_word(self):
         for title in ("議場交鋒 預算審查", "官員被反問 無法答覆", "民眾質疑新制 陣營不明"):
             self.assertFalse(tf.candidate_talk(title), title)
+
+    def test_a_title_of_the_key_group_with_an_exact_key_ranks_before_a_short_form(self):
+        short = _group([("https://x.example/s1", "中聯1300噸 回收", "2026-06-05"), ("https://x.example/s2", "中聯1300噸 停產", "2026-06-05")])
+        full = _group([("https://x.example/f1", "中聯油脂 停產", "2026-06-05")])
+        seed = {"event_id": "ev-20260601-x", "seed_urls": [], "_keys": ["中聯油脂"], "_name": "中聯油脂", "jurisdiction_names": [], "jurisdiction_ids": ["jur-tw"],
+                "gov_levels": [], "controversy_types": [], "policy_domains": [], "actors": []}
+        items = [i for g in (short, full) for i in g["items"]]
+        with mock.patch.object(tp, "group_items", lambda its: [short, full]), mock.patch.object(tp, "MAX_GROUPS", 1):
+            ev = tp.build_event(seed, items, {}, items=items)
+        self.assertEqual(sorted(ev["used"]), ["https://x.example/f1"])
 
     def test_the_old_classes_still_work(self):
         for title in ("議員為候選人助講 批新制", "市府新制 某黨競辦回應"):

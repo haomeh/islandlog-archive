@@ -673,7 +673,9 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
     # R363.6, R384.5: the display cap keeps first the groups with a title that holds the event key or a short form of it (a campaign title does not count),
     # then the bigger groups. The sort is stable: an equal pair keeps the order of the groups.
     def rank(g):
-        return (not any(f in it["title"] and not is_campaign_title(it["title"]) for it in g["items"] for f in forms), -len(g["items"]))
+        hit = [min((forms.index(f) for f in forms if f in it["title"]), default=None) for it in g["items"] if not is_campaign_title(it["title"])]
+        hit = [h for h in hit if h is not None]
+        return (not hit, bool(hit) and min(hit) > 0, -len(g["items"]))  # no form last; the exact key (form 0) before a short form
     reports = sorted([g for g in groups if g["kind"] == "report"], key=rank)
     room = max(0, MAX_GROUPS - len(keep))
     earliest = min((g["items"][0]["published_on"] for g in groups), default="")
