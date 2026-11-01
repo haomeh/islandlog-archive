@@ -25,10 +25,12 @@ import json
 import logging
 import re
 import sys
+from bisect import bisect_left, bisect_right
 from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+from tools.newsfetch import jsonlist
 from tools.newsfetch import topics as tp
 from tools.newsfetch.topic_config import (
     BODY_VERB_NAME_MAX_LEN, BOUNDARY_SHARE, CAMPAIGN_DAYS, CLASSIFY_SHARE, ELECTION_DAY, ELECTION_DISPUTE_MIN_GRADE_A, CONCENTRATION, CONTINUATION_SHARE, EXCLUDE_SHARE, JURISDICTION_SHARE,
@@ -609,6 +611,21 @@ has_sensitive_term = tp.has_sensitive_term
 
 def _day(d):
     return date.fromisoformat(str(d))
+
+
+class DayIndex:
+    """The items sorted by published_on, with their days. between(lo, hi) gives the items dated in [lo, hi], in the sorted order.
+    T82: one bisect replaces a scan of the whole corpus for each topic."""
+
+    def __init__(self, items):
+        self.items = sorted(items, key=lambda j: j["published_on"])
+        self.days = [_day(it["published_on"]) for it in self.items]
+        self.ordered = all(a <= b for a, b in zip(self.days, self.days[1:]))
+
+    def between(self, lo, hi):
+        if not self.ordered:  # a date in another form than YYYY-MM-DD: the old scan, same result
+            return [it for it, d in zip(self.items, self.days) if lo <= d <= hi]
+        return self.items[bisect_left(self.days, lo):bisect_right(self.days, hi)]
 
 
 def owner(item):
@@ -1259,13 +1276,32 @@ def stable_id(published, title, first_day, last_day, new_id):
     return new_id
 
 
-class MonthFrequency:
-    """Window document frequency from month buckets. A window counts every month it touches."""
+class _MonthView:
+    """The counter of one month, read from the gram index. update() adds counts on top (a test sets counts by hand)."""
 
-    def __init__(self, corpus):
-        self.months = defaultdict(Counter)
-        for it in corpus:
-            self.months[it["published_on"][:7]].update(tp._grams(it["title"]))
+    def __init__(self, index, span):
+        self.index = index
+        self.span = span
+        self.extra = Counter()
+
+    def get(self, gram, default=0):
+        return (self.index.count(gram, [self.span]) + self.extra.get(gram, 0)) or default
+
+    __getitem__ = get
+
+    def update(self, counts):
+        self.extra.update(counts)
+
+
+class MonthFrequency:
+    """Window document frequency from month buckets. A window counts every month it touches.
+    T82: the counts come from the GramIndex (shared with the total document frequency), not from a counter of every n-gram per month."""
+
+    def __init__(self, corpus, index=None):
+        self.index = index if index is not None else tp.GramIndex(corpus)
+        self.months = defaultdict(lambda: _MonthView(self.index, (0, 0)))
+        for month, span in self.index.month_ids.items():
+            self.months[month] = _MonthView(self.index, tuple(span))
 
     def window(self, lo, hi):
         keys = []
@@ -1613,8 +1649,8 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
     corpus = kept
     set_officials(office_holders(corpus))  # R141.5
     set_candidates(candidate_names(corpus))  # R154
-    df = tp.document_frequency(corpus)
-    mf = MonthFrequency(corpus)
+    df = tp.GramIndex(corpus)  # T82: the same counts as document_frequency(corpus), without the table of every n-gram
+    mf = MonthFrequency(corpus, df)
     by_url = {it["url"]: it for it in corpus}
     stats = Counter()
     stats["dropped_removed_sources"] = dropped
@@ -1649,6 +1685,7 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
     stats["seed_clusters"] = len(raw)
     # 2. keys and merge
     merged = {}
+    slots = {}  # T82: key -> its slots in merged, in the order of merged; the search does not read the other keys
     for urls in raw:
         its = sorted((by_url[u] for u in urls), key=lambda j: (j["published_on"], j["url"]))
         lo = _day(its[0]["published_on"]) - timedelta(days=tp.WINDOW_BEFORE)
@@ -1659,15 +1696,20 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
             fail("rejected_no_key", urls)
             continue
         slot = None
-        for (k, a, b), v in merged.items():
-            if k == key and a <= hi and lo <= b:
+        for k, a, b in slots.get(key, ()):  # the slots of this key in the order of merged
+            if a <= hi and lo <= b:
                 slot = (k, a, b)
                 break
         if slot:
             v = merged.pop(slot)
-            merged[(key, min(lo, slot[1]), max(hi, slot[2]))] = v + its
+            slots[key].remove(slot)
+            new_slot = (key, min(lo, slot[1]), max(hi, slot[2]))
+            if new_slot not in merged:
+                slots[key].append(new_slot)
+            merged[new_slot] = v + its
         else:
             merged[(key, lo, hi)] = its
+            slots.setdefault(key, []).append((key, lo, hi))
     stats["merged_topics"] = len(merged)
     # 3. existing events
     taken = published_source_urls(root)
@@ -1696,12 +1738,12 @@ def run(corpus, clusters, existing_seeds, root, report_path, today=None, approve
                 enriched_issues.append(entry)
     # Bigger topics first, so a duplicate keeps the larger one.
     ordered = sorted(merged.items(), key=lambda kv: (-len(kv[1]), kv[0][1], kv[0][0]))
-    window_items = sorted(corpus, key=lambda j: j["published_on"])
+    window_index = DayIndex(corpus)
     out_seeds, published, published_sets, published_issues = [], [], [], []
     for (key, lo, hi), seeds in ordered:
         members, seen_titles = [], set()
-        for it in window_items:
-            if lo <= _day(it["published_on"]) <= hi and key in it["title"] and not tp.DROP.search(it["title"]):
+        for it in window_index.between(lo, hi):
+            if key in it["title"] and not tp.DROP.search(it["title"]):
                 norm = tp.normalize_title(it["title"])
                 if norm not in seen_titles:
                     seen_titles.add(norm)
@@ -1967,6 +2009,54 @@ def read_approval_file(path):
     return {line.strip() for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()}
 
 
+UNUSED_ROW_FIELDS = ("snippet", "matched_terms", "negative", "clarification", "topics")  # no code of this run reads them
+SHARED_ROW_FIELDS = ("publisher", "published_on", "source_class", "publisher_group", "fetched_on")
+
+
+def slim_rows(rows, shared=None):
+    """T82: drops the row fields that this run never reads and keeps one string object for equal values of the small-vocabulary fields."""
+    shared = {} if shared is None else shared
+    for it in rows:
+        for name in UNUSED_ROW_FIELDS:
+            it.pop(name, None)
+        for name in SHARED_ROW_FIELDS:
+            v = it.get(name)
+            if isinstance(v, str):
+                it[name] = shared.setdefault(v, v)
+    return rows
+
+
+def read_slim(path):
+    """The rows of tp.read_jsonl(path), slimmed one by one, so the unused fields never stay in memory together."""
+    shared, out = {}, []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                out.extend(slim_rows([json.loads(line)], shared))
+    return out
+
+
+def _keep_cluster_urls(d):
+    """json object hook: run() reads news_groups of a cluster and source_ids of a group only, so every other field is dropped on the load."""
+    if "news_groups" in d:
+        return {"news_groups": d["news_groups"]}
+    if "source_ids" in d:
+        return {"source_ids": d["source_ids"]}
+    return d
+
+
+def read_clusters(path, block=1 << 22):
+    """The clusters of json.load(path), reduced to what run() reads (T82): the URL lists. The full load takes 429 MB and a spike of 1.6 GB
+    (the text of the file as one string). A file whose top level is a list is read one cluster at a time from blocks of `block` characters."""
+    try:
+        return jsonlist.read_list(path, _keep_cluster_urls, block)
+    except ValueError as error:
+        if str(error) != "the top level of the file is not a list":
+            raise
+        with open(path, encoding="utf-8") as f:
+            return json.load(f, object_hook=_keep_cluster_urls)
+
+
 def main(argv):
     try:
         args, today = parse_today(list(argv[1:]))
@@ -1977,8 +2067,8 @@ def main(argv):
     if len(args) != 5:
         print(__doc__.splitlines()[2], file=sys.stderr)
         return 2
-    corpus = tp.read_jsonl(args[0])
-    clusters = json.load(open(args[1], encoding="utf-8"))
+    corpus = read_slim(args[0])
+    clusters = read_clusters(args[1])
     existing = json.load(open(args[2], encoding="utf-8"))
     stats, published, _ = run(corpus, clusters, existing, args[3], args[4], today=today,
                               approve_withdraw=read_approval_file(approve_file) if approve_file else None)

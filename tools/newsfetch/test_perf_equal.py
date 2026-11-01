@@ -1,0 +1,271 @@
+"""T82: the optimized structures give the same counts and the same rows as the old methods, on a small corpus.
+
+The old methods are written out here: document_frequency with Counter, the month Counter table, the scan of the corpus."""
+import json
+import random
+import re
+import unittest
+from collections import Counter, defaultdict
+from datetime import date, timedelta
+
+from tools.newsfetch import cluster as cl
+from tools.newsfetch import topics as tp
+from tools.newsfetch import topics_full as tf
+
+WORDS = ["颱風", "停班停課", "行政院", "預算", "立法院", "三讀", "核能", "臺北市", "高雄", "捷運", "ＡＢＣ", "２０２６", "「政治獻金案」", "政治獻金", "民族團結法", "薔琵", "護病比"]
+
+
+def corpus(n=400, seed=7):
+    rng = random.Random(seed)
+    rows = []
+    for i in range(n):
+        title = " ".join(rng.sample(WORDS, rng.randint(1, 4)))
+        day = date(2026, 4, 1) + timedelta(days=rng.randint(0, 200))
+        rows.append({"url": f"https://example.com/{i}", "title": title, "published_on": day.isoformat(), "publisher": "p", "source_class": "news"})
+    rows.append({"url": "https://example.com/none", "title": "", "published_on": "2026-05-05", "publisher": "p", "source_class": "news"})
+    return rows
+
+
+def old_months(rows):
+    months = defaultdict(Counter)
+    for it in rows:
+        months[it["published_on"][:7]].update(tp._grams(it["title"]))
+    return months
+
+
+class GramIndexTest(unittest.TestCase):
+    def test_total_counts_equal_the_counter_for_every_gram_and_for_phrases_that_are_no_gram(self):
+        rows = corpus()
+        df, gi = tp.document_frequency(rows), tp.GramIndex(rows)
+        for g in df:
+            self.assertEqual(gi.get(g, 0), df[g], g)
+            self.assertEqual(gi[g], df[g], g)
+        for g in ["", "颱", "ab", "颱風A", "颱風 停班", "颱風停班停課行政院預算", "鑫鑫", "三讀核能", "２０", "20", "ＡＢ", "政治獻金案」", "停課行"]:
+            self.assertEqual(gi.get(g, 0), df.get(g, 0), g)
+        self.assertEqual(gi.get("鑫鑫", 5), df.get("鑫鑫", 5))
+
+    def test_a_full_memo_does_not_change_a_count(self):
+        rows = corpus()
+        df, gi = tp.document_frequency(rows), tp.GramIndex(rows)
+        old, tp.MAX_MEMO = tp.MAX_MEMO, 5
+        try:
+            for g in list(df) * 2:
+                self.assertEqual(gi.get(g, 0), df[g], g)
+            self.assertLessEqual(len(gi._total), 5)
+        finally:
+            tp.MAX_MEMO = old
+
+    def test_window_counts_equal_the_month_counters(self):
+        rows = corpus()
+        old, new = old_months(rows), tf.MonthFrequency(rows)
+        self.assertEqual(sorted(new.months), sorted(old))
+        grams = set().union(*(set(c) for c in old.values())) | {"鑫鑫", "颱風A"}
+        for lo, hi in [(date(2026, 4, 3), date(2026, 4, 9)), (date(2026, 5, 20), date(2026, 8, 2)), (date(2026, 1, 1), date(2026, 12, 31)), (date(2027, 1, 1), date(2027, 2, 1))]:
+            keys, d = [], date(lo.year, lo.month, 1)
+            while d <= hi:
+                keys.append(d.strftime("%Y-%m"))
+                d = date(d.year + (d.month == 12), d.month % 12 + 1, 1)
+            counters = [old[k] for k in keys if k in old]
+            view = new.window(lo, hi)
+            for g in grams:
+                self.assertEqual(view.get(g, 0), sum(c.get(g, 0) for c in counters), (g, lo, hi))
+        for month, counter in old.items():
+            for g in list(counter)[:200]:
+                self.assertEqual(new.months[month].get(g, 0), counter[g])
+
+
+class WindowCountsTest(unittest.TestCase):
+    def test_the_index_window_equals_window_frequency_for_every_gram(self):
+        rows = corpus()
+        gi = tp.GramIndex(rows)
+        grams = set(tp.document_frequency(rows)) | {"鑫鑫", "颱風A"}
+        for lo, hi in [(date(2026, 4, 3), date(2026, 4, 9)), (date(2026, 5, 20), date(2026, 5, 20)), (date(2026, 1, 1), date(2026, 12, 31)), (date(2027, 1, 1), date(2027, 2, 1))]:
+            want, view = tp.window_frequency(rows, lo, hi), tp.window_counts(gi, rows, lo, hi)
+            for g in grams:
+                self.assertEqual(view.get(g, 0), want.get(g, 0), (g, lo, hi))
+                self.assertEqual(view[g], want[g], (g, lo, hi))
+            self.assertEqual(view.get("鑫鑫", 7), want.get("鑫鑫", 7))
+
+    def test_members_equal_with_the_counter_and_with_the_index(self):
+        rows = corpus(600)
+        df, gi = tp.document_frequency(rows), tp.GramIndex(rows)
+        rng = random.Random(11)
+        for _ in range(30):
+            picks = rng.sample(rows, 3)
+            seed = {"seed_urls": [r["url"] for r in picks], "jurisdiction_names": [], "jurisdiction_ids": ["jur-tw"]}
+            a, b = dict(seed), dict(seed)
+            ma, mb = tp.members(a, rows, df), tp.members(b, rows, gi)
+            self.assertEqual([id(x) for x in ma], [id(x) for x in mb])
+            self.assertEqual((a["_keys"], a["_name"], a["_generic"]), (b["_keys"], b["_name"], b["_generic"]))
+
+
+class DayIndexTest(unittest.TestCase):
+    def test_slice_equals_the_scan(self):
+        rows = corpus()
+        ix = tf.DayIndex(rows)
+        scan = sorted(rows, key=lambda j: j["published_on"])
+        for lo, hi in [(date(2026, 4, 3), date(2026, 4, 9)), (date(2026, 6, 1), date(2026, 6, 1)), (date(2026, 1, 1), date(2026, 12, 31)), (date(2027, 1, 1), date(2027, 2, 1))]:
+            want = [it for it in scan if lo <= tf._day(it["published_on"]) <= hi]
+            self.assertEqual([id(x) for x in ix.between(lo, hi)], [id(x) for x in want])
+
+
+class PersonCacheTest(unittest.TestCase):
+    def test_the_cached_test_equals_the_direct_test(self):
+        titles = ["柯文哲表示 預算", "行政院說明 颱風", "三讀 核能"]
+        for g in ["柯文哲", "行政院", "颱風", "預算", "核能", "停班停課", "三讀", "文哲"]:
+            direct = any(n in g for n in tp.PUBLIC_FIGURES if len(n) >= 2)
+            if not direct and 2 <= len(g) <= 3 and not tp.NOUN_END.search(g):
+                direct = sum(1 for t in titles if re.compile(re.escape(g) + tp.SPEECH_AFTER).search(t)) >= 1
+            self.assertEqual(tp._is_person_or_speaker(g, titles), direct, g)
+
+
+class SlimRowsTest(unittest.TestCase):
+    def test_only_the_unused_fields_go(self):
+        rows = corpus(20)
+        gone = ("snippet", "matched_terms", "negative", "clarification", "topics")
+        for r in rows:
+            r.update({k: "x" for k in gone})
+            r["sensitive"] = True
+        want = [{k: v for k, v in r.items() if k not in gone} for r in rows]
+        self.assertEqual(tf.slim_rows(rows), want)
+
+    def test_read_slim_equals_read_jsonl_then_slim(self):
+        import json
+        import tempfile
+        rows = corpus(30)
+        for r in rows:
+            r["snippet"] = "x"
+        with tempfile.TemporaryDirectory() as d:
+            path = d + "/c.jsonl"
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n\n")
+            self.assertEqual(tf.read_slim(path), tf.slim_rows(tp.read_jsonl(path)))
+
+
+class ReadClustersTest(unittest.TestCase):
+    def test_the_reduced_clusters_give_the_same_url_lists(self):
+        import json
+        import tempfile
+        data = [{"cluster_id": "c1", "title": "x", "topics": ["a"], "news_groups": [{"id": "ng-01", "kind": "report", "source_ids": ["u1", "u2"], "extra": {"source_ids": ["no"]}},
+                                                                              {"id": "ng-02", "source_ids": ["u3"]}]},
+                {"cluster_id": "c2", "news_groups": []}, {"cluster_id": "c3"}]
+        with tempfile.TemporaryDirectory() as d:
+            path = d + "/c.json"
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f)
+            got = tf.read_clusters(path)
+            for block in (1, 2, 7, 64):  # the block ends inside a value, inside a string, between values
+                self.assertEqual(tf.read_clusters(path, block), got)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n [ " + json.dumps(data, ensure_ascii=False)[1:-1].replace("},", "}\n ,\n") + "\n]\n")
+            self.assertEqual(tf.read_clusters(path, 5), got)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("[]")
+            self.assertEqual(tf.read_clusters(path, 1), [])
+        urls = lambda cs: [[u for g in c.get("news_groups", []) for u in g.get("source_ids", [])] for c in cs]
+        self.assertEqual(urls(got), urls(data))
+
+
+def merge_old(items):
+    merged = {}
+    for key, lo, hi, its in items:
+        slot = None
+        for (k, a, b), v in merged.items():
+            if k == key and a <= hi and lo <= b:
+                slot = (k, a, b)
+                break
+        if slot:
+            v = merged.pop(slot)
+            merged[(key, min(lo, slot[1]), max(hi, slot[2]))] = v + its
+        else:
+            merged[(key, lo, hi)] = its
+    return merged
+
+
+def merge_new(items):  # the loop of run(), with the slots index
+    merged, slots = {}, {}
+    for key, lo, hi, its in items:
+        slot = None
+        for k, a, b in slots.get(key, ()):
+            if a <= hi and lo <= b:
+                slot = (k, a, b)
+                break
+        if slot:
+            v = merged.pop(slot)
+            slots[key].remove(slot)
+            new_slot = (key, min(lo, slot[1]), max(hi, slot[2]))
+            if new_slot not in merged:
+                slots[key].append(new_slot)
+            merged[new_slot] = v + its
+        else:
+            merged[(key, lo, hi)] = its
+            slots.setdefault(key, []).append((key, lo, hi))
+    return merged
+
+
+class MergeSlotsTest(unittest.TestCase):
+    def test_the_slot_index_gives_the_same_merged_dict_in_the_same_order(self):
+        rng = random.Random(3)
+        for keys, spread in [(3, 40), (8, 400), (60, 200)]:
+            items = []
+            for i in range(600):
+                lo = date(2026, 4, 1) + timedelta(days=rng.randint(0, spread))
+                items.append((f"k{rng.randint(0, keys)}", lo, lo + timedelta(days=rng.randint(0, 6)), [i]))
+            old, new = merge_old(items), merge_new(items)
+            self.assertEqual(list(old.items()), list(new.items()))
+
+
+class DailyClustersTest(unittest.TestCase):
+    def test_the_reduced_clusters_give_the_same_count_and_enrich_input(self):
+        import json
+        import tempfile
+        from tools.newsfetch import daily, jsonlist
+        data = [{"cluster_id": f"c{i}", "title": f"標題{i}", "topics": ["a"], "groups": [{"x": 1}],
+                 "news_groups": [{"id": "ng-01", "kind": "report", "source_ids": [f"https://a.example/{i}", f"https://b.example/{i}"], "topics": []}]} for i in range(5)]
+        with tempfile.TemporaryDirectory() as d:
+            path = d + "/c.json"
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            full = json.load(open(path, encoding="utf-8"))
+            self.assertEqual(sum(1 for _ in jsonlist.iter_list(path, daily._drop_all_fields)), len(full))
+            reduced = jsonlist.read_list(path, daily._keep_enrich_fields)
+        key = lambda cs: [(c.get("cluster_id"), c.get("title"), sorted(daily.cluster_urls(c))) for c in cs]
+        self.assertEqual(key(reduced), key(full))
+
+
+def cluster_rows(n, seed):
+    rng = random.Random(seed)
+    chars = [chr(0x4e00 + k * 7) for k in range(300)]
+    base = ["".join(rng.choice(chars) for _ in range(7)) for _ in range(40)]
+    rows = []
+    for i in range(n):
+        title = rng.choice(base)[: rng.randint(5, 7)] + "".join(rng.choice("甲乙丙丁戊己庚辛壬癸") for _ in range(rng.randint(0, 2))) + rng.choice(["", "澄清", "回應"])
+        day = date(2026, 4, 1) + timedelta(days=rng.randint(0, 120))
+        rows.append({"url": f"https://n{rng.randint(0, 4)}.example/{i}", "title": title, "published_on": day.isoformat(),
+                     "publisher": rng.choice(["自由時報", "中央通訊社", "公視"]), "source_class": rng.choice(["news", "news", "fact_check", "official_statement"]),
+                     "negative": rng.random() < 0.2, "clarification": rng.random() < 0.2, "sensitive": rng.random() < 0.1, "topics": rng.sample(["a", "b", "c"], rng.randint(0, 2))})
+    return rows
+
+
+class ClusterWindowTest(unittest.TestCase):
+    def test_the_day_window_of_the_postings_gives_the_same_clusters_as_the_full_postings(self):
+        def full_shared(self, grams, first=0):  # the old method: every node that shares a gram, the day test comes after
+            counts = Counter()
+            for gram in grams:
+                counts.update(self.postings.get(gram, ()))
+            return counts
+        for n, seed in [(300, 1), (700, 2)]:
+            rows = cluster_rows(n, seed)
+            new = cl.cluster_items([dict(r) for r in rows])
+            saved, cl._Index.shared = cl._Index.shared, full_shared
+            try:
+                old = cl.cluster_items([dict(r) for r in rows])
+            finally:
+                cl._Index.shared = saved
+            self.assertEqual(json.dumps(new, ensure_ascii=False), json.dumps(old, ensure_ascii=False))
+            self.assertGreater(len(new), 10)
+            self.assertLess(len(new), n)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -38,8 +38,9 @@ import logging
 import re
 import sys
 import unicodedata
+from bisect import bisect_left
 from collections import Counter
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -163,10 +164,13 @@ class _Index:
         for gram in grams:
             self.postings.setdefault(gram, []).append(node_id)
 
-    def shared(self, grams):
+    def shared(self, grams, first=0):
+        """Count, for each node with id >= first, the grams that it shares. The posting lists are in the order of the ids (T82)."""
         counts = Counter()
         for gram in grams:
-            counts.update(self.postings.get(gram, ()))
+            posting = self.postings.get(gram)
+            if posting:
+                counts.update(posting[bisect_left(posting, first):] if first else posting)
         return counts
 
 
@@ -185,11 +189,14 @@ def _prepare(items):
 
 def _report_groups(prepared):
     groups = []  # each: {"rep": _Prepared, "members": [_Prepared]}
+    rep_days = []  # the day of each group's representative; the entries come in day order, so the list is sorted
     indexes = {}
     for entry in prepared:
         index = indexes.setdefault((entry.source_group, entry.is_clar), _Index())
         best, best_score = None, 0.0
-        for group_id, shared in index.shared(entry.bigrams).items():
+        # T82: a group whose representative is more than SAME_CONTENT_DAYS before the entry is skipped below, so it is not counted at all.
+        first = bisect_left(rep_days, entry.day - timedelta(days=SAME_CONTENT_DAYS))
+        for group_id, shared in index.shared(entry.bigrams, first).items():
             rep = groups[group_id]["rep"]
             if abs((entry.day - rep.day).days) > SAME_CONTENT_DAYS:
                 continue
@@ -202,12 +209,16 @@ def _report_groups(prepared):
                 best, best_score = group_id, score
         if best is None:
             index.add(len(groups), entry.bigrams)
+            rep_days.append(entry.day)
             groups.append({"rep": entry, "members": [entry]})
         else:
             groups[best]["members"].append(entry)
     for group in groups:
         group["clar"] = group["rep"].is_clar
         group["bigrams"] = set().union(*(member.bigrams for member in group["members"]))
+    for group in groups:  # T82: the member bigrams are not read again; the group keeps the union
+        for member in group["members"]:
+            member.bigrams = ()
     return groups
 
 
@@ -221,8 +232,11 @@ def _topic_components(groups):
         return node
 
     index = _Index()
+    rep_days = [group["rep"].day for group in groups]
     for current, group in enumerate(groups):
-        for other, shared in index.shared(group["bigrams"]).items():
+        # T82: a group whose representative is more than TOPIC_DAYS before this one is skipped below, so it is not counted at all.
+        first = bisect_left(rep_days, group["rep"].day - timedelta(days=TOPIC_DAYS))
+        for other, shared in index.shared(group["bigrams"], first).items():
             rep = groups[other]["rep"]
             if abs((group["rep"].day - rep.day).days) > TOPIC_DAYS:
                 continue
