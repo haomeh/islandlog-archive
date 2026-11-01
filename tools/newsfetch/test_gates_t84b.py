@@ -193,5 +193,30 @@ class CampaignClassTest(unittest.TestCase):
         self.assertEqual(kept, self.POLICY)
 
 
+class CriminalCaseTest(unittest.TestCase):
+    """R363.5 (G5): a criminal case of a person (判刑, 入獄) is another case than the issue of the topic. A court ruling on a public act stays."""
+
+    def members(self, titles):
+        from tools.newsfetch.test_topics_full import item
+        return [item(f"m{i}", t, "2026-10-24", f"報{i}") for i, t in enumerate(titles)]
+
+    def test_a_sentence_or_a_prison_title_is_a_case_title(self):
+        for title in ("地下匯兌逾千萬！統促黨「白狼」兒媳判1年7月今入獄 兒棄保潛逃", "統促黨幹部入獄服刑", "統促黨幹部判刑確定", "統促黨成員判2年 緩刑"):
+            self.assertTrue(tf.CASE_TITLE.search(title), title)
+
+    def test_a_court_ruling_on_a_public_act_is_no_case_title(self):
+        for title in ("憲法法庭判決 死刑規定違憲", "行政法院判決 市府裁罰撤銷", "法院裁定 公所補助款應撥付", "最高行政法院判決 環評審查無效"):
+            self.assertFalse(tf.CASE_TITLE.search(title), title)
+
+    def test_the_case_title_leaves_as_its_own_list(self):
+        titles = ["統促黨解散案 內政部聲請憲法法庭", "統促黨解散案 憲法法庭開庭", "地下匯兌 統促黨幹部之媳判1年7月今入獄"]
+        lists = tf.split_cases(self.members(titles))
+        self.assertEqual(sorted(len(g) for g in lists), [1, 2])
+
+    def test_the_ruling_on_a_public_act_stays_in_the_topic(self):
+        titles = ["統促黨解散案 內政部聲請憲法法庭", "統促黨解散案 憲法法庭判決出爐", "統促黨解散案 憲法法庭裁定"]
+        self.assertEqual(len(tf.split_cases(self.members(titles))), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
