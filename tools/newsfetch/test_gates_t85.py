@@ -1,8 +1,10 @@
 """T85 tests (R384). No test or data here holds the name of a minor or of a victim. Names are fake."""
 
 import unittest
+from unittest import mock
 
 from tools.newsfetch import run_report
+from tools.newsfetch import topics as tp
 from tools.newsfetch import topics_full as tf
 
 REMOVED_R384 = ["src-20260806-ettoday-9171cd71", "src-20260806-ettoday-bd4f0e3a", "src-20260912-ltn-7a5c57f9", "src-20260912-ettoday-0768633b",
@@ -126,6 +128,68 @@ class CampaignNamesTest(unittest.TestCase):
     def test_the_old_classes_still_work(self):
         for title in ("議員為候選人助講 批新制", "市府新制 某黨競辦回應"):
             self.assertTrue(tf.candidate_talk(title), title)
+
+
+def _group(rows, kind="report"):
+    items = [{"url": u, "title": t, "published_on": d, "publisher": f"報{i}", "source_class": "news", "fetched_on": f"{d}T12:00:00Z"}
+             for i, (u, t, d) in enumerate(rows)]
+    return {"kind": kind, "items": items, "urls": [i["url"] for i in items]}
+
+
+class DisplayCapShortFormTest(unittest.TestCase):
+    """R384.5: the display cap reads the short forms of the key, keeps the first report so start_date does not move, and gives campaign titles no priority."""
+
+    def build(self, groups, key="中聯油脂", cap=2):
+        seed = {"event_id": "ev-20260601-x", "seed_urls": [], "_keys": [key], "_name": key, "jurisdiction_names": [], "jurisdiction_ids": ["jur-tw"],
+                "gov_levels": [], "controversy_types": [], "policy_domains": [], "actors": []}
+        items = [i for g in groups for i in g["items"]]
+        with mock.patch.object(tp, "group_items", lambda its: groups), mock.patch.object(tp, "MAX_GROUPS", cap):
+            return tp.build_event(seed, items, {}, items=items)
+
+    def test_the_short_forms_of_a_key_are_prefixes_and_long_suffixes(self):
+        forms = tp.key_forms("中聯油脂")
+        self.assertEqual(forms[0], "中聯油脂")
+        for f in ("中聯", "中聯油", "聯油脂"):
+            self.assertIn(f, forms)
+        self.assertNotIn("油脂", forms)
+
+    def test_a_key_of_two_characters_has_no_short_form(self):
+        self.assertEqual(tp.key_forms("萬里"), ["萬里"])
+
+    def test_a_group_with_a_short_form_ranks_before_a_bigger_group_with_none(self):
+        none = _group([("https://x.example/n1", "豆油價格 調漲", "2026-06-05"), ("https://x.example/n2", "豆油價格 再漲", "2026-06-05"), ("https://x.example/n3", "豆油價格 回穩", "2026-06-05")])
+        short = _group([("https://x.example/s1", "中聯1300噸 回收", "2026-06-05")])
+        full = _group([("https://x.example/f1", "中聯油脂 停產", "2026-06-06")])
+        ev = self.build([none, short, full])
+        self.assertEqual(sorted(ev["used"]), ["https://x.example/f1", "https://x.example/s1"])
+
+    def test_the_first_report_stays_so_start_date_does_not_move(self):
+        first = _group([("https://x.example/a", "颱風外圍環流 豪雨", "2026-06-01")])
+        full1 = _group([("https://x.example/b", "中聯油脂 停產", "2026-06-05"), ("https://x.example/b2", "中聯油脂 停產 二", "2026-06-05")])
+        full2 = _group([("https://x.example/c", "中聯油脂 回收", "2026-06-06"), ("https://x.example/c2", "中聯油脂 回收 二", "2026-06-06")])
+        ev = self.build([first, full1, full2])
+        self.assertEqual(ev["start_date"], "2026-06-01")
+        self.assertIn("https://x.example/a", ev["used"])
+
+    def test_the_first_report_is_the_one_with_the_best_rank_on_the_first_day(self):
+        d1 = _group([("https://x.example/a1", "油價 一般", "2026-06-01")])
+        d2 = _group([("https://x.example/a2", "中聯油脂 首報", "2026-06-01")])
+        full = _group([("https://x.example/f1", "中聯油脂 停產", "2026-06-06")])
+        full2 = _group([("https://x.example/f2", "中聯油脂 回收", "2026-06-07")])
+        ev = self.build([d1, d2, full, full2])
+        self.assertIn("https://x.example/a2", ev["used"])
+        self.assertNotIn("https://x.example/a1", ev["used"])
+
+    def test_a_campaign_title_with_the_key_gets_no_priority(self):
+        camp = _group([("https://x.example/c1", "中聯油脂 王小明交鋒李大華", "2026-06-05")])
+        plain = _group([("https://x.example/p1", "中聯油脂 停產", "2026-06-05")])
+        short = _group([("https://x.example/s1", "中聯1300噸 回收", "2026-06-05")])
+        with mock.patch.object(tp, "is_campaign_title", lambda t: "交鋒" in t):
+            ev = self.build([camp, plain, short])
+        self.assertEqual(sorted(ev["used"]), ["https://x.example/p1", "https://x.example/s1"])
+
+    def test_topics_full_sets_the_campaign_hook(self):
+        self.assertIs(tp.is_campaign_title, tf.candidate_talk)
 
 
 if __name__ == "__main__":

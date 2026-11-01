@@ -910,6 +910,9 @@ def candidate_talk(title):
     return bool((named and CANDIDATE_DUEL.search(title)) or (CHANGE_SLOGAN.search(title) and (named or PARTY_WORD.search(title))))
 
 
+tp.is_campaign_title = candidate_talk  # R384.5: the display cap of topics.py gives a campaign title no priority
+
+
 def drop_candidate_talk(members, keep_ids=frozenset()):
     """R359.6 (PRD 4.5 item 5): the candidate-attack rule reads each member, not only the share of a candidate. A title of `keep_ids` (the
     sources that the file of an old topic cites) stays, because an old topic keeps its sources (R155.4)."""
