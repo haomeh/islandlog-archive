@@ -26,7 +26,7 @@
 4. `merge`：`merge_corpus` 把新列合併到暫存檔 `runs/DATE/corpus.next.jsonl`。每個正規化網址只留一列。舊列逐位元相同。語料本身不變。
 5. `cluster`：用 `PYTHONHASHSEED=0` 執行 `cluster.py --as-news-groups`，輸出 `runs/DATE/clusters-ng.json`（R149）。
 6. `promote`：前面五步都成功，才把暫存檔改名成語料，並更新 `state.json`。前面任何一步失敗，語料和 `state.json` 都不變。
-7. `dry_run`：把 `origin/main` 用 `git archive` 匯出到 `runs/DATE/dry/`，在那裡執行 `topics_full`，`--today` 設成臺北日期。這一步約 55 分鐘。
+7. `dry_run`：把 `origin/main` 用 `git archive` 匯出到 `runs/DATE/dry/`，在那裡執行 `topics_full`，`--today` 設成臺北日期。這一步量到的時間：`topics_full` 在 277,420 列語料上用 9 分 54 秒，尖峰記憶體 1069 MB（T82b，2026-11-01，`/usr/bin/python3` 3.14.8）；加上匯出 `origin/main` 的時間，約 10 分鐘。
 8. `validate`：如果有驗證器執行檔（`NEWSFETCH_VALIDATOR`，或 PATH 上的 `islandlog`），或有 `NEWSFETCH_SERVER_REPO` 加 `go`，就對 `dry/` 執行 `validate --mode full`。兩者都沒有就標示 `BLOCKED`。`BLOCKED` 會產生警報（R347.3）。T80 要設定驗證器。
 9. `report`：寫 `reports/DATE.json` 和 `.md`（繁體中文），再寫或刪除 `ALERT`。
 
