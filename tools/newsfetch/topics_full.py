@@ -854,10 +854,14 @@ def set_candidates(names):
     _CANDIDATES = frozenset(names)
 
 
+CAMPAIGN_CLASS = re.compile(r"助講|宣講|競辦|競選辦公室|競總|點名.{0,4}候選人|候選人.{0,2}表態|參選人.{0,2}表態|陣營.{0,3}(?:交鋒|攻防|隔空|互嗆|對槓|喊話)")  # R363.4: the classes 助講, 競辦, 候選人表態, 陣營交鋒
+
+
 def candidate_talk(title):
-    """R154 (PRD 4.5 item 5): a title with a campaign act, or with two candidates and an attack word, judges candidates."""
+    """R154 (PRD 4.5 item 5): a title with a campaign act, or with two candidates and an attack word, judges candidates.
+    R363.4: the campaign classes 助講, 競辦, 候選人表態 and 陣營交鋒 count too. A policy statement of an official with no campaign word stays."""
     named = sum(1 for n in _CANDIDATES if n in title)
-    return bool(CAMPAIGN_ACT.search(title)) or (named > 1 and bool(ATTACK.search(title)))
+    return bool(CAMPAIGN_ACT.search(title)) or bool(CAMPAIGN_CLASS.search(title)) or (named > 1 and bool(ATTACK.search(title)))
 
 
 def drop_candidate_talk(members, keep_ids=frozenset()):

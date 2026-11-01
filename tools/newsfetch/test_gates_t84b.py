@@ -160,5 +160,38 @@ class ForeignMarkerTest(unittest.TestCase):
         self.assertTrue(tf.taiwan_relevant(["波蘭憲法法庭裁定總統令違憲"], new=False))
 
 
+class CampaignClassTest(unittest.TestCase):
+    """R363.4 (G3): the member rule for campaign titles reads four classes: 助講, 競辦, 候選人表態, 陣營交鋒 (PRD 4.5 item 5)."""
+
+    CAMPAIGN = ["黃國昌竹南助講轟綠抹黑造謠 為長者健保補助向賴清德、卓榮泰下戰帖",
+                "黃國昌問沈伯洋「取消北市長者健保補助？」 柯文哲點名9綠營候選人表態",
+                "長者健保補助修法議題 竹市白、綠陣營隔空交鋒",
+                "長者健保費補助爭議 台灣前進陣線全台串連宣講",
+                "長者健保補助掀攻防 李四川競辦追問蘇巧慧：卓榮泰不副署妳支持嗎？"]
+    POLICY = ["長者健保費補助 柯文哲：醫療平權 台灣民眾黨說到做到！", "藍批長者健保補助雙標 綠黨團：弱勢保障不能修到漏接", "民眾黨：中央補助長者健保費 健保收入一塊都不會少",
+              "藍議員問長者健保費中央買單？周春米：立法院要「精傱」一點啦", "蘇巧慧談長者健保補助：若是全國一致福利當然接受",
+              "《少康戰情室專訪》蘇巧慧：長者健保費補助 全國應一致", "衛福部說明長者健保費補助新制", "行政院長卓榮泰：長者健保費補助將修法", "兩部會協商長者健保費 交鋒焦點在財源"]
+
+    def test_each_of_the_five_titles_is_candidate_talk(self):
+        for title in self.CAMPAIGN:
+            self.assertTrue(tf.candidate_talk(title), title)
+
+    def test_a_policy_title_or_an_official_statement_stays(self):
+        for title in self.POLICY:
+            self.assertFalse(tf.candidate_talk(title), title)
+
+    def test_one_title_for_each_class(self):
+        self.assertTrue(tf.candidate_talk("議員為候選人助講 批新制"))
+        self.assertTrue(tf.candidate_talk("市府新制 某黨競辦回應"))
+        self.assertTrue(tf.candidate_talk("市府新制 候選人表態支持"))
+        self.assertTrue(tf.candidate_talk("市府新制 藍綠陣營交鋒"))
+
+    def test_the_member_filter_drops_the_five_titles_and_keeps_the_policy_titles(self):
+        from tools.newsfetch.test_topics_full import item
+        members = [item(f"c{i}", t, "2026-10-24", f"報{i}") for i, t in enumerate(self.CAMPAIGN)] + [item(f"p{i}", t, "2026-10-24", f"報{i}") for i, t in enumerate(self.POLICY)]
+        kept = [m["title"] for m in tf.drop_candidate_talk(members)]
+        self.assertEqual(kept, self.POLICY)
+
+
 if __name__ == "__main__":
     unittest.main()
