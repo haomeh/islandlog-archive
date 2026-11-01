@@ -319,6 +319,43 @@ def _proposed_source_id(url, published_on):
     return f"src-{str(published_on).replace('-', '')}-{label}-{digest}"
 
 
+def _days_by_url(items):
+    """url -> published_on text, over the items with a valid day. A later item with the same url wins."""
+    return {entry["url"]: str(entry["published_on"]) for entry in items if entry.get("url") and _valid_day(entry)}
+
+
+def _news_groups_of(cluster, days, mapping):
+    """The news_groups entry of one cluster. It adds the url -> proposed source id pairs of the cluster to mapping."""
+    news_groups = []
+    for number, group in enumerate(cluster["groups"], start=1):
+        for url in group["member_urls"]:
+            mapping[url] = _proposed_source_id(url, days[url])
+        entry = {
+            "id": f"ng-{number:02d}",
+            "kind": group["kind"],
+            "source_group": group["source_group"],
+            "title": group["title"],
+            "representative_source_id": group["representative_url"],
+            "source_ids": list(group["member_urls"]),
+        }
+        for key in ("source_class", "negative", "clarification", "sensitive", "topics"):
+            entry[key] = group[key]
+        if group.get("routine"):
+            entry["routine"] = True
+        news_groups.append(entry)
+    return {"cluster_id": cluster["cluster_id"], "title": cluster["title"],
+            "negative": cluster["negative"], "clarification": cluster["clarification"],
+            "sensitive": cluster["sensitive"], "topics": cluster["topics"],
+            "has_negative_and_clarification": cluster["has_negative_and_clarification"],
+            "news_groups": news_groups}
+
+
+def iter_news_groups(clusters, days, mapping):
+    """T82b: as_news_groups one cluster at a time. mapping is complete when the iterator ends."""
+    for cluster in clusters:
+        yield _news_groups_of(cluster, days, mapping)
+
+
 def as_news_groups(clusters, items):
     """Return (news_groups per cluster, url -> proposed source id).
 
@@ -327,36 +364,36 @@ def as_news_groups(clusters, items):
     """
     days = {entry["url"]: str(entry["published_on"]) for entry in items if entry.get("url")}
     mapping = {}
-    result = []
-    for cluster in clusters:
-        news_groups = []
-        for number, group in enumerate(cluster["groups"], start=1):
-            for url in group["member_urls"]:
-                mapping[url] = _proposed_source_id(url, days[url])
-            entry = {
-                "id": f"ng-{number:02d}",
-                "kind": group["kind"],
-                "source_group": group["source_group"],
-                "title": group["title"],
-                "representative_source_id": group["representative_url"],
-                "source_ids": list(group["member_urls"]),
-            }
-            for key in ("source_class", "negative", "clarification", "sensitive", "topics"):
-                entry[key] = group[key]
-            if group.get("routine"):
-                entry["routine"] = True
-            news_groups.append(entry)
-        result.append({"cluster_id": cluster["cluster_id"], "title": cluster["title"],
-                       "negative": cluster["negative"], "clarification": cluster["clarification"],
-                       "sensitive": cluster["sensitive"], "topics": cluster["topics"],
-                       "has_negative_and_clarification": cluster["has_negative_and_clarification"],
-                       "news_groups": news_groups})
-    return result, mapping
+    return list(iter_news_groups(clusters, days, mapping)), mapping
 
 
-def read_jsonl(path):
+ITEM_FIELDS = ("url", "title", "published_on", "publisher", "source_group", "source_class",
+               "routine", "negative", "clarification", "sensitive", "topics")  # the fields that clustering and the output read (T82b)
+
+
+def read_jsonl(path, keep=None):
+    """The rows of a JSON lines file. With keep, a row holds only those of its fields that are present (T82b: the snippet and the other fields are not read again)."""
+    rows = []
     with Path(path).open(encoding="utf-8") as stream:
-        return [json.loads(line) for line in stream if line.strip()]
+        for line in stream:
+            if line.strip():
+                row = json.loads(line)
+                if keep is not None and isinstance(row, dict):
+                    row = {key: row[key] for key in keep if key in row}
+                rows.append(row)
+    return rows
+
+
+def write_json_list(path, values):
+    """Write values as json.dumps(list(values), ensure_ascii=False, indent=2) + "\n" gives, one value at a time (T82b).
+    A newline in the text of a value is escaped by json, so each newline that is left is a line of the layout."""
+    with Path(path).open("w", encoding="utf-8") as stream:
+        opened = False
+        for value in values:
+            stream.write(",\n  " if opened else "[\n  ")
+            stream.write(json.dumps(value, ensure_ascii=False, indent=2).replace("\n", "\n  "))
+            opened = True
+        stream.write("\n]\n" if opened else "[]\n")
 
 
 def main(argv=None):
@@ -366,14 +403,16 @@ def main(argv=None):
     parser.add_argument("--as-news-groups", action="store_true",
                         help="write news_groups entries and <output>.sources.json")
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
-    items = read_jsonl(args.input)
+    items = read_jsonl(args.input, ITEM_FIELDS)
     clusters = cluster_items(items)
     out = Path(args.output)
     if args.as_news_groups:
-        clusters, mapping = as_news_groups(clusters, [i for i in items if _valid_day(i)])
+        mapping = {}
+        write_json_list(out, iter_news_groups(clusters, _days_by_url(items), mapping))
         Path(str(out) + ".sources.json").write_text(
             json.dumps(mapping, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    out.write_text(json.dumps(clusters, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    else:
+        write_json_list(out, clusters)
 
 
 def _valid_day(item):
