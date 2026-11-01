@@ -917,7 +917,7 @@ CAMPAIGN_CLASS = re.compile(r"助講|宣講|競辦|競選辦公室|競總|點名
 
 
 CAMPAIGN_SIDE = re.compile(r"陣營質疑|對手陣營|[藍綠白]營?選將|[藍綠白]營?選將.{0,4}喊")  # R384.4: a side of a campaign speaks
-CANDIDATE_DUEL = re.compile(r"交鋒|反問|下台負責|要求.{0,8}下台")  # R384.4: with a named candidate these words judge a candidate
+CANDIDATE_DUEL = re.compile(r"交鋒|反問|攻防|選情|猛打|下台負責|要求.{0,8}下台")  # R384.4: with a named candidate these words judge a candidate
 CHANGE_SLOGAN = re.compile(r"換人做")
 PARTY_WORD = re.compile(r"國民黨|民進黨|民眾黨|[藍綠白]營|[藍綠白]選將|[藍綠白]委|[藍綠白]議員")
 
