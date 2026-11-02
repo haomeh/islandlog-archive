@@ -30,7 +30,14 @@ timeline:
   lifecycle_stage: resolution
   source_ids:
   - src-20211218-tvbs-referendum-results
+- id: tl-02
+  date: '2021-12-19'
+  date_precision: day
+  title: 來源發布：第20案投票，結果不通過
+  lifecycle_stage: resolution
+  source_ids:
   - src-20211219-pts-datan-referendum
+  description: 原紀錄事件日期：2021-12-18（day）；本節日期為來源發布日。
 privacy:
   contains_private_persons: false
   basis_source_ids: []

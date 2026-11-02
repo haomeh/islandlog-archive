@@ -4,7 +4,7 @@ id: ev-20260721-hsinchu-rice-noodle-formaldehyde
 kind: historical_event
 status: published
 title: 新竹市甲醛炊粉
-summary: 2026-07-18至2026-08-05，ETtoday新聞雲、自由時報、華視新聞等共 44 則報導提及甲醛炊粉 [@src-20260718-ettoday-6b6573f3]。
+summary: 2026-07-18至2026-08-14，ETtoday新聞雲、自由時報、華視新聞等共 44 則報導提及甲醛炊粉 [@src-20260718-ettoday-6b6573f3]。
 start_date: '2026-07-18'
 start_date_precision: day
 gov_levels:
@@ -53,6 +53,12 @@ timeline:
   - src-20260721-cts-30043e66
   - src-20260721-newtalk-7124738b
   - src-20260721-newtalk-ad1848f0
+  - src-20260721-ettoday-38f219e8
+  - src-20260721-ltn-a49fb5e9
+  - src-20260721-ltn-ae9d5b76
+  - src-20260721-ltn-0227bf54
+  - src-20260721-ltn-3f34b115
+  - src-20260721-ltn-cc012d9e
 - id: tl-05
   date: '2026-07-22'
   date_precision: day
@@ -61,6 +67,9 @@ timeline:
   - src-20260722-ltn-4478a278
   - src-20260722-cts-742943d1
   - src-20260722-ltn-c8266578
+  - src-20260722-ltn-65f869a2
+  - src-20260722-ltn-1283a125
+  - src-20260722-newtalk-eb2328b1
 - id: tl-06
   date: '2026-07-23'
   date_precision: day
@@ -69,15 +78,33 @@ timeline:
   - src-20260723-cts-6a4cfd48
   - src-20260723-ltn-d1c60c5d
   - src-20260723-ltn-1195da40
+  - src-20260723-ltn-1acc50f5
+  - src-20260723-ltn-271790d9
 - id: tl-07
   date: '2026-07-24'
   date_precision: day
-  title: 4 則報導
+  title: 1 則報導
   source_ids:
   - src-20260724-ltn-9b36f1b2
-  - src-20260725-ltn-04b90d1c
-  - src-20260727-ltn-f7948665
 - id: tl-08
+  date: '2026-07-25'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
+  - src-20260725-ltn-04b90d1c
+- id: tl-09
+  date: '2026-07-27'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
+  - src-20260727-ltn-f7948665
+- id: tl-10
+  date: '2026-07-29'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
+  - src-20260729-ltn-6203ad7f
+- id: tl-11
   date: '2026-07-30'
   date_precision: day
   title: 6 則報導
@@ -85,22 +112,46 @@ timeline:
   - src-20260730-cts-14bd0e34
   - src-20260730-ltn-00dbf911
   - src-20260730-ltn-b6c15dd0
-- id: tl-09
+  - src-20260730-ltn-98e9e0ca
+- id: tl-12
   date: '2026-07-31'
   date_precision: day
-  title: 4 則報導
+  title: 3 則報導
   source_ids:
   - src-20260731-ltn-3f3d00cf
   - src-20260731-ltn-15f27eaa
+- id: tl-13
+  date: '2026-08-01'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
   - src-20260801-ltn-b09a8d80
-- id: tl-10
+- id: tl-14
   date: '2026-08-05'
   date_precision: day
-  title: 7 則報導
+  title: 4 則報導
   source_ids:
   - src-20260805-ltn-d13848cd
   - src-20260805-ettoday-1bbd50e8
   - src-20260805-ltn-3af9d1a2
+- id: tl-15
+  date: '2026-08-07'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
+  - src-20260807-ltn-bb7a6cec
+- id: tl-16
+  date: '2026-08-09'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
+  - src-20260809-ltn-bfa32620
+- id: tl-17
+  date: '2026-08-14'
+  date_precision: day
+  title: 1 則報導
+  source_ids:
+  - src-20260814-ltn-54d9ab32
 news_groups:
 - id: ng-01
   timeline_id: tl-01
@@ -277,28 +328,28 @@ news_groups:
   source_ids:
   - src-20260724-ltn-9b36f1b2
 - id: ng-25
-  timeline_id: tl-07
+  timeline_id: tl-08
   kind: report
   title: 竹市爆甲醛炊粉食安風暴 竹塹特產節僅1家米粉業者擺攤
   representative_source_id: src-20260725-ltn-04b90d1c
   source_ids:
   - src-20260725-ltn-04b90d1c
 - id: ng-26
-  timeline_id: tl-07
+  timeline_id: tl-09
   kind: report
   title: 高虹安市府疑蓋牌甲醛炊粉 在地老牌老鍋、南興出示檢驗自清
   representative_source_id: src-20260727-ltn-f7948665
   source_ids:
   - src-20260727-ltn-f7948665
 - id: ng-27
-  timeline_id: tl-07
+  timeline_id: tl-10
   kind: report
   title: 陳厚全稱甲醛炊粉煮一煮就可食用  莊競程轟甲醛是一級致癌物
   representative_source_id: src-20260729-ltn-6203ad7f
   source_ids:
   - src-20260729-ltn-6203ad7f
 - id: ng-28
-  timeline_id: tl-08
+  timeline_id: tl-11
   kind: report
   title: 竹市衛生局長稱甲醛炊粉煮過能吃 綠議員轟離譜
   representative_source_id: src-20260730-cts-14bd0e34
@@ -306,7 +357,7 @@ news_groups:
   - src-20260730-cts-14bd0e34
   - src-20260730-ltn-62c521e0
 - id: ng-29
-  timeline_id: tl-08
+  timeline_id: tl-11
   kind: report
   title: 竹市衛生局長稱甲醛炊粉煮一煮就可吃 錢康明：荒謬至極
   representative_source_id: src-20260730-ltn-00dbf911
@@ -314,28 +365,28 @@ news_groups:
   - src-20260730-ltn-00dbf911
   - src-20260731-ltn-9902e6e8
 - id: ng-30
-  timeline_id: tl-08
+  timeline_id: tl-11
   kind: report
   title: 甲醛炊粉近8成恐已流入市面 高虹安市府僅開罰12萬挨轟
   representative_source_id: src-20260730-ltn-b6c15dd0
   source_ids:
   - src-20260730-ltn-b6c15dd0
 - id: ng-31
-  timeline_id: tl-08
+  timeline_id: tl-11
   kind: report
   title: 甲醛炊粉業者僅罰12萬 楊玲宜：難怪高友友的明好企業肆無忌憚
   representative_source_id: src-20260730-ltn-98e9e0ca
   source_ids:
   - src-20260730-ltn-98e9e0ca
 - id: ng-32
-  timeline_id: tl-09
+  timeline_id: tl-12
   kind: report
   title: 甲醛炊粉重挫竹市府形象！ 高虹安向楊文科借將 楊郡慈任市府發言人
   representative_source_id: src-20260731-ltn-3f3d00cf
   source_ids:
   - src-20260731-ltn-3f3d00cf
 - id: ng-33
-  timeline_id: tl-09
+  timeline_id: tl-12
   kind: report
   title: 竹市明好農耕牌炊粉擴大抽驗6品項是否含甲醛 4品項仍有疑慮待複驗
   representative_source_id: src-20260731-ltn-15f27eaa
@@ -343,28 +394,28 @@ news_groups:
   - src-20260731-ltn-15f27eaa
   - src-20260802-ltn-6fb69ac7
 - id: ng-34
-  timeline_id: tl-09
+  timeline_id: tl-13
   kind: report
   title: 甲醛炊粉風暴延燒 新竹市公布15家合格米粉業者名單
   representative_source_id: src-20260801-ltn-b09a8d80
   source_ids:
   - src-20260801-ltn-b09a8d80
 - id: ng-35
-  timeline_id: tl-10
+  timeline_id: tl-14
   kind: report
   title: 竹市從甲醛炊粉到托嬰兒虐 家長怒批市府蓋牌
   representative_source_id: src-20260805-ltn-d13848cd
   source_ids:
   - src-20260805-ltn-d13848cd
 - id: ng-36
-  timeline_id: tl-10
+  timeline_id: tl-14
   kind: report
   title: 竹市又爆甲醛炊粉稱「跟陽光一樣」 莊競程轟市府「69天」重創產業
   representative_source_id: src-20260805-ettoday-1bbd50e8
   source_ids:
   - src-20260805-ettoday-1bbd50e8
 - id: ng-37
-  timeline_id: tl-10
+  timeline_id: tl-14
   kind: report
   title: 明好農耕牌炊粉一再驗出甲醛 莊競程：高虹安市府應道歉
   representative_source_id: src-20260805-ltn-3af9d1a2
@@ -372,21 +423,21 @@ news_groups:
   - src-20260805-ltn-3af9d1a2
   - src-20260806-ltn-b4492779
 - id: ng-38
-  timeline_id: tl-10
+  timeline_id: tl-15
   kind: report
   title: 竹市傳甲醛炊粉誘導式電話民調  藍營及市府籲檢調介入調查
   representative_source_id: src-20260807-ltn-bb7a6cec
   source_ids:
   - src-20260807-ltn-bb7a6cec
 - id: ng-39
-  timeline_id: tl-10
+  timeline_id: tl-16
   kind: report
   title: 新竹甲醛炊粉掀食安風暴 歸農雙重檢驗把關
   representative_source_id: src-20260809-ltn-bfa32620
   source_ids:
   - src-20260809-ltn-bfa32620
 - id: ng-40
-  timeline_id: tl-10
+  timeline_id: tl-17
   kind: report
   title: 蔣萬安猛攻毒油 北市衛生局卻對新竹甲醛炊粉無作為 簡舒培直呼離譜
   representative_source_id: src-20260814-ltn-54d9ab32
@@ -459,13 +510,19 @@ Newtalk以「新竹爆毒甲醛炊粉！拖7週才公布遭疑「蓋牌」網轟
 
 自由時報以「34所學校師生恐吃下肚》竹市甲醛炊粉流進校園 「家長氣到發抖」」為題報導 [@src-20260723-ltn-271790d9]。
 
-## 2026-07-24　4 則報導
+## 2026-07-24　1 則報導
 
 自由時報以「竹市農耕牌甲醛炊粉保存期限2年變3年 網揪疑點：2024年就有問題？」為題報導 [@src-20260724-ltn-9b36f1b2]。
 
+## 2026-07-25　1 則報導
+
 自由時報以「竹市爆甲醛炊粉食安風暴 竹塹特產節僅1家米粉業者擺攤」為題報導 [@src-20260725-ltn-04b90d1c]。
 
+## 2026-07-27　1 則報導
+
 自由時報以「高虹安市府疑蓋牌甲醛炊粉 在地老牌老鍋、南興出示檢驗自清」為題報導 [@src-20260727-ltn-f7948665]。
+
+## 2026-07-29　1 則報導
 
 自由時報以「陳厚全稱甲醛炊粉煮一煮就可食用  莊競程轟甲醛是一級致癌物」為題報導 [@src-20260729-ltn-6203ad7f]。
 
@@ -479,15 +536,17 @@ Newtalk以「新竹爆毒甲醛炊粉！拖7週才公布遭疑「蓋牌」網轟
 
 自由時報以「甲醛炊粉業者僅罰12萬 楊玲宜：難怪高友友的明好企業肆無忌憚」為題報導 [@src-20260730-ltn-98e9e0ca]。
 
-## 2026-07-31　4 則報導
+## 2026-07-31　3 則報導
 
 自由時報以「甲醛炊粉重挫竹市府形象！ 高虹安向楊文科借將 楊郡慈任市府發言人」為題報導 [@src-20260731-ltn-3f3d00cf]。
 
 自由時報以「竹市明好農耕牌炊粉擴大抽驗6品項是否含甲醛 4品項仍有疑慮待複驗」為題報導 [@src-20260731-ltn-15f27eaa]。
 
+## 2026-08-01　1 則報導
+
 自由時報以「甲醛炊粉風暴延燒 新竹市公布15家合格米粉業者名單」為題報導 [@src-20260801-ltn-b09a8d80]。
 
-## 2026-08-05　7 則報導
+## 2026-08-05　4 則報導
 
 自由時報以「竹市從甲醛炊粉到托嬰兒虐 家長怒批市府蓋牌」為題報導 [@src-20260805-ltn-d13848cd]。
 
@@ -495,8 +554,14 @@ ETtoday新聞雲以「竹市又爆甲醛炊粉稱「跟陽光一樣」 莊競程
 
 自由時報以「明好農耕牌炊粉一再驗出甲醛 莊競程：高虹安市府應道歉」為題報導 [@src-20260805-ltn-3af9d1a2]。
 
+## 2026-08-07　1 則報導
+
 自由時報以「竹市傳甲醛炊粉誘導式電話民調  藍營及市府籲檢調介入調查」為題報導 [@src-20260807-ltn-bb7a6cec]。
 
+## 2026-08-09　1 則報導
+
 自由時報以「新竹甲醛炊粉掀食安風暴 歸農雙重檢驗把關」為題報導 [@src-20260809-ltn-bfa32620]。
+
+## 2026-08-14　1 則報導
 
 自由時報以「蔣萬安猛攻毒油 北市衛生局卻對新竹甲醛炊粉無作為 簡舒培直呼離譜」為題報導 [@src-20260814-ltn-54d9ab32]。

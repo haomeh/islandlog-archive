@@ -55,15 +55,16 @@ timeline:
   source_ids:
   - src-20261027-cts-39e03685
 - id: tl-02
-  date: '2026-10-29'
+  date: '2026-10-30'
   date_precision: day
-  title: 臺鐵貼出禁止未經申請樂器演奏的公告
+  title: 來源發布：臺鐵貼出禁止未經申請樂器演奏的公告
   attributed_to: ac-taiwan-railway
   lifecycle_stage: decision
   source_ids:
   - src-20261030-pts-9f6dcd48
   - src-20261030-cts-d37d766b
   - src-20261030-ebc-39ed135b
+  description: 原紀錄事件日期：2026-10-29（day）；本節日期為來源發布日。
 - id: tl-03
   date: '2026-10-30'
   date_precision: day

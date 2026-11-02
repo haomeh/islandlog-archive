@@ -30,6 +30,15 @@ positions:
   actor_id: ac-kaohsiung-city-government
   stance: not_found
 timeline:
+- id: tl-02
+  date: '2019-09-21'
+  date_precision: day
+  title: 來源發布：預定自10月起2部燃煤機組停機半年
+  attributed_to: ac-kaohsiung-city-government
+  lifecycle_stage: implementation
+  source_ids:
+  - src-20190921-pts-hsinta
+  description: 原紀錄事件日期：2019-10-01（month）；本節日期為來源發布日。
 - id: tl-01
   date: '2019-09-23'
   date_precision: day
@@ -38,15 +47,15 @@ timeline:
   lifecycle_stage: institutional_response
   source_ids:
   - src-20190923-newtalk-hsinta
-- id: tl-02
-  date: '2019-10-01'
-  date_precision: month
-  title: 預定自10月起2部燃煤機組停機半年
+- id: tl-03
+  date: '2019-09-23'
+  date_precision: day
+  title: 來源發布：預定自10月起2部燃煤機組停機半年
   attributed_to: ac-kaohsiung-city-government
   lifecycle_stage: implementation
   source_ids:
   - src-20190923-newtalk-hsinta
-  - src-20190921-pts-hsinta
+  description: 原紀錄事件日期：2019-10-01（month）；本節日期為來源發布日。
 news_groups:
 - id: ng-01
   timeline_id: tl-01

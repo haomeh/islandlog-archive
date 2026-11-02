@@ -133,7 +133,7 @@ class CampaignNamesTest(unittest.TestCase):
         for title in ("議場交鋒 預算審查", "官員被反問 無法答覆", "民眾質疑新制 陣營不明"):
             self.assertFalse(tf.candidate_talk(title), title)
 
-    def test_a_title_of_the_key_group_with_an_exact_key_ranks_before_a_short_form(self):
+    def test_a_larger_short_form_group_ranks_before_an_exact_key_group(self):
         short = _group([("https://x.example/s1", "中聯1300噸 回收", "2026-06-05"), ("https://x.example/s2", "中聯1300噸 停產", "2026-06-05")])
         full = _group([("https://x.example/f1", "中聯油脂 停產", "2026-06-05")])
         seed = {"event_id": "ev-20260601-x", "seed_urls": [], "_keys": ["中聯油脂"], "_name": "中聯油脂", "jurisdiction_names": [], "jurisdiction_ids": ["jur-tw"],
@@ -141,7 +141,7 @@ class CampaignNamesTest(unittest.TestCase):
         items = [i for g in (short, full) for i in g["items"]]
         with mock.patch.object(tp, "group_items", lambda its: [short, full]), mock.patch.object(tp, "MAX_GROUPS", 1):
             ev = tp.build_event(seed, items, {}, items=items)
-        self.assertEqual(sorted(ev["used"]), ["https://x.example/f1"])
+        self.assertEqual(sorted(ev["used"]), ["https://x.example/s1", "https://x.example/s2"])
 
     def test_the_old_classes_still_work(self):
         for title in ("議員為候選人助講 批新制", "市府新制 某黨競辦回應"):

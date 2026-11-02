@@ -93,12 +93,12 @@ timeline:
   source_ids:
   - src-20261028-cts-mofa-pakistan-airspace
 - id: tl-02
-  date: '2026-10-28'
+  date: '2026-10-29'
   date_precision: day
-  title: 彭博引述文件指巴基斯坦民航局核准華航與長榮使用空域
+  title: 來源發布：彭博引述文件指巴基斯坦民航局核准華航與長榮使用空域
   source_ids:
   - src-20261029-cts-ey-pakistan-airspace
-  - src-20261030-setn-premier-pakistan-airspace
+  description: 原紀錄事件日期：2026-10-28（day）；本節日期為來源發布日。
 - id: tl-03
   date: '2026-10-29'
   date_precision: day
@@ -122,6 +122,13 @@ timeline:
   attributed_to: ac-executive-yuan
   source_ids:
   - src-20261030-setn-premier-pakistan-airspace
+- id: tl-06
+  date: '2026-10-30'
+  date_precision: day
+  title: 來源發布：彭博引述文件指巴基斯坦民航局核准華航與長榮使用空域
+  source_ids:
+  - src-20261030-setn-premier-pakistan-airspace
+  description: 原紀錄事件日期：2026-10-28（day）；本節日期為來源發布日。
 privacy:
   contains_private_persons: false
   basis_source_ids: []

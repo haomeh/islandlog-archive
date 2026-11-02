@@ -17,8 +17,8 @@ Rules:
 - Same content (cluster.same_content) of the same kind joins one group. A newspaper copy
   (/paper/ URL) joins an earlier group of the same kind within PAPER_DAYS when its bigrams
   overlap PAPER_OVERLAP of its own set.
-- Stations: the first day, each day with a clarification, post or official item, then the
-  busiest report days, up to MAX_STATIONS. A station title is a neutral count.
+- Stations: each representative publication day has its own station (R427).
+  A station title is a neutral count.
 """
 
 import hashlib
@@ -618,17 +618,7 @@ def src_id(it, actors_by_host):
 
 
 def _stations(groups):
-    days = sorted({g["items"][0]["published_on"] for g in groups})
-    special = [d for d in days if any(g["items"][0]["published_on"] == d and g["kind"] != "report" for g in groups)]
-    volume = Counter()
-    for g in groups:
-        if g["kind"] == "report":
-            volume[g["items"][0]["published_on"]] += len(g["items"])
-    chosen = [days[0]]
-    for d in special + [d for d, _ in volume.most_common()]:
-        if d not in chosen and len(chosen) < MAX_STATIONS:
-            chosen.append(d)
-    return sorted(chosen)
+    return sorted({g["items"][0]["published_on"] for g in groups})
 
 
 def _station_title(gs):
@@ -675,7 +665,7 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
     def rank(g):
         hit = [min((forms.index(f) for f in forms if f in it["title"]), default=None) for it in g["items"] if not is_campaign_title(it["title"])]
         hit = [h for h in hit if h is not None]
-        return (not hit, bool(hit) and min(hit) > 0, -len(g["items"]))  # no form last; the exact key (form 0) before a short form
+        return (not hit, -len(g["items"]))  # R427: exact keys and short forms have equal priority
     reports = sorted([g for g in groups if g["kind"] == "report"], key=rank)
     room = max(0, MAX_GROUPS - len(keep))
     earliest = min((g["items"][0]["published_on"] for g in groups), default="")
@@ -692,7 +682,7 @@ def build_event(seed, corpus, df, actors_by_host=HOSTS, items=None):
     stations = _stations(groups)
     by_station = {d: [] for d in stations}
     for g in groups:
-        d = max(s for s in stations if s <= g["items"][0]["published_on"])
+        d = g["items"][0]["published_on"]
         by_station[d].append(g)
     used, timeline, news_groups, body = {}, [], [], []
     extra_actors = []
