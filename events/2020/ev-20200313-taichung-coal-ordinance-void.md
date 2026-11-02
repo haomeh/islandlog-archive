@@ -48,10 +48,10 @@ positions:
   - src-20200313-pts-taichung-permits
 timeline:
 - id: tl-01
-  date: '2019-12-01'
-  date_precision: month
-  title: 臺中市政府廢止臺中火力發電廠2部燃煤機組的操作許可證
-  description: 公視報導的時間為2019年底。
+  date: '2020-03-13'
+  date_precision: day
+  title: 來源發布：臺中市政府廢止臺中火力發電廠2部燃煤機組的操作許可證
+  description: 原紀錄事件日期：2019-12-01（month）；本節日期為來源發布日。公視報導的時間為2019年底。
   attributed_to: ac-taichung-city-government
   lifecycle_stage: implementation
   source_ids:

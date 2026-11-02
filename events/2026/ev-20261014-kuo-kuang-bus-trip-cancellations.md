@@ -68,14 +68,15 @@ positions:
   - src-20261030-cts-d12906bb
 timeline:
 - id: tl-01
-  date: '2026-10-14'
+  date: '2026-10-15'
   date_precision: day
-  title: 國光客運在 4 條國道路線取消班次
+  title: 來源發布：國光客運在 4 條國道路線取消班次
   attributed_to: ac-highway-bureau
   lifecycle_stage: emergence
   source_ids:
   - src-20261015-cts-62929cf9
   - src-20261015-pts-9771ea80
+  description: 原紀錄事件日期：2026-10-14（day）；本節日期為來源發布日。
 - id: tl-02
   date: '2026-10-15'
   date_precision: day
@@ -86,13 +87,14 @@ timeline:
   - src-20261015-ltn-1fb08a5f
   - src-20261015-pts-9771ea80
 - id: tl-03
-  date: '2026-10-29'
+  date: '2026-10-30'
   date_precision: day
-  title: 國光客運在國道 1820 路線再度取消班次，公路局再罰 9 萬元
+  title: 來源發布：國光客運在國道 1820 路線再度取消班次，公路局再罰 9 萬元
   attributed_to: ac-highway-bureau
   lifecycle_stage: decision
   source_ids:
   - src-20261030-udn-13dd015f
+  description: 原紀錄事件日期：2026-10-29（day）；本節日期為來源發布日。
 - id: tl-04
   date: '2026-10-30'
   date_precision: day

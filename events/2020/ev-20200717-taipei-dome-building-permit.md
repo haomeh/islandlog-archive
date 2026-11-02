@@ -34,30 +34,40 @@ positions:
   actor_id: ac-farglory
   stance: not_found
 timeline:
-- id: tl-01
-  date: '2015-05-20'
-  date_precision: day
-  title: 大巨蛋被勒令停工
-  lifecycle_stage: escalation
-  source_ids:
-  - src-20200808-pts-dome-resume
 - id: tl-02
-  date: '2020-07-01'
-  date_precision: month
-  title: 核准第3次變更設計並核發新建照
-  description: 公視報導的時間為2020年7月中旬。
+  date: '2020-07-17'
+  date_precision: day
+  title: 來源發布：核准第3次變更設計並核發新建照
+  description: 原紀錄事件日期：2020-07-01（month）；本節日期為來源發布日。公視報導的時間為2020年7月中旬。
   attributed_to: ac-taipei-city-government
   lifecycle_stage: decision
   source_ids:
   - src-20200717-pts-dome-permit
-  - src-20200808-pts-dome-resume
-- id: tl-03
-  date: '2020-08-07'
+- id: tl-01
+  date: '2020-08-08'
   date_precision: day
-  title: 同意大巨蛋復工
+  title: 來源發布：大巨蛋被勒令停工
+  lifecycle_stage: escalation
+  source_ids:
+  - src-20200808-pts-dome-resume
+  description: 原紀錄事件日期：2015-05-20（day）；本節日期為來源發布日。
+- id: tl-03
+  date: '2020-08-08'
+  date_precision: day
+  title: 來源發布：同意大巨蛋復工
   attributed_to: ac-taipei-city-government
   lifecycle_stage: implementation
   decision_id: dc-20200807-taipei-dome-resume
+  source_ids:
+  - src-20200808-pts-dome-resume
+  description: 原紀錄事件日期：2020-08-07（day）；本節日期為來源發布日。
+- id: tl-04
+  date: '2020-08-08'
+  date_precision: day
+  title: 來源發布：核准第3次變更設計並核發新建照
+  description: 原紀錄事件日期：2020-07-01（month）；本節日期為來源發布日。公視報導的時間為2020年7月中旬。
+  attributed_to: ac-taipei-city-government
+  lifecycle_stage: decision
   source_ids:
   - src-20200808-pts-dome-resume
 decision_ids:

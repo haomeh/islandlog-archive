@@ -21,25 +21,37 @@ actors:
   role: decision_maker
 - actor_id: ac-taichung-city-government
   role: proposer
+- actor_id: ac-executive-yuan
+  role: other
 timeline:
-- id: tl-01
-  date: '2015-12-23'
+- id: tl-02
+  date: '2020-03-13'
   date_precision: day
-  title: 臺中市議會三讀通過條例
+  title: 來源發布：臺中市政府函公布條例
+  attributed_to: ac-executive-yuan
+  lifecycle_stage: implementation
+  source_ids:
+  - src-20200313-ey-taichung-ordinance
+  description: 原紀錄事件日期：2016-01-26（day）；本節日期為來源發布日。
+- id: tl-01
+  date: '2020-03-20'
+  date_precision: day
+  title: 來源發布：臺中市議會三讀通過條例
   attributed_to: ac-taichung-city-council
   lifecycle_stage: decision
   decision_id: dc-20151223-taichung-ordinance-passed
   source_ids:
   - src-20200320-taichung-epb-report
-- id: tl-02
-  date: '2016-01-26'
+  description: 原紀錄事件日期：2015-12-23（day）；本節日期為來源發布日。
+- id: tl-03
+  date: '2020-03-20'
   date_precision: day
-  title: 臺中市政府函公布條例
+  title: 來源發布：臺中市政府函公布條例
   attributed_to: ac-taichung-city-government
   lifecycle_stage: implementation
   source_ids:
   - src-20200320-taichung-epb-report
-  - src-20200313-ey-taichung-ordinance
+  description: 原紀錄事件日期：2016-01-26（day）；本節日期為來源發布日。
 decision_ids:
 - dc-20151223-taichung-ordinance-passed
 relations:
