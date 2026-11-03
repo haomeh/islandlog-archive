@@ -7,7 +7,7 @@ Read this file before your first PR. The full rules are in the PRD (sections 5 a
 
 1. Create a branch. Add or change files. Use `islandlog new event` for a skeleton.
 2. Run `islandlog validate .` on your machine. Fix every failure.
-   CI uses the pinned server image `main-59b3d1bd`. Set the GitHub secrets `GITLAB_REGISTRY_USER` and `GITLAB_REGISTRY_TOKEN`.
+   CI uses the pinned server image `main-ee91d722`. Set the GitHub secrets `GITLAB_REGISTRY_USER` and `GITLAB_REGISTRY_TOKEN`.
    Use a GitLab deploy token with the `read_registry` scope.
    If the token is absent, CI warns and skips validation. Fork PRs do not receive secrets.
    Reviewers must run `islandlog validate .` on the PR branch before approval when CI skips validation.

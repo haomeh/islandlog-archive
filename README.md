@@ -28,7 +28,7 @@ islandlog validate .
 The command comes from the `server` repo. It checks `archive/` and `fixtures/` together.
 Content under `fixtures/` is fictional. Never copy it into `events/`.
 
-GitHub CI uses `registry.gitlab.com/howmay/islandlog/server:main-59b3d1bd`.
+GitHub CI uses `registry.gitlab.com/howmay/islandlog/server:main-ee91d722`.
 Set the GitHub secrets `GITLAB_REGISTRY_USER` and `GITLAB_REGISTRY_TOKEN` for registry login.
 Use a GitLab deploy token with the `read_registry` scope.
 If the token is absent, CI warns and skips validation. Fork PRs do not receive secrets.
