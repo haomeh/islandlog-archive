@@ -1,9 +1,9 @@
-# Content validation for archive. It runs the pinned server image (PRD FR-131).
-# Never use the `latest` tag. Raise ISLANDLOG_SERVER_VERSION only in a reviewed PR.
-# CLI form (ruling R25): islandlog validate [--mode full|mr] [--base <git sha>] [--include-fixtures] <archive dir>.
-# PR fields come from ISLANDLOG_PR_DESCRIPTION (fallback CI_MERGE_REQUEST_DESCRIPTION), which the workflow fills from the PR body. A warning prints "LABEL privacy-review" and exits 0.
-# OPEN QUESTION: the image is in registry.gitlab.com/howmay/islandlog/server.
-# A pull from GitHub Actions needs the GitLab registry to allow public pulls.
+# Validate archive content with the pinned server image (FR-131, R451).
+# Update ISLANDLOG_SERVER_IMAGE only through a reviewed PR. Never use latest.
+# GitHub secrets: GITLAB_REGISTRY_USER and GITLAB_REGISTRY_TOKEN.
+# Use a GitLab deploy token with read_registry. Log in before Docker pulls the image.
+# Without the token, warn and skip validation (also applies to fork PRs).
+# PR inputs enter through env. Warnings print LABEL privacy-review and exit 0.
 
 name: validate
 
@@ -13,9 +13,7 @@ on:
     branches: [main]
 
 env:
-  # PLACEHOLDER: no server release exists yet (D19). Replace with the first tag.
-  # The job `container.image` cannot read `env`, so change the tag in both jobs.
-  ISLANDLOG_SERVER_VERSION: "v0.0.0"
+  ISLANDLOG_SERVER_IMAGE: registry.gitlab.com/howmay/islandlog/server:main-59b3d1bd
 
 permissions:
   contents: read
@@ -24,13 +22,36 @@ jobs:
   validate-content:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    container:
-      image: registry.gitlab.com/howmay/islandlog/server:v0.0.0
     steps:
+      - name: Check registry token
+        id: registry
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITLAB_REGISTRY_TOKEN }}
+        run: |
+          if [ -z "$REGISTRY_TOKEN" ]; then
+            echo "::warning::GITLAB_REGISTRY_TOKEN is missing; validation did not run."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        if: steps.registry.outputs.enabled == 'true'
         with:
           fetch-depth: 0
-      - run: islandlog validate .
+          persist-credentials: false
+      - name: Log in to the GitLab registry
+        if: steps.registry.outputs.enabled == 'true'
+        env:
+          REGISTRY_USER: ${{ secrets.GITLAB_REGISTRY_USER }}
+          REGISTRY_TOKEN: ${{ secrets.GITLAB_REGISTRY_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login registry.gitlab.com --username "$REGISTRY_USER" --password-stdin
+      - name: Validate content
+        if: steps.registry.outputs.enabled == 'true'
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/archive,readonly" \
+            "$ISLANDLOG_SERVER_IMAGE" islandlog validate /archive
 
   validate-pr:
     if: github.event_name == 'pull_request'
@@ -38,23 +59,56 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    container:
-      image: registry.gitlab.com/howmay/islandlog/server:v0.0.0
     env:
       GH_TOKEN: ${{ github.token }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
-      # The server reads the PR text from this name (cmd/validate.go, R56).
       ISLANDLOG_PR_DESCRIPTION: ${{ github.event.pull_request.body }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
+      - name: Check registry token
+        id: registry
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITLAB_REGISTRY_TOKEN }}
+        run: |
+          if [ -z "$REGISTRY_TOKEN" ]; then
+            echo "::warning::GITLAB_REGISTRY_TOKEN is missing; validation did not run."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        if: steps.registry.outputs.enabled == 'true'
         with:
           fetch-depth: 0
+          persist-credentials: false
+      - name: Log in to the GitLab registry
+        if: steps.registry.outputs.enabled == 'true'
+        env:
+          REGISTRY_USER: ${{ secrets.GITLAB_REGISTRY_USER }}
+          REGISTRY_TOKEN: ${{ secrets.GITLAB_REGISTRY_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login registry.gitlab.com --username "$REGISTRY_USER" --password-stdin
       - name: Validate in PR mode
+        id: validate
+        if: steps.registry.outputs.enabled == 'true'
+        shell: bash
+        # Git is installed in the image. Trust only this read-only checkout.
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: safe.directory
+          GIT_CONFIG_VALUE_0: /archive
         run: |
-          islandlog validate --mode mr --base "$BASE_SHA" . | tee validate.out
+          # The pinned CLI reads the GitLab variable. Keep both input names.
+          export CI_MERGE_REQUEST_DESCRIPTION="$ISLANDLOG_PR_DESCRIPTION"
+          set -o pipefail
+          docker run --rm --user "$(id -u):$(id -g)" \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/archive,readonly" \
+            --env ISLANDLOG_PR_DESCRIPTION --env CI_MERGE_REQUEST_DESCRIPTION \
+            --env GIT_CONFIG_COUNT --env GIT_CONFIG_KEY_0 --env GIT_CONFIG_VALUE_0 \
+            "$ISLANDLOG_SERVER_IMAGE" islandlog validate --mode mr --base "$BASE_SHA" /archive | tee validate.out
       - name: Apply the privacy-review label
+        if: always() && steps.registry.outputs.enabled == 'true' && steps.validate.outcome != 'skipped'
         run: |
-          if grep -qx "LABEL privacy-review" validate.out; then
+          if [ -f validate.out ] && grep -qx "LABEL privacy-review" validate.out; then
             gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --add-label privacy-review
           fi
