@@ -13,7 +13,7 @@ on:
     branches: [main]
 
 env:
-  ISLANDLOG_SERVER_IMAGE: registry.gitlab.com/howmay/islandlog/server:main-59b3d1bd
+  ISLANDLOG_SERVER_IMAGE: registry.gitlab.com/howmay/islandlog/server:main-ee91d722
 
 permissions:
   contents: read
