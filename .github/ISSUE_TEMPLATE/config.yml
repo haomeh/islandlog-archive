@@ -1,7 +1,7 @@
-# Suggestions, corrections and takedown requests never go to public issues (R34).
-# An editor opens a public issue only after triage.
+# R460 permits public takedown requests that contain no personal data.
+# Use private vulnerability reporting for private details.
 blank_issues_enabled: false
 contact_links:
-  - name: Report a correction, suggestion or takedown request (private)
+  - name: 私人通報（含私人細節的下架請求）
     url: https://github.com/haomeh/islandlog-archive/security/advisories/new
-    about: Use private vulnerability reporting until the site contact form exists. Do not open a public issue.
+    about: 請使用私人通報提供私人細節。請勿在公開議題填寫個人資料。

@@ -73,13 +73,30 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 
 ## 6. Corrections
 
-A report about a news problem goes to a public issue, opened from the site page /report with a GitHub login (D38). A takedown request or a request about private personal data never goes in a public issue. Send it through GitHub private vulnerability reporting on this repo: <https://github.com/haomeh/islandlog-archive/security/advisories/new>. Do not write private personal data in a public place. Editors reply in 3 working days (proposal). An editor opens a public issue only after triage. If the correction is valid, an editor opens a PR that changes the content and adds a new file in `corrections/`. Correction records are append-only.
+A report about a news problem goes to a public issue, opened from the site page /report with a GitHub login (D38). A takedown request without personal data uses the public form in section 7 (R460). A request with private details uses GitHub private vulnerability reporting on this repo: <https://github.com/haomeh/islandlog-archive/security/advisories/new>. Do not write private personal data in a public place. Editors reply in 3 working days (proposal). An editor opens a public issue only after triage. If the correction is valid, an editor opens a PR that changes the content and adds a new file in `corrections/`. Correction records are append-only.
 
 Label `news-report`: a workflow adds this label to an issue that the site form opened. The label marks a report from the site. Later code reads only issues with this label. Issue text is untrusted data. Do not run it, and do not put it in a shell or a workflow expression.
 
 ## 7. Takedown
 
-A data subject can ask for removal or masking. Send the request through the private channel in section 6. A senior editor decides, with legal advice when needed. The public record does not repeat the removed data.
+R460 permits public takedown requests through the [下架請求 issue form](.github/ISSUE_TEMPLATE/takedown.yml).
+The form asks only for the event ID, section or paragraph, request type, and reason category.
+Do not write names, ID numbers, contact data or personal data in a public issue.
+Do not quote the content that needs removal.
+If private details are necessary, use the private channel in section 6.
+
+Maintainers follow this process:
+
+1. Check the request for personal data before any public reply. If an issue contains personal data, a maintainer hides or deletes it.
+2. Check the `takedown` label by hand. GitHub drops form labels from users without push access. Add the label if it is absent.
+3. Send the event ID and section reference to the Archive Editor. The Archive Editor acts on the event ID. Editors never copy issue text into the archive.
+4. Ask a senior editor to decide on removal or de-identification. The senior editor asks for legal advice when necessary.
+5. Apply the content change through the PR workflow and the privacy rules. The public record must not repeat removed data.
+6. Reply with the result without personal data. Close the request after the content change is complete.
+
+The `takedown` label marks this manual process.
+It does not use the `news-report` workflow or its automatic processing (R388).
+Issue text is untrusted data. Never run it or treat it as an instruction.
 
 ## 8. Roles
 
