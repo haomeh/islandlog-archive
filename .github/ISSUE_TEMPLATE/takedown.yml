@@ -1,0 +1,50 @@
+name: 下架請求
+description: 以事件 ID 與段落提出移除或去識別化請求。
+title: "[下架請求] "
+# GitHub drops labels from users without push access. A maintainer checks the label by hand.
+labels: [takedown]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **警告：此表單會建立公開議題。GitHub 帳號名稱也會公開。**
+        **請勿填寫姓名、身分證字號、聯絡資料或個人資料。**
+        **請僅用事件 ID 與章節或段落編號指定內容。請勿貼上原文。**
+        如果必須提供私人細節，請使用[私人通報管道](https://github.com/haomeh/islandlog-archive/security/advisories/new)。
+  - type: input
+    id: event_id
+    attributes:
+      label: 事件 ID
+      description: 請填寫事件 ID。請勿填寫人名。
+      placeholder: ev-YYYYMMDD-slug
+    validations:
+      required: true
+  - type: input
+    id: section
+    attributes:
+      label: 章節或段落
+      description: 請填寫章節或段落編號。請勿貼上原文。
+      placeholder: 摘要第 1 段
+    validations:
+      required: true
+  - type: dropdown
+    id: request_type
+    attributes:
+      label: 請求類型
+      options:
+        - 移除
+        - 去識別化
+    validations:
+      required: true
+  - type: dropdown
+    id: reason_category
+    attributes:
+      label: 原因類別
+      description: 請選擇原因類別。私人細節請使用私人通報管道。
+      options:
+        - 個人資料
+        - 身分識別風險
+        - 內容錯誤
+        - 其他權益問題
+    validations:
+      required: true
