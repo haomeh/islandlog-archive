@@ -1,0 +1,32 @@
+# R461: A stopped Fly Machine cannot import an archive push.
+# Request the API health endpoint after a trusted main push to wake the Machine.
+# This workflow has no credential.
+name: wake-api
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: wake-api
+  cancel-in-progress: true
+
+jobs:
+  wake:
+    if: github.repository == 'haomeh/islandlog-archive' && github.event.repository.fork == false
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Wake the API
+        shell: bash
+        run: |
+          if status="$(curl -fsS --max-time 60 --retry 3 --retry-delay 10 \
+            --output /dev/null --write-out '%{http_code}' \
+            https://islandlog-api.fly.dev/healthz 2>/dev/null)"; then
+            printf '%s\n' "$status"
+          else
+            printf '%s\n' "$status"
+            printf '::warning::API wake request failed.\n'
+            exit 0
+          fi
