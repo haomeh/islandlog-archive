@@ -74,6 +74,11 @@
       "id": "ev-20261014-kuo-kuang-bus-trip-cancellations",
       "ruling": "R392",
       "reason": "created by an agent by web search in T90, not by the system clustering; draft-review; not editor-approved; waits for 2 independent verifiers (R336)"
+    },
+    {
+      "id": "ev-20260904-micron-taoyuan-labor-mediation",
+      "ruling": "R480",
+      "reason": "created by an agent by web search in T126; draft-review; awaits three independent judges; not editor-approved"
     }
   ]
 }
