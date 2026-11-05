@@ -45,6 +45,11 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 3. Do not write ID numbers, phone numbers, emails or home addresses.
 4. Content on health, genes, sex life or criminal records (see `taxonomy/sensitive_terms.yaml`) is sensitive. Set `review.sensitive: true`.
 5. Events with the type `misconduct` or `election` are always sensitive.
+6. R485 permits sensitive events that affect public safety or the public interest. Record police action, prosecutor action, court steps, public body responses, or policy changes.
+7. Never name or identify a minor, a victim, or a private suspect. Use a role for a private suspect. Do not name a school or class. Do not record personal symptoms or named health data.
+8. Name a public official in an official-duty case only with an official record or reports from three publishers. Attribute each accusation to a named official body. Do not state guilt before a final judgment.
+9. Exclude sexual violence, suicide, and private disputes without a public safety or public interest effect.
+10. State the public-interest basis in `review.reason`. Keep `review.sensitive: true` and `review.status: draft-review`. Add later acquittals, non-indictments, and corrections to the timeline.
 
 ## 5. Topics, news groups and review status (R57 to R65)
 
@@ -54,7 +59,7 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 4. A public commentator post is `social_media`, grade E. Record it only when a news report cites it: the news source is the evidence, and the post URL is added when the report links it. Do not crawl social platforms.
 5. A public commentator (`actor_type: public_commentator`) is named only for public posts, with `named_basis_source_ids` that state the public identity.
 6. A source may carry `section` (版別) and `byline` (記者). The crawler reads them from the article page and never stores the article body.
-7. The double confirmation in section 5A, item 6 (R336) applies to every publish, withdrawal or rename of a topic, system-formed or agent-created. A sensitive event still needs its own user decision (section 5A, item 7).
+7. R480 requires three judges for each new event. Under R485, section 5A, item 7 replaces the own user decision and the two-approver step for public-interest sensitive events. Other topic withdrawals and renames follow section 5A, item 6 (R336).
 8. The daily news layer (crawl, merge, cluster, dry run, report, alerts) and the manual publish steps are in [`tools/newsfetch/WORKFLOW.md`](tools/newsfetch/WORKFLOW.md). The daily layer never writes to this repo.
 
 ## 5A. Agent-created events (R330, R332)
@@ -68,7 +73,7 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
    - The user reviews the event.
    - Two independent read-only verifiers on different models agree. The second verifier gets the evidence, not the verdict of the first.
    If the two verifiers disagree, the agent makes one fix round and both verify again. If they still disagree, the user decides.
-7. If the event is sensitive (`review.sensitive: true`), it needs its own user decision. Two verifiers do not replace it. The two-approver rule still applies, except where the user records an exception in `review.reason`. An exception covers one event only.
+7. For public-interest sensitive events, three judges (R480) use the same criteria, including C6 (R485). All three must PASS before publication. This replaces the own user decision and the two-approver step for these events. Keep `review.sensitive: true` and `review.status: draft-review`. State the public-interest basis and agent creation by web search in `review.reason`. Apply the identity rules in section 4.
 8. Criminal investigation: state only what an official or court record, or an attributed report, says. Do not state guilt.
 
 ## 6. Corrections
