@@ -4,7 +4,7 @@ id: ev-20261104-hukou-factory-fire-air-monitoring
 kind: decision_record
 status: published
 title: 湖口工廠火警後空氣監測與交通管制
-summary: 中央社報導，新竹縣政府表示，湖口工廠火警後，環保局將監測周邊空氣品質。縣府提醒居民減少外出，並配合交通指揮 [@src-20261104-cna-hukou-air]。
+summary: 中央社報導，新竹縣政府表示，湖口工廠火警後，環保局將監測周邊空氣品質。縣府提醒居民減少外出，並請用路人配合交通指揮 [@src-20261104-cna-hukou-air]。
 start_date: '2026-11-04'
 start_date_precision: day
 gov_levels:
@@ -40,6 +40,13 @@ timeline:
   - src-20261104-cna-hukou-air
   - src-20261104-pts-hukou-air
   - src-20261104-udn-hukou-air
+- id: tl-02
+  date: '2026-11-05'
+  date_precision: day
+  title: 消防局說明失聯員工搜救結果
+  lifecycle_stage: implementation
+  source_ids:
+  - src-20261105-cna-hukou-search
 news_groups:
 - id: ng-01
   timeline_id: tl-01
@@ -66,3 +73,5 @@ review:
 中央社報導，縣府表示環保局將監測火場周邊空氣品質。縣府提醒附近居民非必要避免外出，減少接觸濃煙 [@src-20261104-cna-hukou-air]。
 
 公視報導，新竹縣環保局在現場監測空氣品質，並模擬風向。聯合報報導，縣長呼籲民眾配合周邊交通管制 [@src-20261104-pts-hukou-air; @src-20261104-udn-hukou-air]。
+
+中央社11月4日報導，消防局表示5名員工受傷、2人尚未尋獲 [@src-20261104-cna-hukou-air]。中央社11月5日報導，消防局表示2名失聯員工均已尋獲、均已死亡 [@src-20261105-cna-hukou-search]。
