@@ -67,3 +67,5 @@ review:
 市府表示，勞檢處已派員檢查施工現場。市府表示，調查將釐清安全防護、鷹架設置及雇主職安管理措施 [@src-20261103-taipei-beitou-safety]。
 
 中央社報導，市府表示將擴大全市鷹架工地稽查。公視與聯合報亦報導市府停工處置 [@src-20261103-cna-beitou-safety; @src-20261103-pts-beitou-safety; @src-20261103-udn-beitou-safety]。
+
+臺北市政府表示，新工處依契約規定對施工廠商裁罰250萬元。市府表示，建管處對承造人及監造人各裁罰9萬元 [@src-20261103-taipei-beitou-safety]。
