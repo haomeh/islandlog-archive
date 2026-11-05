@@ -36,6 +36,7 @@ class LoaderTest(unittest.TestCase):
             "ev-20260821-tainan-annan-waste-fire", "ev-20261027-tainan-station-public-piano", "ev-20261014-kuo-kuang-bus-trip-cancellations",
             "ev-20260904-micron-taoyuan-labor-mediation",
             "ev-20261103-beitou-market-work-suspension",
+            "ev-20261104-hukou-factory-fire-air-monitoring",
             "ev-20261104-dasyueshan-trail-closure"})
 
     def test_a_missing_file_is_an_empty_list(self):
