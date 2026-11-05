@@ -48,7 +48,7 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 6. R485 permits sensitive events that affect public safety or the public interest. Record police action, prosecutor action, court steps, public body responses, or policy changes.
 7. Never name or identify a minor, a victim, or a private suspect. Use a role for a private suspect. Do not name a school or class. Do not record personal symptoms or named health data.
 8. Name a public official in an official-duty case only with an official record or reports from three publishers. Attribute each accusation to a named official body. Do not state guilt before a final judgment.
-9. Exclude sexual violence, suicide, and private disputes without a public safety or public interest effect.
+9. Exclude sexual violence, suicide, and private disputes without a public safety or public interest effect. A sensitive event without a public-interest basis is out of scope.
 10. State the public-interest basis in `review.reason`. Keep `review.sensitive: true` and `review.status: draft-review`. Add later acquittals, non-indictments, and corrections to the timeline.
 
 ## 5. Topics, news groups and review status (R57 to R65)
@@ -69,10 +69,9 @@ Do not copy news text. Keep the link, title, date, publisher and a quote of 150 
 3. An agent-created event has `review.status: draft-review`. It is never `editor-approved` by the agent.
 4. The event id is listed in `tools/newsfetch/enriched_topics.json`. A listed event gets no automatic update (R325).
 5. A separate verifier checks every claim against the opened source page. The agent that wrote the event does not verify it.
-6. The event is published, withdrawn or renamed only after one of two checks (R336):
-   - The user reviews the event.
-   - Two independent read-only verifiers on different models agree. The second verifier gets the evidence, not the verdict of the first.
-   If the two verifiers disagree, the agent makes one fix round and both verify again. If they still disagree, the user decides.
+6. New events use three judges (R480). All three use the same criteria and must PASS before publication. If a judge gives FAIL, the writer makes one fix round (R483). All three judges then review the new head. If a judge still gives FAIL, the PM drops the event.
+
+   Withdrawals and renames use two independent read-only verifiers on different models (R336). The second verifier receives the evidence without the first verdict. If the verifiers disagree, the agent makes one fix round. Both verifiers then review the change again. If they still disagree, the user decides.
 7. For public-interest sensitive events, three judges (R480) use the same criteria, including C6 (R485). All three must PASS before publication. This replaces the own user decision and the two-approver step for these events. Keep `review.sensitive: true` and `review.status: draft-review`. State the public-interest basis and agent creation by web search in `review.reason`. Apply the identity rules in section 4.
 8. Criminal investigation: state only what an official or court record, or an attributed report, says. Do not state guilt.
 
