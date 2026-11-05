@@ -43,9 +43,9 @@ class WorkflowPinTest(unittest.TestCase):
 class ContributingNoteTest(unittest.TestCase):
     def test_manual_check_note(self):
         text = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
-        self.assertIn("islandlog validate", text)
-        self.assertRegex(text, r"(?i)until the first server release")
-        self.assertRegex(text, r"(?i)by hand")
+        self.assertIn("CI uses the pinned server image `main-ee91d722`.", text)
+        self.assertIn("If the token is absent, CI warns and skips validation. Fork PRs do not receive secrets.", text)
+        self.assertIn("Reviewers must run `islandlog validate .` on the PR branch before approval when CI skips validation.", text)
 
 
 class ServiceSandboxTest(unittest.TestCase):
