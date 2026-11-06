@@ -41,6 +41,23 @@ class WorkflowPinTest(unittest.TestCase):
 
 
 class ContributingNoteTest(unittest.TestCase):
+    def test_new_events_require_what_how_why_body(self):
+        text = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+        rule = text.split("## 2A. New event body (R488, C7)", 1)[-1].split("\n## ", 1)[0]
+        for requirement in (
+            "Events created after 2026-11-06 must have both body sections below.",
+            "`## 各方理由`",
+            "For each main actor, give the reason stated by a cited source.",
+            "If no source gives a reason, state that no public reason was found for that actor.",
+            "`## 公共影響`",
+            "State the effect on the public that a cited source states.",
+            "Do not add the agent's own view.",
+            "Each sentence in these sections must have attribution and a source marker: `[@src-YYYYMMDD-slug]`.",
+            "Existing events do not change under this rule.",
+        ):
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, rule)
+
     def test_manual_check_note(self):
         text = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
         self.assertIn("CI uses the pinned server image `main-ee91d722`.", text)

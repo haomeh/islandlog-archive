@@ -25,6 +25,20 @@ Read this file before your first PR. The full rules are in the PRD (sections 5 a
 5. Record each position with its source. If you find no public position, write `stance: not_found`.
 6. Before a final judgment, do not describe a person with a conviction term. Add later acquittals or withdrawals to the same timeline.
 
+## 2A. New event body (R488, C7)
+
+Events created after 2026-11-06 must have both body sections below.
+This rule applies to all new events, including agent-created events.
+Existing events do not change under this rule.
+
+1. `## 各方理由`: For each main actor, give the reason stated by a cited source.
+   If no source gives a reason, state that no public reason was found for that actor.
+2. `## 公共影響`: State the effect on the public that a cited source states.
+   Examples include people affected, money, safety and a rule change.
+   Do not add the agent's own view.
+3. Each sentence in these sections must have attribution and a source marker: `[@src-YYYYMMDD-slug]`.
+   This requirement also applies to a statement that no public reason was found.
+
 ## 3. Source grades
 
 | Grade | Sources | Use |
